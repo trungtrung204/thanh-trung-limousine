@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Đăng nhập - Admin</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+  <div class="auth">
+    <div class="auth-left">
+      <div class="brand">
+        <div class="brand-badge"><i class="fa-solid fa-building"></i></div>
+        <div>
+          <div class="brand-name">THÀNH TRUNG</div>
+          <div class="brand-sub">Hệ thống quản lý doanh nghiệp</div>
+        </div>
+      </div>
+
+      <div class="hero">
+        <h1>Chào mừng bạn quay lại 👋</h1>
+        <p>Đăng nhập để vào trang quản trị. Giao diện đơn giản, dễ dùng và rõ ràng.</p>
+
+        <div class="tips">
+          <div class="tip"><i class="fa-solid fa-shield-halved"></i> Bảo mật cơ bản</div>
+          <div class="tip"><i class="fa-solid fa-gauge-high"></i> Nhanh và gọn</div>
+          <div class="tip"><i class="fa-solid fa-chart-line"></i> Theo dõi số liệu</div>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        <span>©</span> <span id="year"></span> Dashboard Admin
+      </div>
+    </div>
+
+    <div class="auth-right">
+      <div class="card">
+        <h2>Đăng nhập</h2>
+        <p class="muted">Vui lòng nhập tài khoản và mật khẩu</p>
+
+        <form id="loginForm" novalidate>
+          <label class="field">
+            <span class="label">Tài khoản</span>
+            <div class="control">
+              <i class="fa-regular fa-user"></i>
+              <input id="username" type="text" placeholder="Ví dụ: admin" autocomplete="username" required>
+            </div>
+            <small class="error" id="userError"></small>
+          </label>
+
+          <label class="field">
+            <span class="label">Mật khẩu</span>
+            <div class="control">
+              <i class="fa-solid fa-lock"></i>
+              <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
+              <button type="button" class="eye" id="togglePass" aria-label="Hiện/ẩn mật khẩu">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+            <small class="error" id="passError"></small>
+          </label>
+
+          <div class="row">
+            <label class="check">
+              <input id="remember" type="checkbox">
+              <span>Nhớ đăng nhập</span>
+            </label>
+
+            <a class="link" href="#" onclick="return false;">Quên mật khẩu?</a>
+          </div>
+
+          <button class="btn" type="submit">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            Đăng nhập
+          </button>
+
+          <div class="hint">
+            <b>Tài khoản demo:</b> admin — <b>Mật khẩu:</b> 123456
+          </div>
+
+          <div class="toast" id="toast" role="status" aria-live="polite"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="login.js"></script>
+</body>
+</html>

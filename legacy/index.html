@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Admin</title>
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <!-- ✅ Chặn truy cập khi chưa đăng nhập -->
+  <script>
+    if (localStorage.getItem("auth_logged_in") !== "1") {
+      window.location.href = "login.html";
+    }
+  </script>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-badge">
+          <i class="fa-solid fa-building"></i>
+        </div>
+        <div class="brand-text">
+          <div class="brand-name">AMIND</div>
+          <div class="brand-sub">Bảng điều khiển</div>
+        </div>
+      </div>
+
+      <nav class="menu">
+        <!-- ✅ data-page dùng để đổi nội dung -->
+        <a class="menu-item active" href="#overview" data-page="overview">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Tổng quan</span>
+        </a>
+
+        <a class="menu-item" href="#trips" data-page="trips">
+          <i class="fa-solid fa-route"></i>
+          <span>Quản lý chuyến xe</span>
+        </a>
+
+        <a class="menu-item" href="#booking">
+          <i class="fa-solid fa-ticket"></i>
+          <span>Đặt vé</span>
+        </a>
+
+        <a class="menu-item" href="#customers">
+          <i class="fa-solid fa-users"></i>
+          <span>Khách hàng</span>
+        </a>
+
+        <a class="menu-item" href="#drivers">
+          <i class="fa-solid fa-id-card"></i>
+          <span>Tài xế</span>
+        </a>
+
+        <a class="menu-item" href="#vehicles">
+          <i class="fa-solid fa-bus"></i>
+          <span>Xe</span>
+        </a>
+
+        <a class="menu-item" href="#revenue">
+          <i class="fa-solid fa-coins"></i>
+          <span>Doanh thu</span>
+        </a>
+
+        <a class="menu-item" href="#reviews">
+          <i class="fa-solid fa-star"></i>
+          <span>Đánh giá</span>
+        </a>
+
+        <a class="menu-item" href="#notifications">
+          <i class="fa-solid fa-bell"></i>
+          <span>Thông báo</span>
+        </a>
+
+        <a class="menu-item" href="#settings">
+          <i class="fa-solid fa-gear"></i>
+          <span>Cài đặt</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="btn-ghost" id="toggleSidebar" type="button">
+          <i class="fa-solid fa-bars"></i>
+          <span>Thu gọn menu</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <button class="btn-icon mobile-only" id="openSidebar" type="button" aria-label="Mở menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <div class="topbar-title">
+          <div class="title-line">
+            <span class="badge">5</span>
+            <h1>
+              GIAO DIỆN QUẢN LÝ - DOANH NGHIỆP
+              <span class="muted">(ADMIN)</span>
+            </h1>
+          </div>
+
+          <!-- ✅ breadcrumb sẽ đổi theo trang -->
+          <div class="breadcrumb">
+            <span class="crumb" id="breadcrumbTitle">TỔNG QUAN</span>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Tìm nhanh..." />
+          </div>
+
+          <button class="btn-icon" type="button" aria-label="Thông báo">
+            <i class="fa-regular fa-bell"></i>
+          </button>
+
+          <!-- ✅ Nút Đăng xuất -->
+          <button class="btn-icon" id="logoutBtn" type="button" title="Đăng xuất" aria-label="Đăng xuất">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+
+          <div class="avatar" title="Tài khoản">
+            <i class="fa-solid fa-user"></i>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTENT -->
+      <section class="content">
+
+        <!-- ================== PAGE: TỔNG QUAN ================== -->
+        <section class="page active" id="page-overview">
+          <!-- STAT CARDS -->
+          <div class="cards">
+            <div class="card">
+              <div class="card-icon primary">
+                <i class="fa-solid fa-ticket"></i>
+              </div>
+              <div class="card-body">
+                <div class="card-label">Tổng vé bán</div>
+                <div class="card-value" id="ticketsSold">1.256</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-icon success">
+                <i class="fa-solid fa-coins"></i>
+              </div>
+              <div class="card-body">
+                <div class="card-label">Doanh thu hôm nay</div>
+                <div class="card-value" id="revenueToday">32.450.000đ</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-icon warn">
+                <i class="fa-solid fa-user-plus"></i>
+              </div>
+              <div class="card-body">
+                <div class="card-label">Khách hàng mới</div>
+                <div class="card-value" id="newCustomers">86</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-icon info">
+                <i class="fa-solid fa-bus-simple"></i>
+              </div>
+              <div class="card-body">
+                <div class="card-label">Chuyến hôm nay</div>
+                <div class="card-value" id="tripsToday">124</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CHARTS -->
+          <div class="grid-2">
+            <div class="panel">
+              <div class="panel-head">
+                <h2>Doanh thu 7 ngày qua</h2>
+                <button class="btn-ghost small" id="randomizeBar" type="button">
+                  <i class="fa-solid fa-shuffle"></i> Làm mới
+                </button>
+              </div>
+              <div class="panel-body">
+                <canvas id="barChart" height="140"></canvas>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <h2>Tỷ lệ chuyến xe</h2>
+                <button class="btn-ghost small" id="randomizePie" type="button">
+                  <i class="fa-solid fa-shuffle"></i> Làm mới
+                </button>
+              </div>
+              <div class="panel-body">
+                <div class="pie-wrap">
+                  <canvas id="pieChart" height="160"></canvas>
+                  <div class="legend">
+                    <div class="legend-item">
+                      <span><span class="dot done"></span>Hoàn thành</span>
+                      <b id="donePct">75%</b>
+                    </div>
+                    <div class="legend-item">
+                      <span><span class="dot running"></span>Đang chạy</span>
+                      <b id="runPct">15%</b>
+                    </div>
+                    <div class="legend-item">
+                      <span><span class="dot cancel"></span>Đã hủy</span>
+                      <b id="cancelPct">10%</b>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================== PAGE: QUẢN LÝ CHUYẾN XE ================== -->
+        <section class="page" id="page-trips">
+          <div class="page-head">
+            <div>
+              <h2 class="page-title">QUẢN LÝ CHUYẾN XE</h2>
+              <div class="page-underline"></div>
+            </div>
+
+            <button class="btn-primary" id="btnAddTrip" type="button">
+              <i class="fa-solid fa-plus"></i> Thêm chuyến
+            </button>
+          </div>
+
+          <div class="filters">
+            <div class="filter">
+              <label>Tuyến</label>
+              <select id="filterRoute">
+                <option value="all">Tất cả tuyến</option>
+              </select>
+            </div>
+
+            <div class="filter">
+              <label>Trạng thái</label>
+              <select id="filterStatus">
+                <option value="all">Tất cả trạng thái</option>
+                <option value="Đang chạy">Đang chạy</option>
+                <option value="Sắp chạy">Sắp chạy</option>
+                <option value="Đã hủy">Đã hủy</option>
+                <option value="Hoàn thành">Hoàn thành</option>
+              </select>
+            </div>
+
+            <div class="filter grow">
+              <label>Tìm</label>
+              <div class="search2">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input id="filterText" type="text" placeholder="Nhập mã chuyến hoặc tuyến..." />
+              </div>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Mã chuyến</th>
+                  <th>Tuyến đường</th>
+                  <th>Giờ đi</th>
+                  <th>Giá vé</th>
+                  <th>Số ghế</th>
+                  <th>Trạng thái</th>
+                  <th class="right">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="tripTbody">
+                <!-- app.js sẽ render dữ liệu ở đây -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </section>
+    </main>
+  </div>
+
+  <!-- ================== MODAL THÊM/SỬA CHUYẾN ================== -->
+  <div class="modal" id="tripModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="1"></div>
+
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="modalTitle">Thêm chuyến</h3>
+        <button class="btn-icon" id="btnCloseModal" type="button" aria-label="Đóng">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-grid">
+          <label class="field2">
+            <span>Mã chuyến</span>
+            <input id="mCode" type="text" placeholder="VD: TT240520-001 (có thể để trống)" />
+          </label>
+
+          <label class="field2">
+            <span>Tuyến đường</span>
+            <input id="mRoute" type="text" placeholder="VD: Vinh - Hoàng Mai" />
+          </label>
+
+          <label class="field2">
+            <span>Giờ đi</span>
+            <input id="mTime" type="time" />
+          </label>
+
+          <label class="field2">
+            <span>Giá vé (đ)</span>
+            <input id="mPrice" type="number" min="0" step="1000" placeholder="VD: 230000" />
+          </label>
+
+          <label class="field2">
+            <span>Ghế đã bán</span>
+            <input id="mSold" type="number" min="0" step="1" placeholder="VD: 16" />
+          </label>
+
+          <label class="field2">
+            <span>Tổng ghế</span>
+            <input id="mTotal" type="number" min="1" step="1" placeholder="VD: 40" />
+          </label>
+
+          <label class="field2">
+            <span>Trạng thái</span>
+            <select id="mStatus">
+              <option>Đang chạy</option>
+              <option>Sắp chạy</option>
+              <option>Hoàn thành</option>
+              <option>Đã hủy</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-light" id="btnCancelModal" type="button">Hủy</button>
+          <button class="btn-primary" id="btnSaveTrip" type="button">Lưu</button>
+        </div>
+
+        <div class="modal-hint">
+          💡 Demo: dữ liệu chỉ lưu tạm trong trình duyệt (không có server).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- App JS -->
+  <script src="app.js"></script>
+</body>
+</html>
