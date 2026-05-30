@@ -87,7 +87,7 @@ export const revenueData = [
 ];
 
 export const tripMixData = [
-  { label: "Hoàn thành", value: 75, color: "#465FFF" },
+  { label: "Hoàn thành", value: 75, color: "#075bbf" },
   { label: "Đang chạy", value: 15, color: "#12B76A" },
   { label: "Đã hủy", value: 10, color: "#F79009" }
 ];

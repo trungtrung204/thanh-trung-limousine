@@ -127,8 +127,8 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f7fb] text-[#111827]">
-      <header className="border-b border-[#dbe7f3] bg-white">
+    <main className="min-h-screen bg-[#f4f7fb] text-[#111827]">
+      <header className="border-b border-[#dbe7f3] bg-white/95 shadow-[0_10px_30px_rgba(16,24,40,0.06)] backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
           <Link className="flex items-center gap-3" href="/">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#0a67d8] text-base font-black text-white">
@@ -154,12 +154,12 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
           initial={{ opacity: 0, y: 18 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
-          <div className="max-w-2xl">
+          <div className="max-w-2xl rounded-[32px] bg-white/70 p-8 shadow-[0_24px_80px_rgba(16,24,40,0.08)] ring-1 ring-white/80 backdrop-blur">
             <p className="inline-flex items-center gap-2 rounded-full bg-[#e8f3ff] px-4 py-2 text-sm font-bold text-[#0a67d8]">
               <ShieldCheck className="h-4 w-4" />
               Tài khoản khách hàng
             </p>
-            <h1 className="mt-5 text-5xl font-extrabold leading-tight">
+            <h1 className="mt-5 text-5xl font-black leading-tight text-[#073b7a]">
               Đặt vé nhanh hơn và theo dõi chuyến đi của bạn.
             </h1>
             <p className="mt-5 text-lg leading-8 text-[#667085]">
@@ -184,10 +184,12 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
 
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-[28px] bg-white p-6 shadow-[0_24px_80px_rgba(16,24,40,0.12)] ring-1 ring-[#edf2f7]"
+          className="overflow-hidden rounded-[28px] bg-white shadow-[0_24px_80px_rgba(16,24,40,0.12)] ring-1 ring-[#e6eef8]"
           initial={{ opacity: 0, y: 18 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
         >
+          <div className="h-1.5 bg-[linear-gradient(90deg,#073b7a,#0a67d8,#ffd43b)]" />
+          <div className="p-6">
           <div className="mb-6 grid grid-cols-2 rounded-2xl bg-[#f2f4f7] p-1">
             <button
               className={
@@ -315,6 +317,7 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
               {activeMode === "login" ? "Đăng nhập" : "Tạo tài khoản"}
             </button>
           </form>
+          </div>
         </motion.div>
       </section>
     </main>

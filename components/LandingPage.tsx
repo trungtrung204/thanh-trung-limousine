@@ -77,7 +77,7 @@ const northernStationImage = "/landmarks/northern-station.jpg";
 
 const navItems: Array<{ key: keyof typeof landingCopy.vi.nav; href: string }> = [
   { key: "booking", href: "#dat-xe" },
-  { key: "tickets", href: "/user/my-tickets" },
+  { key: "tickets", href: "/user/ve-cua-toi" },
   { key: "offers", href: "/user/promotions" },
   { key: "operators", href: "/user/operators" },
   { key: "support", href: "/user/support" }
@@ -309,7 +309,7 @@ const userCategories: Array<{ label: string; desc: string; icon: LucideIcon; hre
   {
     label: "Vé của tôi",
     desc: "Xem mã đặt chỗ, ghế, trạng thái xác nhận và thông tin lên xe.",
-    href: "/user/my-tickets",
+    href: "/user/ve-cua-toi",
     icon: QrCode
   },
   {
@@ -382,6 +382,27 @@ const operators = [
   ["TT Express", "4.8", "78 chuyến/ngày", "Ghế ngồi, gửi hàng"],
   ["Hoàng Mai Shuttle", "4.7", "36 chuyến/ngày", "Giường nằm, trung chuyển"],
   ["Vinh Premium Bus", "4.8", "42 chuyến/ngày", "Tuyến đêm Hà Nội"]
+];
+
+const customerReviews = [
+  {
+    name: "Nguyễn Minh Anh",
+    route: "Vinh - Hoàng Mai",
+    text: "Giao diện chọn ghế dễ nhìn, nhà xe gọi xác nhận nhanh và điểm đón được ghi rất rõ.",
+    rating: "5.0"
+  },
+  {
+    name: "Trần Quốc Bảo",
+    route: "Vinh - Hà Nội",
+    text: "Tôi đặt tuyến đêm, vé hiện trong tài khoản ngay. Phần theo dõi chuyến giúp chủ động giờ ra bến.",
+    rating: "4.9"
+  },
+  {
+    name: "Lê Thu Hà",
+    route: "Hoàng Mai - Vinh",
+    text: "Có mã vé, ghế, tổng tiền và hotline ở một chỗ nên không phải gọi lại nhiều lần.",
+    rating: "4.8"
+  }
 ];
 
 const supportItems: Array<{ title: string; desc: string; icon: LucideIcon }> = [
@@ -624,9 +645,9 @@ export default function LandingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f7fb] text-[#111827]">
-      <header className="sticky top-0 z-50 border-b border-[#dbe7f3] bg-white">
-        <div className="bg-[#0a67d8] text-white">
+    <main className="min-h-screen bg-[#f4f7fb] text-[#111827]">
+      <header className="sticky top-0 z-50 border-b border-[#dbe7f3] bg-white/95 shadow-[0_10px_30px_rgba(16,24,40,0.06)] backdrop-blur">
+        <div className="bg-[#073b7a] text-white">
           <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-4 text-xs font-medium md:px-6">
             <span className="flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-[#ffd43b]" />
@@ -721,7 +742,15 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <MobileMenu authCopy={copy.auth} navCopy={copy.nav} open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <MobileMenu
+        authCopy={copy.auth}
+        language={language}
+        languageLabel={languageLabel}
+        navCopy={copy.nav}
+        onClose={() => setMenuOpen(false)}
+        onLanguageChange={handleLanguageChange}
+        open={menuOpen}
+      />
 
       <AnimatePresence>
         {bookingTrip ? (
@@ -742,7 +771,7 @@ export default function LandingPage() {
         ) : null}
       </AnimatePresence>
 
-      <section className="relative overflow-hidden bg-[#0a67d8] px-0 py-8 md:py-12">
+      <section className="relative overflow-hidden bg-[#073b7a] px-0 py-10 md:py-14">
         <div className="absolute inset-0">
           <Image
             alt="Bến xe đô thị"
@@ -752,13 +781,13 @@ export default function LandingPage() {
             sizes="100vw"
             src={heroImage}
           />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,103,216,0.72),rgba(10,103,216,0.96))]" />
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(7,59,122,0.82),rgba(10,103,216,0.93)_48%,rgba(7,59,122,0.98))]" />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 md:px-6">
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="mx-auto max-w-3xl text-center text-white"
+            className="mx-auto max-w-4xl text-center text-white"
             initial={{ opacity: 0, y: 16 }}
             transition={{ duration: 0.45, ease: "easeOut" }}
           >
@@ -770,7 +799,7 @@ export default function LandingPage() {
             <p className="text-sm font-semibold text-[#ffe58f]">
               {copy.hero.eyebrow}
             </p>
-            <h1 className="mt-3 text-3xl font-extrabold leading-[1.15] md:text-4xl lg:text-5xl">
+            <h1 className="mt-3 text-4xl font-black leading-[1.08] md:text-5xl lg:text-6xl">
               {copy.hero.title}
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-[#e8f3ff]">
@@ -780,7 +809,7 @@ export default function LandingPage() {
 
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="mx-auto mt-6 max-w-6xl rounded-3xl bg-white p-3 shadow-[0_18px_60px_rgba(10,50,120,0.22)]"
+            className="mx-auto mt-8 max-w-6xl rounded-[28px] bg-white p-3 shadow-[0_24px_80px_rgba(5,38,82,0.28)] ring-1 ring-white/30"
             initial={{ opacity: 0, y: 20 }}
             transition={{ delay: 0.1, duration: 0.45, ease: "easeOut" }}
           >
@@ -913,6 +942,42 @@ export default function LandingPage() {
               <p className="mt-1 text-sm font-semibold text-[#667085]">{label}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-12">
+        <div className="mb-6">
+          <p className="text-sm font-extrabold uppercase tracking-wide text-[#075bbf]">
+            Quy trình đặt vé
+          </p>
+          <h2 className="mt-2 text-2xl font-black text-[#111827] md:text-3xl">
+            Bốn bước rõ ràng trước khi nhà xe xác nhận
+          </h2>
+        </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          {[
+            [Search, "Tìm chuyến", "Chọn điểm đi, điểm đến và ngày đi bằng lịch trực quan."],
+            [Armchair, "Chọn ghế", "Xem ghế trống, ghế đang chọn và ghế đã đặt trước khi giữ chỗ."],
+            [MapPinned, "Đón trả", "Chọn điểm đón/trả phù hợp và kiểm tra lại thông tin chuyến."],
+            [ReceiptText, "Xác nhận", "Nhận mã vé, QR demo hoặc thanh toán sau khi admin duyệt."]
+          ].map(([Icon, title, desc], index) => {
+            const StepIcon = Icon as LucideIcon;
+            return (
+              <article
+                className="rounded-3xl bg-white p-5 shadow-[0_14px_40px_rgba(16,24,40,0.06)] ring-1 ring-[#e6eef8]"
+                key={title as string}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#e8f3ff] text-[#075bbf]">
+                    <StepIcon className="h-5 w-5" />
+                  </span>
+                  <span className="text-sm font-black text-[#f2b600]">0{index + 1}</span>
+                </div>
+                <h3 className="mt-5 text-lg font-black text-[#111827]">{title as string}</h3>
+                <p className="mt-2 text-sm leading-6 text-[#667085]">{desc as string}</p>
+              </article>
+            );
+          })}
         </div>
       </section>
 
@@ -1056,6 +1121,43 @@ export default function LandingPage() {
           </div>
         </div>
       </Section>
+
+      <section className="mx-auto max-w-7xl px-4 py-12 md:px-6 md:py-16" id="danh-gia">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-extrabold uppercase tracking-wide text-[#075bbf]">
+              Đánh giá khách hàng
+            </p>
+            <h2 className="mt-2 text-2xl font-black text-[#111827] md:text-3xl">
+              Trải nghiệm rõ ràng từ lúc tìm chuyến đến khi lên xe
+            </h2>
+          </div>
+          <div className="rounded-2xl bg-[#fff7d6] px-4 py-3 text-sm font-extrabold text-[#8a4b00] ring-1 ring-[#ffe58f]">
+            4.9/5 · 2.400+ lượt đánh giá demo
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {customerReviews.map((review) => (
+            <article
+              className="rounded-3xl bg-white p-5 shadow-[0_14px_40px_rgba(16,24,40,0.07)] ring-1 ring-[#e6eef8]"
+              key={review.name}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-black text-[#111827]">{review.name}</h3>
+                  <p className="mt-1 text-sm font-semibold text-[#667085]">{review.route}</p>
+                </div>
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#fff7d6] px-3 py-1 text-sm font-black text-[#8a4b00]">
+                  <Star className="h-4 w-4 fill-[#fdb022] text-[#fdb022]" />
+                  {review.rating}
+                </span>
+              </div>
+              <p className="mt-4 text-sm leading-7 text-[#475467]">{review.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
 
       <section className="bg-[#e8f3ff]" id="ho-tro">
         <div className="mx-auto max-w-7xl px-4 py-12 md:px-6 md:py-16">
@@ -2213,13 +2315,19 @@ function Section({
 
 function MobileMenu({
   authCopy,
+  language,
+  languageLabel,
   navCopy,
   onClose,
+  onLanguageChange,
   open
 }: {
   authCopy: Record<keyof typeof landingCopy.vi.auth, string>;
+  language: Language;
+  languageLabel: string;
   navCopy: Record<keyof typeof landingCopy.vi.nav, string>;
   onClose: () => void;
+  onLanguageChange: (value: string) => void;
   open: boolean;
 }) {
   return (
@@ -2254,6 +2362,23 @@ function MobileMenu({
               </a>
             ))}
           </nav>
+          <div className="px-4">
+            <label className="flex h-12 items-center justify-between rounded-2xl border border-[#d0d5dd] bg-[#f8fafc] px-4 text-sm font-extrabold text-[#344054]">
+              <span>Ngôn ngữ · {languageLabel}</span>
+              <select
+                aria-label="Chuyển đổi ngôn ngữ"
+                className="border-0 bg-transparent p-0 text-sm font-extrabold text-[#075bbf] focus:ring-0"
+                onChange={(event) => onLanguageChange(event.target.value)}
+                value={language}
+              >
+                {languageOptions.map((option) => (
+                  <option key={option.code} value={option.code}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           <div className="absolute inset-x-4 bottom-6 grid gap-3">
             <Link
               className="flex h-12 items-center justify-center rounded-2xl bg-[#ffd43b] px-6 text-sm font-extrabold text-[#111827]"

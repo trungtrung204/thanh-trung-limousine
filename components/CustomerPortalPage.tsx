@@ -89,8 +89,21 @@ const pageConfig = {
 
 type SectionKey = keyof typeof pageConfig;
 
+const pageAliases: Record<string, SectionKey> = {
+  "ve-cua-toi": "my-tickets",
+  "doi-huy-ve": "cancel",
+  "ma-giam-gia": "promotions",
+  "thanh-toan": "payment",
+  "theo-doi-chuyen": "tracking",
+  "phan-hoi": "feedback",
+  "hanh-ly": "luggage",
+  "lich-su-chuyen": "history",
+  "nha-xe": "operators",
+  "ho-tro": "support"
+};
+
 export default function CustomerPortalPage({ section }: { section: string }) {
-  const pageKey = (section in pageConfig ? section : "my-tickets") as SectionKey;
+  const pageKey = (section in pageConfig ? section : pageAliases[section] || "my-tickets") as SectionKey;
   const config = pageConfig[pageKey];
   const Icon = config.icon;
   const [customer, setCustomer] = useState<Omit<Customer, "password" | "createdAt"> | null>(null);
@@ -127,11 +140,14 @@ export default function CustomerPortalPage({ section }: { section: string }) {
   const languageLabel = languageOptions.find((option) => option.code === language)?.short || "VI";
 
   return (
-    <main className="min-h-screen bg-[#f5f7fb] text-[#111827]">
-      <header className="border-b border-[#dbe7f3] bg-white">
-        <div className="bg-[#0a67d8] text-white">
+    <main className="min-h-screen bg-[#f4f7fb] text-[#111827]">
+      <header className="sticky top-0 z-40 border-b border-[#dbe7f3] bg-white/95 shadow-[0_10px_30px_rgba(16,24,40,0.06)] backdrop-blur">
+        <div className="bg-[#073b7a] text-white">
           <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-4 text-xs font-medium md:px-6">
-            <span>{copy.assurance}</span>
+            <span className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-[#ffd43b]" />
+              {copy.assurance}
+            </span>
             <span className="hidden md:inline">{copy.hotline}</span>
           </div>
         </div>
@@ -188,13 +204,14 @@ export default function CustomerPortalPage({ section }: { section: string }) {
           {copy.back}
         </Link>
 
-        <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#edf2f7]">
-          <div className="flex items-start gap-4">
-            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#e8f3ff] text-[#0a67d8]">
+        <div className="mt-6 overflow-hidden rounded-[28px] bg-white shadow-[0_18px_60px_rgba(16,24,40,0.08)] ring-1 ring-[#e6eef8]">
+          <div className="h-1.5 bg-[linear-gradient(90deg,#073b7a,#0a67d8,#ffd43b)]" />
+          <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start">
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#e8f3ff] text-[#075bbf]">
               <Icon className="h-6 w-6" />
             </div>
-            <div>
-              <h1 className="text-3xl font-extrabold">{title}</h1>
+            <div className="min-w-0">
+              <h1 className="text-3xl font-black leading-tight">{title}</h1>
               <p className="mt-2 max-w-2xl leading-7 text-[#667085]">{desc}</p>
             </div>
           </div>
@@ -1213,7 +1230,7 @@ function TicketCard({
   language: Language;
 }) {
   return (
-    <article className="rounded-2xl border border-[#edf2f7] p-4">
+    <article className="rounded-3xl border border-[#e6eef8] bg-white p-4 shadow-[0_10px_30px_rgba(16,24,40,0.04)]">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-extrabold">{booking.route}</h3>
@@ -1246,7 +1263,7 @@ function TicketCard({
 
 function Info({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-[#f8fafc] p-3">
+    <div className="rounded-2xl bg-[#f8fafc] p-3 ring-1 ring-[#eef2f7]">
       <p className="text-xs font-bold uppercase tracking-wide text-[#667085]">{label}</p>
       <p className="mt-1 text-sm font-extrabold text-[#111827]">{value}</p>
     </div>
@@ -1268,8 +1285,10 @@ function StatusBadge({ copy, status }: { copy: TicketCopy; status: CustomerBooki
 
 function EmptyState({ text }: { text: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-[#d0d5dd] bg-[#f8fafc] p-8 text-center">
-      <Ticket className="mx-auto h-8 w-8 text-[#98a2b3]" />
+    <div className="rounded-3xl border border-dashed border-[#bad7f5] bg-[#f8fbff] p-8 text-center">
+      <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#e8f3ff] text-[#075bbf]">
+        <Ticket className="h-6 w-6" />
+      </div>
       <p className="mx-auto mt-3 max-w-md text-sm font-semibold leading-6 text-[#667085]">{text}</p>
     </div>
   );

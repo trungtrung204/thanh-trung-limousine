@@ -77,19 +77,20 @@ export default function LoginScreen() {
   }
 
   return (
-    <main className="grid min-h-screen bg-[#f6f7fb] text-gray-900 lg:grid-cols-[minmax(0,1.02fr)_minmax(460px,0.98fr)]">
-      <section className="relative hidden overflow-hidden border-r border-gray-200 bg-white px-10 py-8 lg:flex lg:flex-col lg:justify-between">
-        <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#465FFF,#12B76A,#F79009)]" />
+    <main className="grid min-h-screen bg-[#f4f7fb] text-gray-900 lg:grid-cols-[minmax(0,1.02fr)_minmax(460px,0.98fr)]">
+      <section className="relative hidden overflow-hidden border-r border-[#dbe7f3] bg-[#073b7a] px-10 py-8 text-white lg:flex lg:flex-col lg:justify-between">
+        <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(#ffffff_1px,transparent_1px),linear-gradient(90deg,#ffffff_1px,transparent_1px)] [background-size:42px_42px]" />
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-[linear-gradient(90deg,#ffd43b,#0a67d8,#ffffff)]" />
 
         <div className="relative flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-lg bg-[#465FFF] text-white shadow-sm">
+          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#ffd43b] text-[#111827] shadow-sm">
             <Building2 className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-gray-500">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#bad7f5]">
               Thành Trung
             </p>
-            <h1 className="text-xl font-semibold text-gray-950">Admin Operations</h1>
+            <h1 className="text-xl font-black text-white">Admin Operations</h1>
           </div>
         </div>
 
@@ -99,14 +100,14 @@ export default function LoginScreen() {
           transition={{ duration: 0.45, ease: "easeOut" }}
           className="relative max-w-xl"
         >
-          <div className="mb-6 inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-3 py-2 text-sm font-bold text-[#ffd43b] backdrop-blur">
             <Route className="h-4 w-4" />
             Điều hành tuyến xe hôm nay
           </div>
-          <h2 className="text-5xl font-semibold leading-[1.05] tracking-normal text-gray-950">
+          <h2 className="text-5xl font-black leading-[1.05] tracking-normal text-white">
             Quản lý chuyến, vé và doanh thu trong một màn hình.
           </h2>
-          <p className="mt-5 max-w-lg text-base leading-7 text-gray-600">
+          <p className="mt-5 max-w-lg text-base leading-7 text-[#d7ebff]">
             Hôm nay có 124 chuyến, 1.256 vé đã bán và các cảnh báo vận hành được cập
             nhật liên tục.
           </p>
@@ -117,17 +118,17 @@ export default function LoginScreen() {
               ["1.256", "Vé đã bán"],
               ["98%", "Đúng giờ"]
             ].map(([value, label]) => (
-              <div key={label} className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                <p className="text-2xl font-semibold text-gray-950">{value}</p>
-                <p className="mt-1 text-sm text-gray-500">{label}</p>
+              <div key={label} className="rounded-2xl border border-white/15 bg-white/10 p-4 shadow-sm backdrop-blur">
+                <p className="text-2xl font-black text-[#ffd43b]">{value}</p>
+                <p className="mt-1 text-sm font-semibold text-[#d7ebff]">{label}</p>
               </div>
             ))}
           </div>
         </motion.div>
 
-        <div className="relative flex items-center gap-2 text-sm text-gray-500">
-          <ShieldCheck className="h-4 w-4 text-emerald-600" />
-          Dashboard Admin 2026
+        <div className="relative flex items-center gap-2 text-sm font-semibold text-[#d7ebff]">
+          <ShieldCheck className="h-4 w-4 text-[#ffd43b]" />
+          Khu vực quản trị nội bộ
         </div>
       </section>
 
@@ -136,10 +137,12 @@ export default function LoginScreen() {
           initial={{ opacity: 0, y: 16, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ type: "spring", stiffness: 230, damping: 24 }}
-          className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-6 shadow-sm sm:p-8"
+          className="w-full max-w-md overflow-hidden rounded-[28px] border border-[#e6eef8] bg-white shadow-[0_24px_80px_rgba(16,24,40,0.12)]"
         >
+          <div className="h-1.5 bg-[linear-gradient(90deg,#073b7a,#0a67d8,#ffd43b)]" />
+          <div className="p-6 sm:p-8">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#465FFF] text-white">
+            <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#073b7a] text-white">
               <Building2 className="h-5 w-5" />
             </div>
             <div>
@@ -151,15 +154,18 @@ export default function LoginScreen() {
           </div>
 
           <div>
-            <h1 className="text-2xl font-semibold text-gray-950">Đăng nhập</h1>
+            <h1 className="text-2xl font-black text-gray-950">Đăng nhập quản trị</h1>
             <p className="mt-2 text-sm text-gray-500">Tài khoản demo: admin / 123456</p>
+            <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold leading-6 text-amber-800">
+              Đây là khu vực quản trị. Chỉ nhân sự vận hành được phép truy cập.
+            </p>
           </div>
 
           <form className="mt-7 space-y-5" onSubmit={handleSubmit} noValidate>
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-gray-700">Tài khoản</span>
-              <span className="flex h-11 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 transition focus-within:border-[#465FFF] focus-within:ring-4 focus-within:ring-blue-50">
-                <UserRound className="h-4 w-4 text-gray-400" />
+              <span className="flex h-12 items-center gap-3 rounded-2xl border border-[#d0d5dd] bg-white px-4 transition focus-within:border-[#075bbf] focus-within:ring-4 focus-within:ring-[#e8f3ff]">
+                <UserRound className="h-4 w-4 text-[#075bbf]" />
                 <input
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
@@ -173,8 +179,8 @@ export default function LoginScreen() {
 
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-gray-700">Mật khẩu</span>
-              <span className="flex h-11 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 transition focus-within:border-[#465FFF] focus-within:ring-4 focus-within:ring-blue-50">
-                <Lock className="h-4 w-4 text-gray-400" />
+              <span className="flex h-12 items-center gap-3 rounded-2xl border border-[#d0d5dd] bg-white px-4 transition focus-within:border-[#075bbf] focus-within:ring-4 focus-within:ring-[#e8f3ff]">
+                <Lock className="h-4 w-4 text-[#075bbf]" />
                 <input
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
@@ -199,12 +205,12 @@ export default function LoginScreen() {
                 <input
                   checked={remember}
                   onChange={(event) => setRemember(event.target.checked)}
-                  className="rounded border-gray-300 text-[#465FFF] focus:ring-[#465FFF]"
+                  className="rounded border-gray-300 text-[#075bbf] focus:ring-[#075bbf]"
                   type="checkbox"
                 />
                 Nhớ đăng nhập
               </label>
-              <button className="text-sm font-medium text-[#465FFF] hover:text-blue-700" type="button">
+              <button className="text-sm font-bold text-[#075bbf] hover:text-[#073b7a]" type="button">
                 Quên mật khẩu?
               </button>
             </div>
@@ -229,7 +235,7 @@ export default function LoginScreen() {
             </AnimatePresence>
 
             <button
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#465FFF] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3641f5] disabled:cursor-not-allowed disabled:opacity-70"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#073b7a] px-4 text-sm font-black text-white shadow-sm transition hover:bg-[#075bbf] disabled:cursor-not-allowed disabled:opacity-70"
               disabled={isSubmitting}
               type="submit"
             >
@@ -237,6 +243,7 @@ export default function LoginScreen() {
               {isSubmitting ? "Đang xử lý..." : "Đăng nhập"}
             </button>
           </form>
+          </div>
         </motion.div>
       </section>
     </main>

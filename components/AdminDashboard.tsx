@@ -21,6 +21,7 @@ import {
   DollarSign,
   Eye,
   Filter,
+  Gift,
   IdCard,
   LayoutDashboard,
   LogOut,
@@ -462,7 +463,7 @@ export default function AdminDashboard() {
   const currentPage = pageContent[activePage];
 
   return (
-    <div className="min-h-screen bg-[#f6f7fb] text-gray-900">
+    <div className="min-h-screen bg-[#f4f7fb] text-gray-900">
       <AnimatePresence>
         {mobileSidebarOpen ? (
           <motion.button
@@ -502,7 +503,7 @@ export default function AdminDashboard() {
           title={currentPage.title}
         />
 
-        <main className="px-4 py-5 sm:px-6 lg:px-8">
+        <main className="px-4 py-6 sm:px-6 lg:px-8">
           <AnimatePresence mode="wait">
             {activePage === "overview" ? (
               <OverviewPage key="overview" trips={trips} />
@@ -613,12 +614,11 @@ export default function AdminDashboard() {
     </div>
   );
 }
-
 function AuthLoading() {
   return (
-    <main className="grid min-h-screen place-items-center bg-[#f6f7fb]">
-      <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-600 shadow-sm">
-        <span className="h-2 w-2 animate-pulse rounded-full bg-[#465FFF]" />
+    <main className="grid min-h-screen place-items-center bg-[#f4f7fb]">
+      <div className="flex items-center gap-3 rounded-2xl border border-[#dbe7f3] bg-white px-5 py-4 text-sm font-semibold text-gray-600 shadow-[0_18px_50px_rgba(16,24,40,0.08)]">
+        <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#075bbf]" />
         Đang kiểm tra phiên đăng nhập...
       </div>
     </main>
@@ -641,13 +641,13 @@ function Sidebar({
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-40 flex w-[280px] flex-col border-r border-gray-200 bg-white shadow-sm transition-all duration-300 ease-out",
+        "fixed inset-y-0 left-0 z-40 flex w-[280px] flex-col border-r border-[#0a4f9f] bg-[#073b7a] text-white shadow-[18px_0_50px_rgba(7,59,122,0.22)] transition-all duration-300 ease-out",
         mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         collapsed ? "lg:w-[88px]" : "lg:w-[280px]"
       )}
     >
-      <div className="flex h-16 items-center gap-3 border-b border-gray-200 px-4">
-        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#465FFF] text-white">
+      <div className="flex h-16 items-center gap-3 border-b border-white/10 px-4">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#ffd43b] text-[#111827]">
           <Building2 className="h-5 w-5" />
         </div>
         <AnimatePresence initial={false}>
@@ -658,10 +658,10 @@ function Sidebar({
               exit={{ opacity: 0, x: -8 }}
               className="min-w-0"
             >
-              <p className="truncate text-sm font-semibold uppercase tracking-[0.16em] text-gray-500">
+              <p className="truncate text-sm font-semibold uppercase tracking-[0.16em] text-[#bad7f5]">
                 Thành Trung
               </p>
-              <p className="truncate text-base font-semibold text-gray-950">Admin</p>
+              <p className="truncate text-base font-black text-white">Admin</p>
             </motion.div>
           ) : null}
         </AnimatePresence>
@@ -676,11 +676,11 @@ function Sidebar({
             <button
               key={item.key}
               className={cn(
-                "group flex h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium transition",
+                "group flex h-11 w-full items-center gap-3 rounded-2xl px-3 text-left text-sm font-bold transition",
                 collapsed && "justify-center px-0",
                 isActive
-                  ? "bg-[#465FFF] text-white shadow-sm"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-950"
+                  ? "bg-white text-[#073b7a] shadow-sm"
+                  : "text-[#d7ebff] hover:bg-white/10 hover:text-white"
               )}
               onClick={() => onNavigate(item.key)}
               title={collapsed ? item.label : undefined}
@@ -693,10 +693,10 @@ function Sidebar({
         })}
       </nav>
 
-      <div className="border-t border-gray-200 p-3">
+      <div className="border-t border-white/10 p-3">
         <button
           className={cn(
-            "flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-900",
+            "flex h-10 w-full items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 text-sm font-bold text-[#d7ebff] transition hover:bg-white/15 hover:text-white",
             collapsed && "px-0"
           )}
           onClick={onCollapse}
@@ -725,29 +725,33 @@ function Topbar({
   title: string;
 }) {
   return (
-    <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b border-[#dbe7f3] bg-white/95 shadow-[0_10px_30px_rgba(16,24,40,0.05)] backdrop-blur">
       <div className="flex min-h-16 items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
           <button
             aria-label="Mở menu"
-            className="grid h-10 w-10 place-items-center rounded-lg border border-gray-200 text-gray-600 transition hover:bg-gray-50 lg:hidden"
+            className="grid h-10 w-10 place-items-center rounded-2xl border border-[#dbe7f3] text-gray-600 transition hover:bg-[#f8fbff] lg:hidden"
             onClick={onOpenSidebar}
             type="button"
           >
             <Menu className="h-5 w-5" />
           </button>
           <div className="min-w-0">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#465FFF]">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-[#075bbf]">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
               {navItems.find((item) => item.key === activePage)?.label}
             </div>
-            <h1 className="mt-1 truncate text-lg font-semibold text-gray-950 sm:text-xl">{title}</h1>
+            <h1 className="mt-1 truncate text-lg font-black text-gray-950 sm:text-xl">{title}</h1>
             <p className="hidden truncate text-sm text-gray-500 md:block">{description}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="hidden h-10 w-[260px] items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-500 transition focus-within:border-[#465FFF] focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-50 xl:flex">
+          <div className="hidden items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-black text-amber-800 md:flex">
+            Demo localStorage
+          </div>
+
+          <label className="hidden h-10 w-[260px] items-center gap-2 rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] px-3 text-sm text-gray-500 transition focus-within:border-[#075bbf] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#e8f3ff] xl:flex">
             <Search className="h-4 w-4" />
             <input
               className="h-full flex-1 border-0 bg-transparent p-0 text-sm outline-none placeholder:text-gray-400 focus:ring-0"
@@ -758,7 +762,7 @@ function Topbar({
 
           <button
             aria-label="Thông báo"
-            className="relative grid h-10 w-10 place-items-center rounded-lg border border-gray-200 bg-white text-gray-600 transition hover:bg-gray-50"
+            className="relative grid h-10 w-10 place-items-center rounded-2xl border border-[#dbe7f3] bg-white text-gray-600 transition hover:bg-[#f8fbff]"
             type="button"
           >
             <Bell className="h-5 w-5" />
@@ -767,7 +771,7 @@ function Topbar({
 
           <button
             aria-label="Đăng xuất"
-            className="grid h-10 w-10 place-items-center rounded-lg border border-gray-200 bg-white text-gray-600 transition hover:bg-gray-50 hover:text-red-600"
+            className="grid h-10 w-10 place-items-center rounded-2xl border border-[#dbe7f3] bg-white text-gray-600 transition hover:bg-red-50 hover:text-red-600"
             onClick={onLogout}
             title="Đăng xuất"
             type="button"
@@ -775,8 +779,8 @@ function Topbar({
             <LogOut className="h-5 w-5" />
           </button>
 
-          <div className="hidden h-10 items-center gap-2 rounded-lg border border-gray-200 bg-white px-2 pr-3 sm:flex">
-            <div className="grid h-7 w-7 place-items-center rounded-lg bg-gray-100 text-gray-600">
+          <div className="hidden h-10 items-center gap-2 rounded-2xl border border-[#dbe7f3] bg-white px-2 pr-3 sm:flex">
+            <div className="grid h-7 w-7 place-items-center rounded-xl bg-[#e8f3ff] text-[#075bbf]">
               <UserRound className="h-4 w-4" />
             </div>
             <span className="text-sm font-medium text-gray-700">Admin</span>
@@ -800,7 +804,7 @@ function OverviewPage({ trips }: { trips: Trip[] }) {
       toolbar: { show: false },
       zoom: { enabled: false }
     },
-    colors: ["#465FFF"],
+    colors: ["#075bbf"],
     dataLabels: { enabled: false },
     fill: {
       gradient: { opacityFrom: 0.28, opacityTo: 0.04, shadeIntensity: 1 },
@@ -988,7 +992,7 @@ function OverviewPage({ trips }: { trips: Trip[] }) {
           <div className="space-y-4">
             {[
               ["Đúng giờ", 98, "bg-emerald-500"],
-              ["Lấp ghế", Math.round(seatRate), "bg-[#465FFF]"],
+              ["Lấp ghế", Math.round(seatRate), "bg-[#075bbf]"],
               ["Thanh toán online", 72, "bg-amber-500"],
               ["Phản hồi trong ngày", 89, "bg-violet-500"]
             ].map(([label, value, bar]) => (
@@ -1051,7 +1055,7 @@ function KpiCard({
   value: string;
 }) {
   const tones = {
-    blue: "bg-blue-50 text-[#465FFF]",
+    blue: "bg-blue-50 text-[#075bbf]",
     emerald: "bg-emerald-50 text-emerald-600",
     amber: "bg-amber-50 text-amber-600",
     violet: "bg-violet-50 text-violet-600"
@@ -1060,20 +1064,20 @@ function KpiCard({
   return (
     <motion.div
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+      className="rounded-3xl border border-[#e6eef8] bg-white p-5 shadow-[0_14px_40px_rgba(16,24,40,0.06)]"
       initial={{ opacity: 0, y: 12 }}
       transition={{ delay: index * 0.04, duration: 0.25, ease: "easeOut" }}
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-gray-500">{label}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-normal text-gray-950">{value}</p>
+          <p className="text-sm font-bold text-gray-500">{label}</p>
+          <p className="mt-2 text-2xl font-black tracking-normal text-gray-950">{value}</p>
         </div>
-        <div className={cn("grid h-11 w-11 place-items-center rounded-lg", tones[tone])}>
+        <div className={cn("grid h-11 w-11 place-items-center rounded-2xl", tones[tone])}>
           <Icon className="h-5 w-5" />
         </div>
       </div>
-      <div className="mt-4 inline-flex items-center gap-1 rounded-lg bg-gray-50 px-2 py-1 text-xs font-semibold text-gray-600">
+      <div className="mt-4 inline-flex items-center gap-1 rounded-full bg-[#f8fbff] px-3 py-1 text-xs font-bold text-gray-600 ring-1 ring-[#e6eef8]">
         <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
         {trend}
       </div>
@@ -1143,7 +1147,7 @@ function TripsPage({
       <Panel
         action={
           <button
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#465FFF] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3641f5]"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#075bbf] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#073b7a]"
             onClick={onAdd}
             type="button"
           >
@@ -1160,7 +1164,7 @@ function TripsPage({
               Tuyến
             </span>
             <select
-              className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+              className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
               onChange={(event) => setRouteFilter(event.target.value)}
               value={routeFilter}
             >
@@ -1179,7 +1183,7 @@ function TripsPage({
               Trạng thái
             </span>
             <select
-              className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+              className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
               onChange={(event) => setStatusFilter(event.target.value as TripStatus | "all")}
               value={statusFilter}
             >
@@ -1198,7 +1202,7 @@ function TripsPage({
               Tìm kiếm
             </span>
             <input
-              className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+              className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Mã chuyến, tuyến hoặc tài xế..."
               type="search"
@@ -1234,7 +1238,7 @@ function TripsPage({
                         <p className="text-xs text-gray-500">{trip.vehicle}</p>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-gray-600">{trip.time}</td>
-                      <td className="whitespace-nowrap px-4 py-3 font-semibold text-[#465FFF]">
+                      <td className="whitespace-nowrap px-4 py-3 font-semibold text-[#075bbf]">
                         {formatCurrency(trip.price)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-gray-600">
@@ -1289,13 +1293,13 @@ function TripsPage({
 
 function MiniStat({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="grid h-10 w-10 place-items-center rounded-lg bg-blue-50 text-[#465FFF]">
+    <div className="flex items-center gap-3 rounded-3xl border border-[#e6eef8] bg-white p-4 shadow-[0_12px_36px_rgba(16,24,40,0.05)]">
+      <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#e8f3ff] text-[#075bbf]">
         <Icon className="h-5 w-5" />
       </div>
       <div>
-        <p className="text-sm text-gray-500">{label}</p>
-        <p className="text-xl font-semibold text-gray-950">{value}</p>
+        <p className="text-sm font-semibold text-gray-500">{label}</p>
+        <p className="text-xl font-black text-gray-950">{value}</p>
       </div>
     </div>
   );
@@ -1316,7 +1320,7 @@ function IconButton({
     <button
       aria-label={label}
       className={cn(
-        "grid h-9 w-9 place-items-center rounded-lg border border-gray-200 bg-white text-gray-500 transition hover:bg-gray-50 hover:text-gray-900",
+        "grid h-9 w-9 place-items-center rounded-2xl border border-[#dbe7f3] bg-white text-gray-500 transition hover:bg-[#f8fbff] hover:text-gray-900",
         danger && "hover:border-red-200 hover:bg-red-50 hover:text-red-600"
       )}
       onClick={onClick}
@@ -1351,7 +1355,7 @@ function TripDetailPanel({ onClose, trip }: { onClose: () => void; trip: Trip | 
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#465FFF]">
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#075bbf]">
                   {trip.code}
                 </p>
                 <h3 className="mt-1 text-xl font-semibold text-gray-950">{trip.route}</h3>
@@ -1547,7 +1551,7 @@ function TripModal({
           >
             <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#465FFF]">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#075bbf]">
                   Chuyến xe
                 </p>
                 <h3 className="mt-1 text-lg font-semibold text-gray-950">
@@ -1567,7 +1571,7 @@ function TripModal({
             <div className="grid gap-4 p-5 sm:grid-cols-2">
               <FormField label="Mã chuyến">
                 <input
-                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
                   onChange={(event) => updateField("code", event.target.value)}
                   placeholder="Tự tạo nếu để trống"
                   value={form.code}
@@ -1575,7 +1579,7 @@ function TripModal({
               </FormField>
               <FormField label="Tuyến đường">
                 <input
-                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
                   onChange={(event) => updateField("route", event.target.value)}
                   placeholder="VD: Vinh - Hoàng Mai"
                   value={form.route}
@@ -1583,7 +1587,7 @@ function TripModal({
               </FormField>
               <FormField label="Giờ đi">
                 <input
-                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
                   onChange={(event) => updateField("time", event.target.value)}
                   type="time"
                   value={form.time}
@@ -1591,7 +1595,7 @@ function TripModal({
               </FormField>
               <FormField label="Giá vé">
                 <input
-                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
                   min={0}
                   onChange={(event) => updateField("price", event.target.value)}
                   step={1000}
@@ -1601,7 +1605,7 @@ function TripModal({
               </FormField>
               <FormField label="Ghế đã bán">
                 <input
-                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
                   min={0}
                   onChange={(event) => updateField("sold", event.target.value)}
                   type="number"
@@ -1610,7 +1614,7 @@ function TripModal({
               </FormField>
               <FormField label="Tổng ghế">
                 <input
-                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
                   min={1}
                   onChange={(event) => updateField("total", event.target.value)}
                   type="number"
@@ -1619,7 +1623,7 @@ function TripModal({
               </FormField>
               <FormField label="Tài xế">
                 <input
-                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
                   onChange={(event) => updateField("driver", event.target.value)}
                   placeholder="Tên tài xế"
                   value={form.driver}
@@ -1627,7 +1631,7 @@ function TripModal({
               </FormField>
               <FormField label="Xe">
                 <input
-                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
                   onChange={(event) => updateField("vehicle", event.target.value)}
                   placeholder="Biển số xe"
                   value={form.vehicle}
@@ -1635,7 +1639,7 @@ function TripModal({
               </FormField>
               <FormField label="Trạng thái">
                 <select
-                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
                   onChange={(event) => updateField("status", event.target.value as TripStatus)}
                   value={form.status}
                 >
@@ -1646,7 +1650,7 @@ function TripModal({
               </FormField>
               <FormField label="Kênh bán">
                 <select
-                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+                  className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
                   onChange={(event) => updateField("platform", event.target.value)}
                   value={form.platform}
                 >
@@ -1679,7 +1683,7 @@ function TripModal({
                   Hủy
                 </button>
                 <button
-                  className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#465FFF] px-4 text-sm font-semibold text-white hover:bg-[#3641f5]"
+                  className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#075bbf] px-4 text-sm font-semibold text-white hover:bg-[#073b7a]"
                   type="submit"
                 >
                   <Save className="h-4 w-4" />
@@ -1874,7 +1878,7 @@ function CustomerAdminPage({
       <Panel
         action={
           <button
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#465FFF] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3641f5]"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#075bbf] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#073b7a]"
             onClick={onRefresh}
             type="button"
           >
@@ -1915,7 +1919,7 @@ function CustomerAdminPage({
                       </td>
                       <td className="px-4 py-3">
                         <select
-                          className="h-9 rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+                          className="h-9 rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
                           onChange={(event) => onCustomerUpdate(customer.id, { tier: event.target.value as Customer["tier"] })}
                           value={customer.tier || "Thường"}
                         >
@@ -1924,7 +1928,7 @@ function CustomerAdminPage({
                           ))}
                         </select>
                         <input
-                          className="mt-2 h-9 w-24 rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+                          className="mt-2 h-9 w-24 rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
                           min={0}
                           onChange={(event) => onCustomerUpdate(customer.id, { points: Number(event.target.value) || 0 })}
                           type="number"
@@ -1932,7 +1936,7 @@ function CustomerAdminPage({
                         />
                       </td>
                       <td className="px-4 py-3">{customerBookings.length}</td>
-                      <td className="px-4 py-3 font-semibold text-[#465FFF]">{formatCurrency(totalSpent)}</td>
+                      <td className="px-4 py-3 font-semibold text-[#075bbf]">{formatCurrency(totalSpent)}</td>
                       <td className="px-4 py-3">
                         <button
                           className={cn(
@@ -1999,7 +2003,7 @@ function FeedbackAdminPage({
       <Panel
         action={
           <button
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#465FFF] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3641f5]"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#075bbf] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#073b7a]"
             onClick={onRefresh}
             type="button"
           >
@@ -2017,7 +2021,7 @@ function FeedbackAdminPage({
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-base font-semibold text-gray-950">{feedback.route}</h3>
-                      <span className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-semibold text-[#465FFF]">
+                      <span className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-semibold text-[#075bbf]">
                         {feedback.status}
                       </span>
                     </div>
@@ -2102,12 +2106,12 @@ function RevenueAdminPage({
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Panel title="Số dư QR demo 7 ngày">
-          <div className="flex h-[300px] items-end gap-3 rounded-lg bg-gray-50 p-4">
+          <div className="flex h-[300px] items-end gap-3 rounded-3xl bg-[#f8fbff] p-4 ring-1 ring-[#e6eef8]">
             {chartData.map((day) => (
               <div className="flex min-w-0 flex-1 flex-col items-center justify-end gap-2" key={day.label}>
                 <div className="flex h-[220px] w-full items-end">
                   <div
-                    className="w-full rounded-t-lg bg-[#465FFF]"
+                    className="w-full rounded-t-2xl bg-[linear-gradient(180deg,#0a67d8,#073b7a)] shadow-[0_8px_20px_rgba(10,103,216,0.22)]"
                     style={{ height: `${Math.max((day.value / chartMax) * 100, day.value ? 10 : 2)}%` }}
                   />
                 </div>
@@ -2125,9 +2129,9 @@ function RevenueAdminPage({
               ["Chờ đối soát", formatCurrency(pendingAmount), "bg-amber-50 text-amber-700"],
               ["Kênh demo", "QR demo Thành Trung", "bg-violet-50 text-violet-700"]
             ].map(([label, value, tone]) => (
-              <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3" key={label}>
-                <span className="text-sm font-medium text-gray-700">{label}</span>
-                <span className={cn("rounded-lg px-2 py-1 text-sm font-semibold", tone)}>{value}</span>
+              <div className="flex items-center justify-between rounded-2xl border border-[#e6eef8] p-3" key={label}>
+                <span className="text-sm font-semibold text-gray-700">{label}</span>
+                <span className={cn("rounded-full px-3 py-1 text-sm font-bold", tone)}>{value}</span>
               </div>
             ))}
           </div>
@@ -2153,7 +2157,7 @@ function RevenueAdminPage({
                       <td className="px-4 py-3">{payment.bookingId}</td>
                       <td className="px-4 py-3">{payment.customerName}</td>
                       <td className="px-4 py-3">{payment.route}</td>
-                      <td className="px-4 py-3 font-semibold text-[#465FFF]">{formatCurrency(payment.amount)}</td>
+                      <td className="px-4 py-3 font-semibold text-[#075bbf]">{formatCurrency(payment.amount)}</td>
                       <td className="px-4 py-3">{formatShortDate(payment.balanceDate)}</td>
                       <td className="px-4 py-3">
                         <span className="rounded-lg bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
@@ -2197,30 +2201,30 @@ function RevenueAdminPage({
             }}
           >
             <input
-              className="h-10 rounded-lg border-gray-300 text-sm uppercase focus:border-[#465FFF] focus:ring-[#465FFF]"
+              className="h-11 rounded-2xl border-gray-300 text-sm uppercase focus:border-[#075bbf] focus:ring-[#075bbf]"
               onChange={(event) => setCouponForm((current) => ({ ...current, code: event.target.value }))}
               placeholder="Mã coupon"
               value={couponForm.code}
             />
             <input
-              className="h-10 rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+              className="h-11 rounded-2xl border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
               onChange={(event) => setCouponForm((current) => ({ ...current, title: event.target.value }))}
               placeholder="Tên ưu đãi"
               value={couponForm.title}
             />
             <input
-              className="h-10 rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+              className="h-11 rounded-2xl border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
               onChange={(event) => setCouponForm((current) => ({ ...current, discount: event.target.value }))}
               placeholder="Mức giảm"
               value={couponForm.discount}
             />
             <textarea
-              className="min-h-24 rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+              className="min-h-24 rounded-2xl border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
               onChange={(event) => setCouponForm((current) => ({ ...current, description: event.target.value }))}
               placeholder="Điều kiện áp dụng"
               value={couponForm.description}
             />
-            <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#465FFF] px-4 text-sm font-semibold text-white hover:bg-[#3641f5]" type="submit">
+            <button className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#073b7a] px-4 text-sm font-black text-white hover:bg-[#075bbf]" type="submit">
               <Plus className="h-4 w-4" />
               Lưu coupon
             </button>
@@ -2229,15 +2233,15 @@ function RevenueAdminPage({
 
         <Panel title="Coupon đang hiển thị sang user">
           <div className="grid gap-3 md:grid-cols-2">
-            {coupons.map((coupon) => (
-              <article className="rounded-lg border border-gray-200 p-4" key={coupon.id}>
+            {coupons.length ? coupons.map((coupon) => (
+              <article className="rounded-2xl border border-[#e6eef8] p-4" key={coupon.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-gray-950">{coupon.title}</p>
-                    <p className="mt-1 text-xs font-semibold text-[#465FFF]">{coupon.code} · {coupon.discount}</p>
+                    <p className="mt-1 text-xs font-semibold text-[#075bbf]">{coupon.code} · {coupon.discount}</p>
                   </div>
                   <span className={cn(
-                    "rounded-lg px-2 py-1 text-xs font-semibold",
+                    "rounded-full px-3 py-1 text-xs font-bold",
                     coupon.active ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-600"
                   )}>
                     {coupon.active ? "Đang bật" : "Đã tắt"}
@@ -2245,7 +2249,7 @@ function RevenueAdminPage({
                 </div>
                 <p className="mt-3 text-sm leading-6 text-gray-600">{coupon.description}</p>
                 <button
-                  className="mt-3 rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                  className="mt-3 rounded-2xl border border-[#dbe7f3] px-3 py-2 text-xs font-bold text-gray-600 hover:bg-[#f8fbff]"
                   onClick={() => {
                     upsertCoupon({ ...coupon, active: !coupon.active });
                     onCouponSaved();
@@ -2255,7 +2259,14 @@ function RevenueAdminPage({
                   {coupon.active ? "Tắt mã" : "Bật mã"}
                 </button>
               </article>
-            ))}
+            )) : (
+              <div className="rounded-3xl border border-dashed border-[#bad7f5] bg-[#f8fbff] p-8 text-center md:col-span-2">
+                <Gift className="mx-auto h-8 w-8 text-[#075bbf]" />
+                <p className="mt-3 text-sm font-semibold text-gray-600">
+                  Chưa có coupon. Tạo mã ở form bên trái để hiển thị sang trang user.
+                </p>
+              </div>
+            )}
           </div>
         </Panel>
       </div>
@@ -2303,7 +2314,7 @@ function BookingAdminPage({
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Panel title="Xác nhận vé xe">
           <div className="mb-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px]">
-            <label className="flex h-10 items-center gap-2 rounded-lg border border-gray-300 px-3 text-sm text-gray-500 focus-within:border-[#465FFF] focus-within:ring-4 focus-within:ring-blue-50">
+            <label className="flex h-10 items-center gap-2 rounded-lg border border-gray-300 px-3 text-sm text-gray-500 focus-within:border-[#075bbf] focus-within:ring-4 focus-within:ring-blue-50">
               <Search className="h-4 w-4" />
               <input
                 className="h-full flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0"
@@ -2336,7 +2347,7 @@ function BookingAdminPage({
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-base font-semibold text-[#465FFF]">{formatCurrency(booking.price)}</p>
+                      <p className="text-base font-semibold text-[#075bbf]">{formatCurrency(booking.price)}</p>
                       <p className="mt-1 text-xs font-medium text-gray-500">{booking.paymentMethod}</p>
                     </div>
                   </div>
@@ -2399,7 +2410,7 @@ function BookingAdminPage({
                       Từ chối
                     </button>
                     <button
-                      className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#465FFF] px-4 text-sm font-semibold text-white transition hover:bg-[#3641f5]"
+                      className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#075bbf] px-4 text-sm font-semibold text-white transition hover:bg-[#073b7a]"
                       onClick={() => onNotifyDriver(booking)}
                       type="button"
                     >
@@ -2469,7 +2480,7 @@ function BookingAdminPage({
                         <p className="text-sm font-semibold text-gray-950">{item.title}</p>
                         <p className="mt-1 text-xs text-gray-500">{item.bookingId}</p>
                       </div>
-                      <span className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-semibold text-[#465FFF]">
+                      <span className="rounded-lg bg-blue-50 px-2 py-1 text-xs font-semibold text-[#075bbf]">
                         {item.status}
                       </span>
                     </div>
@@ -2511,7 +2522,7 @@ function BookingAdminPage({
                 const Icon = item.icon;
                 return (
                   <div className="flex gap-3 rounded-lg border border-gray-200 p-3" key={item.label}>
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-blue-50 text-[#465FFF]">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-blue-50 text-[#075bbf]">
                       <Icon className="h-4 w-4" />
                     </span>
                     <div>
@@ -2533,7 +2544,7 @@ function BookingAdminPage({
                 ["4", "Theo dõi phản hồi và cập nhật nếu đổi chuyến."]
               ].map(([step, text]) => (
                 <div className="flex gap-3 rounded-lg border border-gray-200 p-3" key={step}>
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-blue-50 text-sm font-semibold text-[#465FFF]">
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-blue-50 text-sm font-semibold text-[#075bbf]">
                     {step}
                   </span>
                   <p className="text-sm leading-6 text-gray-600">{text}</p>
@@ -2558,7 +2569,7 @@ function BookingInfoBlock({
 }) {
   return (
     <div className="flex gap-3 rounded-lg bg-gray-50 p-3">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#465FFF]" />
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#075bbf]" />
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
         <p className="mt-1 text-sm font-semibold text-gray-900">{value}</p>
@@ -2638,7 +2649,7 @@ function RejectBookingModal({
                 Lý do gửi cho khách hàng
               </span>
               <textarea
-                className="min-h-32 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+                className="min-h-32 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
                 onChange={(event) => onReasonChange(event.target.value)}
                 placeholder="VD: Chuyến xe đã hết ghế trống do thay đổi xe vận hành. Nhà xe sẽ hỗ trợ chọn chuyến gần nhất."
                 value={reason}
@@ -2699,7 +2710,7 @@ function WorkspacePage({
         <Panel
           action={
             <button
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#465FFF] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#3641f5]"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#075bbf] px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#073b7a]"
               type="button"
             >
               <Plus className="h-4 w-4" />
@@ -2709,7 +2720,7 @@ function WorkspacePage({
           title={config.title}
         >
           <div className="mb-4 flex flex-col gap-3 sm:flex-row">
-            <label className="flex h-10 flex-1 items-center gap-2 rounded-lg border border-gray-300 px-3 text-sm text-gray-500 focus-within:border-[#465FFF] focus-within:ring-4 focus-within:ring-blue-50">
+            <label className="flex h-10 flex-1 items-center gap-2 rounded-lg border border-gray-300 px-3 text-sm text-gray-500 focus-within:border-[#075bbf] focus-within:ring-4 focus-within:ring-blue-50">
               <Search className="h-4 w-4" />
               <input
                 className="h-full flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0"
@@ -2757,7 +2768,7 @@ function WorkspacePage({
         </Panel>
 
         <Panel title="Trạng thái nhanh">
-          <div className="mb-5 grid h-16 w-16 place-items-center rounded-lg bg-blue-50 text-[#465FFF]">
+          <div className="mb-5 grid h-16 w-16 place-items-center rounded-lg bg-blue-50 text-[#075bbf]">
             <Icon className="h-7 w-7" />
           </div>
           <div className="space-y-3">
@@ -2813,7 +2824,7 @@ function NotificationComposer() {
         }}
       >
         <select
-          className="h-10 rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+          className="h-10 rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
           onChange={(event) => setTargetCustomerId(event.target.value)}
           value={targetCustomerId}
         >
@@ -2825,19 +2836,19 @@ function NotificationComposer() {
           ))}
         </select>
         <input
-          className="h-10 rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+          className="h-10 rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
           onChange={(event) => setTitle(event.target.value)}
           placeholder="Tiêu đề"
           value={title}
         />
         <input
-          className="h-10 rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+          className="h-10 rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
           onChange={(event) => setMessage(event.target.value)}
           placeholder="Nội dung thông báo xuống user..."
           value={message}
         />
         <button
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#465FFF] px-4 text-sm font-semibold text-white hover:bg-[#3641f5]"
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#075bbf] px-4 text-sm font-semibold text-white hover:bg-[#073b7a]"
           type="submit"
         >
           <Send className="h-4 w-4" />
@@ -2885,7 +2896,7 @@ function SettingsPage() {
       <Panel
         action={
           <button
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#465FFF] px-4 text-sm font-semibold text-white hover:bg-[#3641f5]"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#075bbf] px-4 text-sm font-semibold text-white hover:bg-[#073b7a]"
             type="button"
           >
             <Save className="h-4 w-4" />
@@ -2897,24 +2908,24 @@ function SettingsPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Tên doanh nghiệp">
             <input
-              className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+              className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
               defaultValue="Công ty vận tải Thành Trung"
             />
           </FormField>
           <FormField label="Hotline">
             <input
-              className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+              className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
               defaultValue="1900 2026"
             />
           </FormField>
           <FormField label="Email vận hành">
             <input
-              className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+              className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
               defaultValue="ops@thanhtrung.vn"
             />
           </FormField>
           <FormField label="Chi nhánh mặc định">
-            <select className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]">
+            <select className="h-10 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]">
               <option>Vinh</option>
               <option>Hoàng Mai</option>
               <option>Diễn Châu</option>
@@ -2926,7 +2937,7 @@ function SettingsPage() {
       <Panel
         action={
           <button
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#465FFF] px-4 text-sm font-semibold text-white hover:bg-[#3641f5]"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#075bbf] px-4 text-sm font-semibold text-white hover:bg-[#073b7a]"
             onClick={saveUserSearchConfig}
             type="button"
           >
@@ -2939,7 +2950,7 @@ function SettingsPage() {
         <div className="grid gap-4">
           <FormField label="Địa điểm hiển thị trong ô tìm kiếm">
             <textarea
-              className="min-h-24 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+              className="min-h-24 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
               onChange={(event) =>
                 setSearchConfig((current) => ({
                   ...current,
@@ -2951,7 +2962,7 @@ function SettingsPage() {
           </FormField>
           <FormField label="Điểm đón gợi ý">
             <textarea
-              className="min-h-24 w-full rounded-lg border-gray-300 text-sm focus:border-[#465FFF] focus:ring-[#465FFF]"
+              className="min-h-24 w-full rounded-lg border-gray-300 text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
               onChange={(event) =>
                 setSearchConfig((current) => ({
                   ...current,
@@ -2988,7 +2999,7 @@ function SettingsPage() {
           <div className="space-y-3">
             {["Vinh", "Hoàng Mai", "Diễn Châu", "Quỳnh Lưu"].map((location) => (
               <div key={location} className="flex items-center gap-3 rounded-lg border border-gray-200 p-3">
-                <MapPin className="h-4 w-4 text-[#465FFF]" />
+                <MapPin className="h-4 w-4 text-[#075bbf]" />
                 <span className="text-sm font-medium text-gray-700">{location}</span>
               </div>
             ))}
@@ -3009,12 +3020,12 @@ function Panel({
   title: string;
 }) {
   return (
-    <section className="rounded-lg border border-gray-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between gap-3 border-b border-gray-200 px-4 py-3">
-        <h2 className="text-base font-semibold text-gray-950">{title}</h2>
+    <section className="overflow-hidden rounded-3xl border border-[#e6eef8] bg-white shadow-[0_14px_44px_rgba(16,24,40,0.06)]">
+      <div className="flex items-center justify-between gap-3 border-b border-[#eef2f7] bg-[#fbfdff] px-5 py-4">
+        <h2 className="text-base font-black text-gray-950">{title}</h2>
         {action}
       </div>
-      <div className="p-4">{children}</div>
+      <div className="p-5">{children}</div>
     </section>
   );
 }
