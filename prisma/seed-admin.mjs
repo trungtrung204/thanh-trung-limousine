@@ -6,11 +6,16 @@ import { PrismaPg } from "@prisma/adapter-pg";
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  throw new Error("Missing DATABASE_URL. Add it to .env.local before seeding admin.");
+  throw new Error("Missing DATABASE_URL. Add the Supabase pooled connection string before seeding admin.");
 }
 
-const adminEmail = process.env.ADMIN_EMAIL || "admin@thanhtrung.local";
-const adminPassword = process.env.ADMIN_PASSWORD || "123456";
+const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+const adminPassword = process.env.ADMIN_PASSWORD;
+
+if (!adminEmail || !adminPassword) {
+  throw new Error("Missing ADMIN_EMAIL or ADMIN_PASSWORD. Add them to your local environment before seeding admin.");
+}
+
 const prisma = new PrismaClient({
   adapter: new PrismaPg(databaseUrl)
 });
@@ -22,12 +27,13 @@ await prisma.user.upsert({
     email: adminEmail,
     name: "Admin",
     passwordHash,
-    phone: "0000000000",
+    phone: null,
     role: "ADMIN"
   },
   update: {
     name: "Admin",
     passwordHash,
+    phone: null,
     role: "ADMIN"
   },
   where: {
@@ -37,4 +43,4 @@ await prisma.user.upsert({
 
 await prisma.$disconnect();
 
-console.log(`Admin ready: admin / ${adminPassword} (${adminEmail})`);
+console.log(`Admin ready: ${adminEmail}`);

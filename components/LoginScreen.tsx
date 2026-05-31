@@ -176,7 +176,9 @@ export default function LoginScreen() {
 
           <div>
             <h1 className="text-2xl font-black text-gray-950">Đăng nhập quản trị</h1>
-            <p className="mt-2 text-sm text-gray-500">Tài khoản demo: admin / 123456</p>
+            <p className="mt-2 text-sm text-gray-500">
+              Tài khoản admin được tạo bằng `npm run db:seed:admin` từ ADMIN_EMAIL và ADMIN_PASSWORD.
+            </p>
             <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold leading-6 text-amber-800">
               Đây là khu vực quản trị. Chỉ nhân sự vận hành được phép truy cập.
             </p>

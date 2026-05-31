@@ -15,6 +15,15 @@ function normalizePhone(value: unknown) {
   return typeof value === "string" ? value.replace(/\s+/g, "").trim() : "";
 }
 
+function isUniqueConstraintError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "P2002"
+  );
+}
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Record<string, unknown>;
@@ -23,7 +32,7 @@ export async function POST(request: Request) {
     const phone = normalizePhone(body.phone);
     const password = normalizeText(body.password);
 
-    if (!name || !email || !phone || !password) {
+    if (!name || !email || !password) {
       return NextResponse.json({ error: "Vui lòng nhập đầy đủ thông tin đăng ký." }, { status: 400 });
     }
 
@@ -31,17 +40,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Mật khẩu cần ít nhất 6 ký tự." }, { status: 400 });
     }
 
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [{ email }, { phone }]
-      }
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: "Email hoặc số điện thoại này đã được đăng ký." },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: "Email này đã được đăng ký." }, { status: 409 });
+    }
+
+    if (phone) {
+      const existingPhone = await prisma.user.findUnique({
+        where: { phone }
+      });
+
+      if (existingPhone) {
+        return NextResponse.json({ error: "Số điện thoại này đã được đăng ký." }, { status: 409 });
+      }
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
@@ -50,7 +64,7 @@ export async function POST(request: Request) {
         email,
         name,
         passwordHash,
-        phone,
+        phone: phone || null,
         role: "USER"
       },
       select: {
@@ -66,7 +80,11 @@ export async function POST(request: Request) {
     const response = NextResponse.json({ user: toPublicUser(user) }, { status: 201 });
     response.cookies.set(authCookieName, token, getAuthCookieOptions());
     return response;
-  } catch {
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      return NextResponse.json({ error: "Email này đã được đăng ký." }, { status: 409 });
+    }
+
     return NextResponse.json(
       { error: "Không thể tạo tài khoản. Vui lòng kiểm tra kết nối database." },
       { status: 500 }

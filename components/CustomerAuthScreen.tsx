@@ -15,10 +15,6 @@ import {
   ShieldCheck,
   UserRound
 } from "lucide-react";
-import {
-  getCurrentCustomer,
-  setCurrentCustomerSession
-} from "@/lib/local-db";
 
 type AuthMode = "login" | "register";
 type AuthApiUser = {
@@ -28,15 +24,6 @@ type AuthApiUser = {
   phone: string | null;
   role: "USER" | "ADMIN" | "DRIVER";
 };
-
-function toCustomerSession(user: AuthApiUser) {
-  return {
-    email: user.email,
-    id: user.id,
-    name: user.name,
-    phone: user.phone || ""
-  };
-}
 
 export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode }) {
   const router = useRouter();
@@ -62,12 +49,6 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
     let cancelled = false;
 
     async function checkCurrentSession() {
-      const customer = getCurrentCustomer();
-      if (customer) {
-        router.replace("/");
-        return;
-      }
-
       try {
         const response = await fetch("/api/auth/me", { cache: "no-store" });
         if (!response.ok || cancelled) {
@@ -76,11 +57,10 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
 
         const data = (await response.json()) as { user?: AuthApiUser | null };
         if (data.user?.role === "USER") {
-          setCurrentCustomerSession(toCustomerSession(data.user));
           router.replace("/");
         }
       } catch {
-        // Keep the existing localStorage demo flow usable when the API is unavailable.
+        // Stay on the auth screen when the API/database is not ready.
       }
     }
 
@@ -102,8 +82,6 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
       return;
     }
 
-    const customer = toCustomerSession(user);
-    setCurrentCustomerSession(customer);
     setMessage({
       text: "Đăng nhập thành công.",
       type: "success"
@@ -133,7 +111,7 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
 
     try {
       if (activeMode === "register") {
-        if (!form.name.trim() || !form.email.trim() || !form.phone.trim() || !form.password) {
+        if (!form.name.trim() || !form.email.trim() || !form.password) {
           setMessage({ type: "error", text: "Vui lòng nhập đầy đủ thông tin đăng ký." });
           setIsSubmitting(false);
           return;
@@ -308,7 +286,7 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
                   <input
                     className="h-full flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0"
                     onChange={(event) => updateField("phone", event.target.value)}
-                    placeholder="09xxxxxxxx"
+                    placeholder="09xxxxxxxx (không bắt buộc)"
                     value={form.phone}
                   />
                 </Field>

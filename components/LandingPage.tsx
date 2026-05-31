@@ -43,13 +43,10 @@ import {
   X
 } from "lucide-react";
 import {
-  getCurrentCustomer,
   listCoupons,
   listSearchConfig,
-  logoutCustomer,
   type Coupon,
-  type CustomerBooking,
-  type Customer
+  type CustomerBooking
 } from "@/lib/local-db";
 import type { ApiBooking, ApiTrip } from "@/lib/transport-api";
 import {
@@ -444,10 +441,18 @@ const footerGroups = [
   }
 ];
 
+type CustomerSession = {
+  email: string;
+  id: string;
+  name: string;
+  phone: string;
+  role: "USER" | "ADMIN" | "DRIVER";
+};
+
 export default function LandingPage() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [customer, setCustomer] = useState<Omit<Customer, "password" | "createdAt"> | null>(null);
+  const [customer, setCustomer] = useState<CustomerSession | null>(null);
   const [toast, setToast] = useState("");
   const [bookingTrip, setBookingTrip] = useState<PopularRoute | null>(null);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
@@ -483,17 +488,45 @@ export default function LandingPage() {
   const languageLabel = languageOptions.find((option) => option.code === language)?.short || "VI";
 
   useEffect(() => {
-    const currentCustomer = getCurrentCustomer();
+    async function refreshCurrentUser() {
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        if (!response.ok) {
+          setCustomer(null);
+          setCustomerBookings([]);
+          return;
+        }
+
+        const data = (await response.json()) as { user?: CustomerSession | null };
+        if (data.user?.role === "USER") {
+          setCustomer({
+            ...data.user,
+            phone: data.user.phone || ""
+          });
+
+          const bookingsResponse = await fetch("/api/user/bookings", { cache: "no-store" });
+          if (bookingsResponse.ok) {
+            const bookingData = (await bookingsResponse.json()) as { bookings?: ApiBooking[] };
+            setCustomerBookings((bookingData.bookings || []).map(apiBookingToCustomerBooking));
+          }
+          return;
+        }
+
+        setCustomer(null);
+        setCustomerBookings([]);
+      } catch {
+        setCustomer(null);
+        setCustomerBookings([]);
+      }
+    }
+
     const storedLanguage = readStoredLanguage();
     setLanguage(storedLanguage);
-    setCustomer(currentCustomer);
     setSearchLocations(listSearchConfig().locations);
     setAdminCoupons(listCoupons().filter((coupon) => coupon.active));
     setSearchDate(getDefaultTravelDate());
-    refreshServerTrips();
-    if (currentCustomer) {
-      refreshUserBookings();
-    }
+    void refreshServerTrips();
+    void refreshCurrentUser();
 
     if (window.location.search.includes("booking=created")) {
       setToast("Đơn đặt vé đã được gửi đến nhà xe. Vui lòng chờ xác nhận.");
@@ -528,20 +561,6 @@ export default function LandingPage() {
     }
   }
 
-  async function refreshUserBookings() {
-    try {
-      const response = await fetch("/api/user/bookings", { cache: "no-store" });
-      if (!response.ok) {
-        setCustomerBookings([]);
-        return;
-      }
-      const data = (await response.json()) as { bookings?: ApiBooking[] };
-      setCustomerBookings((data.bookings || []).map(apiBookingToCustomerBooking));
-    } catch {
-      setCustomerBookings([]);
-    }
-  }
-
   function handleLanguageChange(value: string) {
     const nextLanguage = languageOptions.some((option) => option.code === value)
       ? (value as Language)
@@ -550,9 +569,8 @@ export default function LandingPage() {
     saveStoredLanguage(nextLanguage);
   }
 
-  function handleLogout() {
-    logoutCustomer();
-    void fetch("/api/auth/logout", { method: "POST" });
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
     setCustomer(null);
     setCustomerBookings([]);
     setToast("Bạn đã đăng xuất tài khoản khách hàng.");
@@ -1483,7 +1501,7 @@ function UserBookingPanel({
   customer
 }: {
   bookings: CustomerBooking[];
-  customer: Omit<Customer, "password" | "createdAt"> | null;
+  customer: CustomerSession | null;
 }) {
   const visibleBookings = customer
     ? bookings.filter((booking) => booking.customerId === customer.id).slice(0, 3)

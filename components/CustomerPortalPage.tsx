@@ -33,11 +33,8 @@ import {
 } from "lucide-react";
 import {
   addCustomerFeedback,
-  getCurrentCustomer,
   listCustomerNotifications,
   listCustomerFeedbacks,
-  logoutCustomer,
-  type Customer,
   type CustomerBooking,
   type CustomerFeedback,
   type CustomerNotification,
@@ -104,11 +101,34 @@ export default function CustomerPortalPage({ section }: { section: string }) {
   const pageKey = (section in pageConfig ? section : pageAliases[section] || "my-tickets") as SectionKey;
   const config = pageConfig[pageKey];
   const Icon = config.icon;
-  const [customer, setCustomer] = useState<Omit<Customer, "password" | "createdAt"> | null>(null);
+  const [customer, setCustomer] = useState<CustomerSession>(null);
   const [bookings, setBookings] = useState<CustomerBooking[]>([]);
   const [notifications, setNotifications] = useState<CustomerNotification[]>([]);
   const [routeInventory, setRouteInventory] = useState<RouteInventory[]>([]);
   const [language, setLanguage] = useState<Language>("vi");
+
+  const refreshCurrentUser = useCallback(async () => {
+    try {
+      const response = await fetch("/api/auth/me", { cache: "no-store" });
+      if (!response.ok) {
+        setCustomer(null);
+        return;
+      }
+
+      const data = (await response.json()) as { user?: NonNullable<CustomerSession> | null };
+      if (data.user?.role === "USER") {
+        setCustomer({
+          ...data.user,
+          phone: data.user.phone || ""
+        });
+        return;
+      }
+
+      setCustomer(null);
+    } catch {
+      setCustomer(null);
+    }
+  }, []);
 
   const refreshServerData = useCallback(async () => {
     try {
@@ -138,11 +158,16 @@ export default function CustomerPortalPage({ section }: { section: string }) {
 
   useEffect(() => {
     setLanguage(readStoredLanguage());
-    const currentCustomer = getCurrentCustomer();
-    setCustomer(currentCustomer);
     setNotifications(listCustomerNotifications());
+    void refreshCurrentUser();
     void refreshServerData();
-  }, [refreshServerData]);
+  }, [refreshCurrentUser, refreshServerData]);
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setCustomer(null);
+    setBookings([]);
+  }
 
   function handleLanguageChange(value: string) {
     const nextLanguage = languageOptions.some((option) => option.code === value)
@@ -204,10 +229,7 @@ export default function CustomerPortalPage({ section }: { section: string }) {
             {customer ? (
               <button
                 className="rounded-full border border-[#0a67d8] px-4 py-2 text-sm font-bold text-[#0a67d8]"
-                onClick={() => {
-                  logoutCustomer();
-                  setCustomer(null);
-                }}
+                onClick={() => void handleLogout()}
                 type="button"
               >
                 {copy.auth.logout}
@@ -320,7 +342,13 @@ type TicketCopy = {
   };
 };
 
-type CustomerSession = Omit<Customer, "password" | "createdAt"> | null;
+type CustomerSession = {
+  email: string;
+  id: string;
+  name: string;
+  phone: string;
+  role: "USER" | "ADMIN" | "DRIVER";
+} | null;
 
 type UtilityItem = {
   icon: LucideIcon;
