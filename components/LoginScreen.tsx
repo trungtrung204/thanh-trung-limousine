@@ -15,17 +15,6 @@ import {
   UserRound
 } from "lucide-react";
 
-const demoAccount = {
-  username: "admin",
-  password: "123456",
-  displayName: "Admin"
-};
-
-const adminAuthKeys = {
-  loggedIn: "admin_auth_logged_in",
-  name: "admin_auth_name"
-};
-
 export default function LoginScreen() {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -38,16 +27,35 @@ export default function LoginScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const isLoggedIn =
-      window.localStorage.getItem(adminAuthKeys.loggedIn) === "1" ||
-      window.sessionStorage.getItem(adminAuthKeys.loggedIn) === "1";
+    let cancelled = false;
 
-    if (isLoggedIn) {
-      router.replace("/admin");
+    async function checkAdminSession() {
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        if (!response.ok || cancelled) {
+          return;
+        }
+
+        const data = (await response.json()) as {
+          user?: { role?: string } | null;
+        };
+
+        if (data.user?.role === "ADMIN") {
+          router.replace("/admin");
+        }
+      } catch {
+        // Stay on the login screen when the API/database is not ready.
+      }
     }
+
+    checkAdminSession();
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage(null);
 
@@ -57,23 +65,36 @@ export default function LoginScreen() {
       return;
     }
 
-    if (nextUsername !== demoAccount.username || password !== demoAccount.password) {
-      setMessage({ type: "error", text: "Sai tài khoản hoặc mật khẩu." });
-      return;
-    }
-
     setIsSubmitting(true);
-    window.localStorage.removeItem(adminAuthKeys.loggedIn);
-    window.localStorage.removeItem(adminAuthKeys.name);
-    window.sessionStorage.removeItem(adminAuthKeys.loggedIn);
-    window.sessionStorage.removeItem(adminAuthKeys.name);
 
-    const storage = remember ? window.localStorage : window.sessionStorage;
-    storage.setItem(adminAuthKeys.loggedIn, "1");
-    storage.setItem(adminAuthKeys.name, demoAccount.displayName);
-    setMessage({ type: "success", text: "Đăng nhập thành công. Đang chuyển trang..." });
+    try {
+      const response = await fetch("/api/auth/login", {
+        body: JSON.stringify({
+          identifier: nextUsername,
+          password,
+          remember,
+          role: "ADMIN"
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST"
+      });
+      const data = (await response.json()) as { error?: string };
 
-    window.setTimeout(() => router.replace("/admin"), 520);
+      if (!response.ok) {
+        setMessage({ type: "error", text: data.error || "Không thể đăng nhập." });
+        setIsSubmitting(false);
+        return;
+      }
+
+      setMessage({ type: "success", text: "Đăng nhập thành công. Đang chuyển trang..." });
+      window.setTimeout(() => router.replace("/admin"), 520);
+    } catch {
+      setMessage({
+        type: "error",
+        text: "Không thể đăng nhập. Vui lòng kiểm tra kết nối database."
+      });
+      setIsSubmitting(false);
+    }
   }
 
   return (

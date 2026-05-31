@@ -172,11 +172,6 @@ const pageContent: Record<PageKey, { title: string; description: string }> = {
 
 const statusOptions: TripStatus[] = ["Đang chạy", "Sắp chạy", "Hoàn thành", "Đã hủy"];
 
-const adminAuthKeys = {
-  loggedIn: "admin_auth_logged_in",
-  name: "admin_auth_name"
-};
-
 const statusTone: Record<TripStatus, string> = {
   "Đang chạy": "border-emerald-200 bg-emerald-50 text-emerald-700",
   "Sắp chạy": "border-blue-200 bg-blue-50 text-blue-700",
@@ -287,31 +282,52 @@ export default function AdminDashboard() {
   }>({ open: false, mode: "add", trip: null });
 
   useEffect(() => {
-    const isLoggedIn =
-      window.localStorage.getItem(adminAuthKeys.loggedIn) === "1" ||
-      window.sessionStorage.getItem(adminAuthKeys.loggedIn) === "1";
+    let cancelled = false;
 
-    if (!isLoggedIn) {
-      router.replace("/admin/login");
-      return;
+    async function bootstrapAdmin() {
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        const data = response.ok
+          ? ((await response.json()) as { user?: { role?: string } | null })
+          : { user: null };
+
+        if (cancelled) {
+          return;
+        }
+
+        if (data.user?.role !== "ADMIN") {
+          router.replace("/admin/login");
+          return;
+        }
+
+        const hash = window.location.hash.replace("#", "") as PageKey;
+        if (navItems.some((item) => item.key === hash)) {
+          setActivePage(hash);
+        }
+
+        const savedTrips = listAdminTrips(initialTrips);
+        setTrips(savedTrips);
+        savedTrips.forEach((trip) => syncRouteInventoryFromTrip(toRouteInventory(trip)));
+        setCustomerBookings(listBookings());
+        setRegisteredCustomers(listCustomers());
+        setCustomerFeedbacks(listCustomerFeedbacks());
+        setCustomerNotifications(listCustomerNotifications());
+        setDriverNotifications(listDriverNotifications());
+        setPaymentTransactions(listPaymentTransactions());
+        setCoupons(listCoupons());
+        setIsAuthorized(true);
+      } catch {
+        if (!cancelled) {
+          router.replace("/admin/login");
+        }
+      }
     }
 
-    const hash = window.location.hash.replace("#", "") as PageKey;
-    if (navItems.some((item) => item.key === hash)) {
-      setActivePage(hash);
-    }
+    bootstrapAdmin();
 
-    const savedTrips = listAdminTrips(initialTrips);
-    setTrips(savedTrips);
-    savedTrips.forEach((trip) => syncRouteInventoryFromTrip(toRouteInventory(trip)));
-    setCustomerBookings(listBookings());
-    setRegisteredCustomers(listCustomers());
-    setCustomerFeedbacks(listCustomerFeedbacks());
-    setCustomerNotifications(listCustomerNotifications());
-    setDriverNotifications(listDriverNotifications());
-    setPaymentTransactions(listPaymentTransactions());
-    setCoupons(listCoupons());
-    setIsAuthorized(true);
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   useEffect(() => {
@@ -422,11 +438,12 @@ export default function AdminDashboard() {
     setToast(`Đã gửi thông báo cho ${notification.driverName}.`);
   }
 
-  function handleLogout() {
-    window.localStorage.removeItem(adminAuthKeys.loggedIn);
-    window.localStorage.removeItem(adminAuthKeys.name);
-    window.sessionStorage.removeItem(adminAuthKeys.loggedIn);
-    window.sessionStorage.removeItem(adminAuthKeys.name);
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Still send the operator back to login if logout API is unavailable.
+    }
     router.replace("/admin/login");
   }
 

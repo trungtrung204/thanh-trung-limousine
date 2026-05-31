@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+  DRIVER
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  CANCELLED
+  CHANGE_REQUESTED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  DEMO_RECORDED
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  phone        String?   @unique
+  email        String    @unique
+  passwordHash String?
+  role         Role      @default(USER)
+  bookings     Booking[]
+  payments     Payment[]
+  feedbacks    Feedback[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Trip {
+  id          String     @id @default(cuid())
+  code        String     @unique
+  route       String
+  from        String
+  to          String
+  departureAt DateTime
+  arrivalAt   DateTime?
+  vehicleNo   String?
+  driverName  String?
+  price       Int
+  totalSeats  Int
+  status      String     @default("SCHEDULED")
+  bookings    Booking[]
+  seatHolds   SeatHold[]
+  tickets     Ticket[]
+  feedbacks   Feedback[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([from, to])
+  @@index([departureAt])
+}
+
+model Booking {
+  id           String        @id @default(cuid())
+  code         String        @unique
+  userId       String
+  tripId       String
+  status       BookingStatus @default(PENDING)
+  seats        Int           @default(1)
+  totalAmount  Int
+  pickupPoint  String?
+  dropoffPoint String?
+  note         String?
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trip         Trip          @relation(fields: [tripId], references: [id], onDelete: Restrict)
+  seatHolds    SeatHold[]
+  payments     Payment[]
+  tickets      Ticket[]
+  feedbacks    Feedback[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([tripId])
+  @@index([status])
+}
+
+model SeatHold {
+  id           String         @id @default(cuid())
+  tripId       String
+  bookingId    String?
+  seatNo       String
+  customerName String?
+  expiresAt    DateTime
+  status       BookingStatus  @default(PENDING)
+  trip         Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  booking      Booking?       @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([tripId, seatNo])
+  @@index([bookingId])
+  @@index([expiresAt])
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  bookingId   String?
+  userId      String?
+  amount      Int
+  status      PaymentStatus @default(PENDING)
+  method      String
+  provider    String?
+  reference   String?       @unique
+  paidAt      DateTime?
+  balanceDate DateTime?
+  booking     Booking?      @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  user        User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([bookingId])
+  @@index([userId])
+  @@index([status])
+  @@index([balanceDate])
+}
+
+model Ticket {
+  id        String   @id @default(cuid())
+  bookingId String
+  tripId    String
+  seatNo    String
+  qrCode    String?
+  issuedAt  DateTime @default(now())
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tripId, seatNo])
+  @@index([bookingId])
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String?
+  bookingId String?
+  tripId    String?
+  rating    Int
+  message   String
+  status    String   @default("PENDING")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  booking   Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  trip      Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([bookingId])
+  @@index([tripId])
+}

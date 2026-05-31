@@ -291,6 +291,15 @@ export function loginCustomer(emailOrPhone: string, password: string) {
 }
 
 export function setCurrentCustomer(customer: Customer) {
+  setCurrentCustomerSession(customer);
+}
+
+export function setCurrentCustomerSession(customer: {
+  email: string;
+  id: string;
+  name: string;
+  phone: string;
+}) {
   writeJson(keys.currentCustomer, {
     email: customer.email,
     id: customer.id,

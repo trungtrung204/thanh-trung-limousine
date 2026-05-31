@@ -18,11 +18,26 @@ import {
 import {
   createBookingFromPending,
   getCurrentCustomer,
-  loginCustomer,
-  registerCustomer
+  setCurrentCustomerSession
 } from "@/lib/local-db";
 
 type AuthMode = "login" | "register";
+type AuthApiUser = {
+  email: string;
+  id: string;
+  name: string;
+  phone: string | null;
+  role: "USER" | "ADMIN" | "DRIVER";
+};
+
+function toCustomerSession(user: AuthApiUser) {
+  return {
+    email: user.email,
+    id: user.id,
+    name: user.name,
+    phone: user.phone || ""
+  };
+}
 
 export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode }) {
   const router = useRouter();
@@ -45,17 +60,52 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
   }, [mode]);
 
   useEffect(() => {
-    const customer = getCurrentCustomer();
-    if (customer) {
-      router.replace("/");
+    let cancelled = false;
+
+    async function checkCurrentSession() {
+      const customer = getCurrentCustomer();
+      if (customer) {
+        router.replace("/");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        if (!response.ok || cancelled) {
+          return;
+        }
+
+        const data = (await response.json()) as { user?: AuthApiUser | null };
+        if (data.user?.role === "USER") {
+          setCurrentCustomerSession(toCustomerSession(data.user));
+          router.replace("/");
+        }
+      } catch {
+        // Keep the existing localStorage demo flow usable when the API is unavailable.
+      }
     }
+
+    checkCurrentSession();
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   function updateField(field: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
   }
 
-  function completeAuth(customer: NonNullable<ReturnType<typeof getCurrentCustomer>>) {
+  function completeAuth(user: AuthApiUser) {
+    if (user.role !== "USER") {
+      setMessage({ type: "error", text: "Tài khoản này không phải tài khoản khách hàng." });
+      setIsSubmitting(false);
+      return;
+    }
+
+    const customer = toCustomerSession(user);
+    setCurrentCustomerSession(customer);
+
     let booking = null;
     try {
       booking = createBookingFromPending(customer);
@@ -64,6 +114,7 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
         text: error instanceof Error ? error.message : "Không thể tạo vé đang chờ. Vui lòng đặt lại.",
         type: "error"
       });
+      setIsSubmitting(false);
       return;
     }
     setMessage({
@@ -75,55 +126,71 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
     window.setTimeout(() => router.replace(booking ? "/?booking=created" : "/"), 450);
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function submitAuth(endpoint: "/api/auth/login" | "/api/auth/register", payload: object) {
+    const response = await fetch(endpoint, {
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
+      method: "POST"
+    });
+    const data = (await response.json()) as { error?: string; user?: AuthApiUser };
+
+    if (!response.ok || !data.user) {
+      throw new Error(data.error || "Không thể xác thực tài khoản.");
+    }
+
+    return data.user;
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage(null);
     setIsSubmitting(true);
 
-    if (activeMode === "register") {
-      if (!form.name.trim() || !form.email.trim() || !form.phone.trim() || !form.password) {
-        setMessage({ type: "error", text: "Vui lòng nhập đầy đủ thông tin đăng ký." });
+    try {
+      if (activeMode === "register") {
+        if (!form.name.trim() || !form.email.trim() || !form.phone.trim() || !form.password) {
+          setMessage({ type: "error", text: "Vui lòng nhập đầy đủ thông tin đăng ký." });
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (form.password.length < 6) {
+          setMessage({ type: "error", text: "Mật khẩu cần ít nhất 6 ký tự." });
+          setIsSubmitting(false);
+          return;
+        }
+
+        const user = await submitAuth("/api/auth/register", {
+          email: form.email,
+          name: form.name,
+          password: form.password,
+          phone: form.phone
+        });
+
+        completeAuth(user);
+        return;
+      }
+
+      if (!form.emailOrPhone.trim() || !form.password) {
+        setMessage({ type: "error", text: "Vui lòng nhập email/số điện thoại và mật khẩu." });
         setIsSubmitting(false);
         return;
       }
 
-      if (form.password.length < 6) {
-        setMessage({ type: "error", text: "Mật khẩu cần ít nhất 6 ký tự." });
-        setIsSubmitting(false);
-        return;
-      }
-
-      const result = registerCustomer({
-        email: form.email,
-        name: form.name,
+      const user = await submitAuth("/api/auth/login", {
+        identifier: form.emailOrPhone,
         password: form.password,
-        phone: form.phone
+        role: "USER"
       });
 
-      if (result.error || !result.customer) {
-        setMessage({ type: "error", text: result.error || "Không thể tạo tài khoản." });
-        setIsSubmitting(false);
-        return;
-      }
-
-      completeAuth(result.customer);
-      return;
-    }
-
-    if (!form.emailOrPhone.trim() || !form.password) {
-      setMessage({ type: "error", text: "Vui lòng nhập email/số điện thoại và mật khẩu." });
+      completeAuth(user);
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Không thể đăng nhập."
+      });
       setIsSubmitting(false);
-      return;
     }
-
-    const result = loginCustomer(form.emailOrPhone, form.password);
-    if (result.error || !result.customer) {
-      setMessage({ type: "error", text: result.error || "Không thể đăng nhập." });
-      setIsSubmitting(false);
-      return;
-    }
-
-    completeAuth(result.customer);
   }
 
   return (
