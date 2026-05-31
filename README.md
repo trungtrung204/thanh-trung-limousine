@@ -11,7 +11,6 @@
 - Stack hiện tại: Next.js App Router, React, TypeScript, Tailwind CSS, Framer Motion, ApexCharts.
 
 ## Chạy dự án
-
 Yêu cầu Node.js 20.x hoặc mới hơn.
 
 ```bash
