@@ -7,6 +7,9 @@ out
 dist
 .next-dev.log
 .next-dev.err.log
+.env
+.env.local
+data.env
 .env*
 !.env.example
 npm-debug.log*

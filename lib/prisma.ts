@@ -5,18 +5,22 @@ const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
 
-// Keeps local builds working before a real PostgreSQL URL is configured.
-const databaseUrl =
-  process.env.DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/thanhtrung?schema=public";
+function createPrismaClient() {
+  const databaseUrl = process.env.DATABASE_URL;
 
-const adapter = new PrismaPg(databaseUrl);
+  if (!databaseUrl) {
+    throw new Error("Missing DATABASE_URL. Add the Supabase pooled connection string to your environment.");
+  }
+
+  return new PrismaClient({
+    adapter: new PrismaPg(databaseUrl),
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"]
+  });
+}
 
 export const prisma =
   globalForPrisma.prisma ??
-  new PrismaClient({
-    adapter,
-    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"]
-  });
+  createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;

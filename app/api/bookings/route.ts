@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -15,6 +14,15 @@ function normalizeSeatNos(value: unknown) {
         .map((seat) => (typeof seat === "string" ? seat.trim().toUpperCase() : ""))
         .filter(Boolean)
     )
+  );
+}
+
+function isUniqueConstraintError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === "P2002"
   );
 }
 
@@ -97,7 +105,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ booking: mapBookingToApi(booking) }, { status: 201 });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    if (isUniqueConstraintError(error)) {
       return NextResponse.json({ error: "Ghế đã có người đặt" }, { status: 409 });
     }
 
