@@ -1,6 +1,7 @@
 export type TripStatus = "Đang chạy" | "Sắp chạy" | "Hoàn thành" | "Đã hủy";
 
 export type Trip = {
+  id?: string;
   code: string;
   route: string;
   time: string;

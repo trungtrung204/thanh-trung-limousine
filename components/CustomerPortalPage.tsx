@@ -1,7 +1,7 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -34,18 +34,16 @@ import {
 import {
   addCustomerFeedback,
   getCurrentCustomer,
-  listBookings,
   listCustomerNotifications,
   listCustomerFeedbacks,
-  listRouteInventory,
   logoutCustomer,
-  requestBookingChange,
   type Customer,
   type CustomerBooking,
   type CustomerFeedback,
   type CustomerNotification,
   type RouteInventory
 } from "@/lib/local-db";
+import type { ApiBooking, ApiTrip } from "@/lib/transport-api";
 import {
   languageOptions,
   portalCopy,
@@ -112,14 +110,39 @@ export default function CustomerPortalPage({ section }: { section: string }) {
   const [routeInventory, setRouteInventory] = useState<RouteInventory[]>([]);
   const [language, setLanguage] = useState<Language>("vi");
 
+  const refreshServerData = useCallback(async () => {
+    try {
+      const [bookingsResponse, tripsResponse] = await Promise.all([
+        fetch("/api/user/bookings", { cache: "no-store" }),
+        fetch("/api/trips", { cache: "no-store" })
+      ]);
+
+      if (bookingsResponse.ok) {
+        const bookingData = (await bookingsResponse.json()) as { bookings?: ApiBooking[] };
+        setBookings((bookingData.bookings || []).map(apiBookingToCustomerBooking));
+      } else {
+        setBookings([]);
+      }
+
+      if (tripsResponse.ok) {
+        const tripsData = (await tripsResponse.json()) as { trips?: ApiTrip[] };
+        setRouteInventory((tripsData.trips || []).map(apiTripToRouteInventory));
+      } else {
+        setRouteInventory([]);
+      }
+    } catch {
+      setBookings([]);
+      setRouteInventory([]);
+    }
+  }, []);
+
   useEffect(() => {
     setLanguage(readStoredLanguage());
     const currentCustomer = getCurrentCustomer();
     setCustomer(currentCustomer);
-    setBookings(listBookings());
     setNotifications(listCustomerNotifications());
-    setRouteInventory(listRouteInventory());
-  }, []);
+    void refreshServerData();
+  }, [refreshServerData]);
 
   function handleLanguageChange(value: string) {
     const nextLanguage = languageOptions.some((option) => option.code === value)
@@ -410,8 +433,7 @@ function CancelSection({
       return;
     }
 
-    const updated = requestBookingChange(bookingId, requestReason || content.defaultReason);
-    setRequestStatus(updated ? content.requestSent : content.noRequestable);
+    setRequestStatus("Yêu cầu đã được ghi nhận trên giao diện. API đổi/hủy sẽ được nối với database ở bước tiếp theo.");
     setRequestReason("");
   }
 
@@ -1292,6 +1314,43 @@ function EmptyState({ text }: { text: string }) {
       <p className="mx-auto mt-3 max-w-md text-sm font-semibold leading-6 text-[#667085]">{text}</p>
     </div>
   );
+}
+
+function apiBookingToCustomerBooking(booking: ApiBooking): CustomerBooking {
+  return {
+    createdAt: booking.createdAt,
+    customerEmail: booking.customerEmail,
+    customerId: booking.customerId,
+    customerName: booking.customerName,
+    customerPhone: booking.customerPhone,
+    dropoffPoint: booking.dropoffPoint,
+    from: booking.from,
+    id: booking.code,
+    paymentMethod: booking.paymentMethod,
+    paymentStatus: booking.paymentStatus === "Chờ thanh toán" ? "Chờ thanh toán" : "Đã ghi nhận demo",
+    pickupPoint: booking.pickupPoint,
+    price: booking.price,
+    route: booking.route,
+    seatCodes: booking.seatCodes,
+    seats: booking.seats,
+    status: booking.status === "CONFIRMED" ? "Đã xác nhận" : booking.status === "REJECTED" ? "Từ chối" : booking.status === "CANCELLED" ? "Đã hủy" : "Chờ xác nhận",
+    to: booking.to,
+    travelDate: booking.travelDate
+  };
+}
+
+function apiTripToRouteInventory(trip: ApiTrip): RouteInventory {
+  return {
+    code: trip.code,
+    driver: trip.driver,
+    price: trip.price,
+    route: trip.route,
+    sold: trip.sold,
+    status: trip.status as RouteInventory["status"],
+    time: trip.time,
+    total: trip.total,
+    vehicle: trip.vehicle
+  };
 }
 
 function getStatusText(status: CustomerBooking["status"], copy: TicketCopy) {

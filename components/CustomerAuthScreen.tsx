@@ -16,7 +16,6 @@ import {
   UserRound
 } from "lucide-react";
 import {
-  createBookingFromPending,
   getCurrentCustomer,
   setCurrentCustomerSession
 } from "@/lib/local-db";
@@ -105,25 +104,11 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
 
     const customer = toCustomerSession(user);
     setCurrentCustomerSession(customer);
-
-    let booking = null;
-    try {
-      booking = createBookingFromPending(customer);
-    } catch (error) {
-      setMessage({
-        text: error instanceof Error ? error.message : "Không thể tạo vé đang chờ. Vui lòng đặt lại.",
-        type: "error"
-      });
-      setIsSubmitting(false);
-      return;
-    }
     setMessage({
-      text: booking
-        ? "Đăng nhập thành công. Vé đang chờ nhà xe xác nhận."
-        : "Đăng nhập thành công.",
+      text: "Đăng nhập thành công.",
       type: "success"
     });
-    window.setTimeout(() => router.replace(booking ? "/?booking=created" : "/"), 450);
+    window.setTimeout(() => router.replace("/"), 450);
   }
 
   async function submitAuth(endpoint: "/api/auth/login" | "/api/auth/register", payload: object) {

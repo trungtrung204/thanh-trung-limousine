@@ -43,20 +43,15 @@ import {
   X
 } from "lucide-react";
 import {
-  createBooking,
-  getBookedSeatCodes,
   getCurrentCustomer,
-  listBookings,
   listCoupons,
-  listRouteInventory,
   listSearchConfig,
   logoutCustomer,
-  setPendingBooking,
   type Coupon,
   type CustomerBooking,
-  type Customer,
-  type RouteInventory
+  type Customer
 } from "@/lib/local-db";
+import type { ApiBooking, ApiTrip } from "@/lib/transport-api";
 import {
   landingCopy,
   languageOptions,
@@ -100,6 +95,8 @@ const quickBenefits: Array<{ label: string; icon: LucideIcon }> = [
 ];
 
 type PopularRoute = {
+  id?: string;
+  code?: string;
   route: string;
   price: string;
   priceValue: number;
@@ -460,7 +457,8 @@ export default function LandingPage() {
   const [bookingPaymentMethod, setBookingPaymentMethod] = useState("Thanh toán sau");
   const [routeFilter, setRouteFilter] = useState("all");
   const [customerBookings, setCustomerBookings] = useState<CustomerBooking[]>([]);
-  const [routeInventory, setRouteInventory] = useState<RouteInventory[]>([]);
+  const [serverTrips, setServerTrips] = useState<ApiTrip[]>([]);
+  const [tripsLoading, setTripsLoading] = useState(true);
   const [adminCoupons, setAdminCoupons] = useState<Coupon[]>([]);
   const [searchLocations, setSearchLocations] = useState(locationOptions);
   const [language, setLanguage] = useState<Language>("vi");
@@ -469,16 +467,7 @@ export default function LandingPage() {
   const [searchDate, setSearchDate] = useState("");
   const [activeSearchPicker, setActiveSearchPicker] = useState<"from" | "to" | "date" | null>(null);
 
-  const userRoutes = useMemo(
-    () =>
-      buildUserRoutesFromAdminConfig(
-        popularRoutes,
-        routeInventory,
-        customerBookings,
-        searchDate || getDefaultTravelDate()
-      ),
-    [customerBookings, routeInventory, searchDate]
-  );
+  const userRoutes = useMemo(() => buildUserRoutesFromServer(serverTrips), [serverTrips]);
 
   const filteredRoutes = useMemo(() => {
     if (routeFilter === "all") {
@@ -498,11 +487,13 @@ export default function LandingPage() {
     const storedLanguage = readStoredLanguage();
     setLanguage(storedLanguage);
     setCustomer(currentCustomer);
-    setCustomerBookings(listBookings());
-    setRouteInventory(listRouteInventory());
     setSearchLocations(listSearchConfig().locations);
     setAdminCoupons(listCoupons().filter((coupon) => coupon.active));
     setSearchDate(getDefaultTravelDate());
+    refreshServerTrips();
+    if (currentCustomer) {
+      refreshUserBookings();
+    }
 
     if (window.location.search.includes("booking=created")) {
       setToast("Đơn đặt vé đã được gửi đến nhà xe. Vui lòng chờ xác nhận.");
@@ -512,8 +503,6 @@ export default function LandingPage() {
 
   useEffect(() => {
     function refreshLocalData() {
-      setCustomerBookings(listBookings());
-      setRouteInventory(listRouteInventory());
       setSearchLocations(listSearchConfig().locations);
       setAdminCoupons(listCoupons().filter((coupon) => coupon.active));
     }
@@ -521,6 +510,37 @@ export default function LandingPage() {
     window.addEventListener("storage", refreshLocalData);
     return () => window.removeEventListener("storage", refreshLocalData);
   }, []);
+
+  async function refreshServerTrips() {
+    setTripsLoading(true);
+    try {
+      const response = await fetch("/api/trips", { cache: "no-store" });
+      const data = (await response.json()) as { error?: string; trips?: ApiTrip[] };
+      if (!response.ok) {
+        throw new Error(data.error || "Không thể tải chuyến xe.");
+      }
+      setServerTrips(data.trips || []);
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Không thể tải chuyến xe từ server.");
+      setServerTrips([]);
+    } finally {
+      setTripsLoading(false);
+    }
+  }
+
+  async function refreshUserBookings() {
+    try {
+      const response = await fetch("/api/user/bookings", { cache: "no-store" });
+      if (!response.ok) {
+        setCustomerBookings([]);
+        return;
+      }
+      const data = (await response.json()) as { bookings?: ApiBooking[] };
+      setCustomerBookings((data.bookings || []).map(apiBookingToCustomerBooking));
+    } catch {
+      setCustomerBookings([]);
+    }
+  }
 
   function handleLanguageChange(value: string) {
     const nextLanguage = languageOptions.some((option) => option.code === value)
@@ -532,16 +552,17 @@ export default function LandingPage() {
 
   function handleLogout() {
     logoutCustomer();
+    void fetch("/api/auth/logout", { method: "POST" });
     setCustomer(null);
+    setCustomerBookings([]);
     setToast("Bạn đã đăng xuất tài khoản khách hàng.");
   }
 
   function openBookingDialog(trip: PopularRoute, travelDate = getDefaultTravelDate()) {
-    const occupiedSeats = getBookedSeatCodes(trip.route, travelDate);
     setBookingTrip({
       ...trip,
-      seatsLeft: Math.max(trip.seatsTotal - new Set([...trip.unavailableSeats, ...occupiedSeats]).size, 0),
-      unavailableSeats: Array.from(new Set([...trip.unavailableSeats, ...occupiedSeats]))
+      seatsLeft: Math.max(trip.seatsTotal - new Set(trip.unavailableSeats).size, 0),
+      unavailableSeats: Array.from(new Set(trip.unavailableSeats))
     });
     setBookingDate(travelDate);
     setBookingPickup(trip.pickup);
@@ -569,69 +590,53 @@ export default function LandingPage() {
     });
   }
 
-  function handleConfirmBooking() {
+  async function handleConfirmBooking() {
     if (!bookingTrip || selectedSeats.length === 0) {
       return;
     }
 
-    const travelDate = bookingDate || getDefaultTravelDate();
-    const totalPrice = bookingTrip.priceValue * selectedSeats.length;
-    const occupiedSeats = getBookedSeatCodes(bookingTrip.route, travelDate);
-    const duplicatedSeat = selectedSeats.find((seat) => occupiedSeats.includes(seat));
-
-    if (duplicatedSeat) {
-      setToast(`Ghế ${duplicatedSeat} vừa được người khác giữ. Vui lòng chọn ghế khác.`);
-      setBookingTrip({
-        ...bookingTrip,
-        unavailableSeats: Array.from(new Set([...bookingTrip.unavailableSeats, ...occupiedSeats]))
-      });
-      setSelectedSeats((current) => current.filter((seat) => seat !== duplicatedSeat));
+    if (!bookingTrip.id) {
+      setToast("Chuyến xe chưa được đồng bộ database. Vui lòng chọn chuyến khác.");
       return;
     }
 
     if (!customer) {
-      const [from = "Vinh", to = "Hoàng Mai"] = bookingTrip.route.split("-").map((part) => part.trim());
-      setPendingBooking({
-        dropoffPoint: bookingDropoff,
-        from,
-        paymentMethod: bookingPaymentMethod,
-        pickupPoint: bookingPickup,
-        price: totalPrice,
-        route: bookingTrip.route,
-        seats: selectedSeats.length,
-        seatCodes: selectedSeats,
-        to,
-        travelDate
-      });
+      setToast("Vui lòng đăng nhập trước khi đặt vé để giữ ghế trên hệ thống.");
       router.push("/login");
       return;
     }
 
-    let booking: CustomerBooking;
     try {
-      booking = createBooking({
-        customer,
-        dropoffPoint: bookingDropoff,
-        paymentMethod: bookingPaymentMethod,
-        pickupPoint: bookingPickup,
-        price: totalPrice,
-        route: bookingTrip.route,
-        seatCodes: selectedSeats,
-        seats: selectedSeats.length,
-        travelDate
+      const response = await fetch("/api/bookings", {
+        body: JSON.stringify({
+          dropoffPoint: bookingDropoff,
+          paymentMethod: bookingPaymentMethod,
+          pickupPoint: bookingPickup,
+          seatNos: selectedSeats,
+          tripId: bookingTrip.id
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST"
       });
+      const data = (await response.json()) as { booking?: ApiBooking; error?: string };
+
+      if (!response.ok || !data.booking) {
+        throw new Error(data.error || "Không thể giữ ghế. Vui lòng thử lại.");
+      }
+
+      const booking = apiBookingToCustomerBooking(data.booking);
+      setBookingTrip(null);
+      setSelectedSeats([]);
+      setCustomerBookings((current) => [booking, ...current.filter((item) => item.id !== booking.id)]);
+      await refreshServerTrips();
+      setToast(
+        `Đã gửi đơn ${booking.id} cho tuyến ${booking.route}, ghế ${selectedSeats.join(", ")}. Trạng thái: chờ thanh toán.`
+      );
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Không thể giữ ghế. Vui lòng thử lại.");
-      setCustomerBookings(listBookings());
-      return;
+      await refreshServerTrips();
+      setSelectedSeats([]);
     }
-
-    setBookingTrip(null);
-    setSelectedSeats([]);
-    setCustomerBookings(listBookings());
-    setToast(
-      `Đã gửi đơn ${booking.id} cho tuyến ${booking.route}, ghế ${selectedSeats.join(", ")}. Nhà xe sẽ xác nhận sớm.`
-    );
   }
 
   function handleSearchTrips() {
@@ -640,6 +645,11 @@ export default function LandingPage() {
       userRoutes.find((trip) => trip.route === exactRoute) ||
       userRoutes.find((trip) => trip.route.includes(searchFrom) && trip.route.includes(searchTo)) ||
       userRoutes[0];
+
+    if (!matchedTrip) {
+      setToast("Chưa có chuyến xe trong database. Vui lòng thử lại sau.");
+      return;
+    }
 
     openBookingDialog(matchedTrip, searchDate || getDefaultTravelDate());
   }
@@ -1032,14 +1042,27 @@ export default function LandingPage() {
           </aside>
 
           <div className="space-y-4">
-            {filteredRoutes.map((trip, index) => (
-              <TripResultCard
-                index={index}
-                key={trip.route}
-                onBook={() => openBookingDialog(trip)}
-                trip={trip}
-              />
-            ))}
+            {tripsLoading ? (
+              <div className="rounded-3xl border border-dashed border-[#bad7f5] bg-white p-8 text-center text-sm font-bold text-[#667085]">
+                Đang tải chuyến xe từ database...
+              </div>
+            ) : filteredRoutes.length ? (
+              filteredRoutes.map((trip, index) => (
+                <TripResultCard
+                  index={index}
+                  key={trip.id || trip.route}
+                  onBook={() => openBookingDialog(trip)}
+                  trip={trip}
+                />
+              ))
+            ) : (
+              <div className="rounded-3xl border border-dashed border-[#bad7f5] bg-white p-8 text-center">
+                <Bus className="mx-auto h-8 w-8 text-[#075bbf]" />
+                <p className="mt-3 text-sm font-bold text-[#667085]">
+                  Chưa có chuyến xe trong database. Admin cần tạo chuyến tại trang quản trị.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -1220,56 +1243,58 @@ export default function LandingPage() {
   );
 }
 
-function buildUserRoutesFromAdminConfig(
-  baseRoutes: PopularRoute[],
-  inventory: RouteInventory[],
-  bookings: CustomerBooking[],
-  travelDate: string
-) {
-  const activeInventory = inventory.filter((item) => item.status !== "Đã hủy");
-  const configuredRoutes = activeInventory.length
-    ? activeInventory.map((item) => {
-        const base = baseRoutes.find((route) => route.route === item.route) || baseRoutes[0];
-        const bookedSeats = bookings
-          .filter(
-            (booking) =>
-              booking.route === item.route &&
-              booking.travelDate === travelDate &&
-              booking.status !== "Từ chối" &&
-              booking.status !== "Đã hủy"
-          )
-          .flatMap((booking) => booking.seatCodes || []);
-        const adminSoldSeats = makeSoldSeatCodes(item.sold, item.total);
-        const unavailableSeats = Array.from(new Set([...adminSoldSeats, ...bookedSeats]));
-        const [from = "Vinh", to = "Hoàng Mai"] = item.route.split("-").map((part) => part.trim());
-        const duration = estimateDuration(item.time);
+function buildUserRoutesFromServer(trips: ApiTrip[]) {
+  return trips
+    .filter((item) => item.status !== "Đã hủy")
+    .map((item) => {
+      const base = popularRoutes.find((route) => route.route === item.route) || popularRoutes[0];
+      const duration = estimateDuration(item.time);
+      const unavailableSeats = item.seatHolds;
 
-        return {
-          ...base,
-          arrival: duration.arrival,
-          busType: item.total <= 18 ? "Limousine 16 chỗ" : item.total <= 34 ? "Giường nằm 34 chỗ" : "Ghế ngồi 40 chỗ",
-          departure: item.time,
-          dropoff: item.dropoff || `Bến xe ${to}`,
-          duration: duration.label,
-          operator: "Thành Trung Limousine",
-          pickup: item.pickup || `Bến xe ${from}`,
-          plate: item.vehicle,
-          price: `Từ ${formatMoney(item.price)}`,
-          priceValue: item.price,
-          route: item.route,
-          seatsLeft: Math.max(item.total - unavailableSeats.length, 0),
-          seatsTotal: item.total,
-          tag: item.status === "Đang chạy" ? "Đang chạy" : item.total <= 18 ? "Limousine 16" : "Còn ghế",
-          unavailableSeats
-        } satisfies PopularRoute;
-      })
-    : baseRoutes;
-
-  return configuredRoutes;
+      return {
+        ...base,
+        arrival: duration.arrival,
+        busType: item.total <= 18 ? "Limousine 16 chỗ" : item.total <= 34 ? "Giường nằm 34 chỗ" : "Ghế ngồi 40 chỗ",
+        code: item.code,
+        departure: item.time,
+        dropoff: `Bến xe ${item.to}`,
+        duration: duration.label,
+        id: item.id,
+        operator: "Thành Trung Limousine",
+        pickup: `Bến xe ${item.from}`,
+        plate: item.vehicle,
+        price: `Từ ${formatMoney(item.price)}`,
+        priceValue: item.price,
+        route: item.route,
+        seatsLeft: Math.max(item.total - unavailableSeats.length, 0),
+        seatsTotal: item.total,
+        tag: item.status === "Đang chạy" ? "Đang chạy" : item.total <= 18 ? "Limousine 16" : "Còn ghế",
+        unavailableSeats
+      } satisfies PopularRoute;
+    });
 }
 
-function makeSoldSeatCodes(sold: number, total: number) {
-  return Array.from({ length: Math.min(sold, total) }, (_, index) => `A${String(index + 1).padStart(2, "0")}`);
+function apiBookingToCustomerBooking(booking: ApiBooking): CustomerBooking {
+  return {
+    createdAt: booking.createdAt,
+    customerEmail: booking.customerEmail,
+    customerId: booking.customerId,
+    customerName: booking.customerName,
+    customerPhone: booking.customerPhone,
+    dropoffPoint: booking.dropoffPoint,
+    from: booking.from,
+    id: booking.code,
+    paymentMethod: booking.paymentMethod,
+    paymentStatus: booking.paymentStatus === "Chờ thanh toán" ? "Chờ thanh toán" : "Đã ghi nhận demo",
+    pickupPoint: booking.pickupPoint,
+    price: booking.price,
+    route: booking.route,
+    seatCodes: booking.seatCodes,
+    seats: booking.seats,
+    status: booking.status === "CONFIRMED" ? "Đã xác nhận" : booking.status === "REJECTED" ? "Từ chối" : booking.status === "CANCELLED" ? "Đã hủy" : "Chờ xác nhận",
+    to: booking.to,
+    travelDate: booking.travelDate
+  };
 }
 
 function estimateDuration(departure: string) {

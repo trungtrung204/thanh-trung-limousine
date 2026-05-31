@@ -13,6 +13,7 @@ enum Role {
 }
 
 enum BookingStatus {
+  PENDING_PAYMENT
   PENDING
   CONFIRMED
   REJECTED
@@ -72,7 +73,7 @@ model Booking {
   code         String        @unique
   userId       String
   tripId       String
-  status       BookingStatus @default(PENDING)
+  status       BookingStatus @default(PENDING_PAYMENT)
   seats        Int           @default(1)
   totalAmount  Int
   pickupPoint  String?
@@ -99,7 +100,7 @@ model SeatHold {
   seatNo       String
   customerName String?
   expiresAt    DateTime
-  status       BookingStatus  @default(PENDING)
+  status       BookingStatus  @default(PENDING_PAYMENT)
   trip         Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
   booking      Booking?       @relation(fields: [bookingId], references: [id], onDelete: SetNull)
   createdAt    DateTime       @default(now())

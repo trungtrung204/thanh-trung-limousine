@@ -53,7 +53,6 @@ import {
   bookings,
   customers,
   drivers,
-  initialTrips,
   notifications,
   revenueChannels,
   revenueData,
@@ -66,8 +65,6 @@ import {
 import {
   addDriverNotification,
   addCustomerNotification,
-  listBookings,
-  listAdminTrips,
   listCoupons,
   listCustomers,
   listCustomerNotifications,
@@ -75,12 +72,7 @@ import {
   listDriverNotifications,
   listPaymentTransactions,
   listSearchConfig,
-  removeRouteInventory,
-  rejectBooking,
-  saveAdminTrips,
   saveSearchConfig,
-  syncRouteInventoryFromTrip,
-  updateBookingStatus,
   updateCustomerAdmin,
   upsertCoupon,
   type Coupon,
@@ -92,6 +84,7 @@ import {
   type PaymentTransaction,
   type SearchConfig
 } from "@/lib/local-db";
+import type { ApiBooking, ApiTrip } from "@/lib/transport-api";
 import { cn } from "@/lib/utils";
 
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -238,31 +231,13 @@ function formatPercent(value: number) {
   return `${Math.round(value)}%`;
 }
 
-function toRouteInventory(trip: Trip) {
-  const [from = "Vinh", to = "Hoàng Mai"] = trip.route.split("-").map((part) => part.trim());
-
-  return {
-    code: trip.code,
-    driver: trip.driver,
-    dropoff: `Bến xe ${to}`,
-    pickup: `Bến xe ${from}`,
-    price: trip.price,
-    route: trip.route,
-    sold: trip.sold,
-    status: trip.status,
-    time: trip.time,
-    total: trip.total,
-    vehicle: trip.vehicle
-  };
-}
-
 export default function AdminDashboard() {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [activePage, setActivePage] = useState<PageKey>("overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [trips, setTrips] = useState<Trip[]>(initialTrips);
+  const [trips, setTrips] = useState<Trip[]>([]);
   const [customerBookings, setCustomerBookings] = useState<CustomerBooking[]>([]);
   const [registeredCustomers, setRegisteredCustomers] = useState<Customer[]>([]);
   const [customerFeedbacks, setCustomerFeedbacks] = useState<CustomerFeedback[]>([]);
@@ -305,10 +280,7 @@ export default function AdminDashboard() {
           setActivePage(hash);
         }
 
-        const savedTrips = listAdminTrips(initialTrips);
-        setTrips(savedTrips);
-        savedTrips.forEach((trip) => syncRouteInventoryFromTrip(toRouteInventory(trip)));
-        setCustomerBookings(listBookings());
+        await Promise.all([refreshAdminTrips(), refreshAdminBookings()]);
         setRegisteredCustomers(listCustomers());
         setCustomerFeedbacks(listCustomerFeedbacks());
         setCustomerNotifications(listCustomerNotifications());
@@ -338,7 +310,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (isAuthorized && (activePage === "booking" || activePage === "revenue" || activePage === "customers" || activePage === "reviews")) {
-      setCustomerBookings(listBookings());
+      void refreshAdminBookings();
       setRegisteredCustomers(listCustomers());
       setCustomerFeedbacks(listCustomerFeedbacks());
       setCustomerNotifications(listCustomerNotifications());
@@ -354,7 +326,6 @@ export default function AdminDashboard() {
     }
 
     function handleStorageChange() {
-      setCustomerBookings(listBookings());
       setRegisteredCustomers(listCustomers());
       setCustomerFeedbacks(listCustomerFeedbacks());
       setPaymentTransactions(listPaymentTransactions());
@@ -365,26 +336,46 @@ export default function AdminDashboard() {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [isAuthorized]);
 
-  function refreshBookingOps() {
-    setCustomerBookings(listBookings());
-    setRegisteredCustomers(listCustomers());
-    setCustomerFeedbacks(listCustomerFeedbacks());
-    setCustomerNotifications(listCustomerNotifications());
-    setDriverNotifications(listDriverNotifications());
-    setPaymentTransactions(listPaymentTransactions());
-    setCoupons(listCoupons());
+  async function refreshAdminTrips() {
+    try {
+      const response = await fetch("/api/trips", { cache: "no-store" });
+      const data = (await response.json()) as { trips?: ApiTrip[]; error?: string };
+      if (!response.ok) {
+        throw new Error(data.error || "Không thể tải chuyến xe.");
+      }
+      setTrips((data.trips || []).map(apiTripToDashboardTrip));
+    } catch (error) {
+      setTrips([]);
+      setToast(error instanceof Error ? error.message : "Không thể tải chuyến xe từ server.");
+    }
+  }
+
+  async function refreshAdminBookings() {
+    try {
+      const response = await fetch("/api/admin/bookings", { cache: "no-store" });
+      const data = (await response.json()) as { bookings?: ApiBooking[]; error?: string };
+      if (!response.ok) {
+        throw new Error(data.error || "Không thể tải đặt vé.");
+      }
+      setCustomerBookings((data.bookings || []).map(apiBookingToCustomerBooking));
+    } catch (error) {
+      setCustomerBookings([]);
+      setToast(error instanceof Error ? error.message : "Không thể tải vé từ server.");
+    }
   }
 
   function handleConfirmBooking(booking: CustomerBooking) {
-    updateBookingStatus(booking.id, "Đã xác nhận");
     addCustomerNotification({
       bookingId: booking.id,
       customerId: booking.customerId,
       message: `Vé ${booking.id} tuyến ${booking.route} đã được xác nhận. Vui lòng có mặt đúng điểm đón ${booking.pickupPoint || booking.from}.`,
       title: "Vé xe đã được xác nhận"
     });
-    refreshBookingOps();
-    setToast(`Đã xác nhận vé ${booking.id}.`);
+    setCustomerBookings((current) =>
+      current.map((item) => (item.id === booking.id ? { ...item, status: "Đã xác nhận" } : item))
+    );
+    setCustomerNotifications(listCustomerNotifications());
+    setToast(`Đã đánh dấu xác nhận vé ${booking.id} trên giao diện. API cập nhật trạng thái sẽ làm ở bước sau.`);
   }
 
   function handleRejectBooking() {
@@ -398,19 +389,22 @@ export default function AdminDashboard() {
       return;
     }
 
-    const rejected = rejectBooking(rejectModal.booking.id, reason);
-    if (rejected) {
-      addCustomerNotification({
-        bookingId: rejected.id,
-        customerId: rejected.customerId,
-        message: `Đơn ${rejected.id} tuyến ${rejected.route} bị từ chối. Lý do: ${reason}`,
-        title: "Đơn đặt vé bị từ chối"
-      });
-    }
+    const rejected = rejectModal.booking;
+    addCustomerNotification({
+      bookingId: rejected.id,
+      customerId: rejected.customerId,
+      message: `Đơn ${rejected.id} tuyến ${rejected.route} bị từ chối. Lý do: ${reason}`,
+      title: "Đơn đặt vé bị từ chối"
+    });
 
     setRejectModal({ booking: null, reason: "" });
-    refreshBookingOps();
-    setToast(`Đã từ chối vé ${rejectModal.booking.id} và gửi lý do cho khách.`);
+    setCustomerBookings((current) =>
+      current.map((item) =>
+        item.id === rejected.id ? { ...item, rejectionReason: reason, status: "Từ chối" } : item
+      )
+    );
+    setCustomerNotifications(listCustomerNotifications());
+    setToast(`Đã đánh dấu từ chối vé ${rejected.id} trên giao diện và gửi lý do demo cho khách.`);
   }
 
   function handleNotifyDriver(booking: CustomerBooking) {
@@ -447,30 +441,65 @@ export default function AdminDashboard() {
     router.replace("/admin/login");
   }
 
-  function saveTrip(payload: Trip) {
+  async function saveTrip(payload: Trip) {
     const duplicated = trips.some(
-      (trip) => trip.code === payload.code && trip.code !== tripModal.trip?.code
+      (trip) => trip.code === payload.code && (trip.id || trip.code) !== (tripModal.trip?.id || tripModal.trip?.code)
     );
 
     if (duplicated) {
       return "Mã chuyến đã tồn tại.";
     }
 
-    setTrips((current) => {
-      if (tripModal.mode === "edit" && tripModal.trip) {
-        const next = current.map((trip) => (trip.code === tripModal.trip?.code ? payload : trip));
-        saveAdminTrips(next);
-        return next;
+    if (tripModal.mode === "edit" && !tripModal.trip?.id) {
+      return "Không tìm thấy ID chuyến trong database để cập nhật.";
+    }
+
+    try {
+      const response = await fetch(
+        tripModal.mode === "edit" ? `/api/admin/trips/${tripModal.trip?.id}` : "/api/admin/trips",
+        {
+          body: JSON.stringify(payload),
+          headers: { "Content-Type": "application/json" },
+          method: tripModal.mode === "edit" ? "PUT" : "POST"
+        }
+      );
+      const data = (await response.json()) as { error?: string; trip?: ApiTrip };
+
+      if (!response.ok || !data.trip) {
+        return data.error || "Không thể lưu chuyến xe.";
       }
 
-      const next = [payload, ...current];
-      saveAdminTrips(next);
-      return next;
-    });
-    syncRouteInventoryFromTrip(toRouteInventory(payload));
-    setToast(`Đã đồng bộ chuyến ${payload.code} sang màn hình user.`);
+      await refreshAdminTrips();
+      setToast(`Đã lưu chuyến ${data.trip.code} vào database và đồng bộ sang màn hình user.`);
+      return null;
+    } catch {
+      return "Không thể kết nối API lưu chuyến xe.";
+    }
+  }
 
-    return null;
+  async function deleteTrip(trip: Trip) {
+    if (!trip.id) {
+      setToast("Không tìm thấy ID chuyến trong database để xóa.");
+      return;
+    }
+
+    if (!window.confirm(`Xóa chuyến ${trip.code}?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/trips/${trip.id}`, { method: "DELETE" });
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error || "Không thể xóa chuyến xe.");
+      }
+
+      await refreshAdminTrips();
+      setToast(`Đã xóa chuyến ${trip.code} khỏi database.`);
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Không thể xóa chuyến xe.");
+    }
   }
 
   if (!isAuthorized) {
@@ -528,17 +557,7 @@ export default function AdminDashboard() {
               <TripsPage
                 key="trips"
                 onAdd={() => setTripModal({ open: true, mode: "add", trip: null })}
-                onDelete={(trip) => {
-                  if (window.confirm(`Xóa chuyến ${trip.code}?`)) {
-                    setTrips((current) => {
-                      const next = current.filter((item) => item.code !== trip.code);
-                      saveAdminTrips(next);
-                      return next;
-                    });
-                    removeRouteInventory(trip.code);
-                    setToast(`Đã xóa chuyến ${trip.code} khỏi lịch user.`);
-                  }
-                }}
+                onDelete={(trip) => void deleteTrip(trip)}
                 onEdit={(trip) => setTripModal({ open: true, mode: "edit", trip })}
                 trips={trips}
               />
@@ -573,7 +592,7 @@ export default function AdminDashboard() {
                 }}
                 onRefresh={() => {
                   setRegisteredCustomers(listCustomers());
-                  setCustomerBookings(listBookings());
+                  void refreshAdminBookings();
                 }}
               />
             ) : activePage === "reviews" ? (
@@ -1453,13 +1472,14 @@ function TripModal({
 }: {
   mode: "add" | "edit";
   onClose: () => void;
-  onSave: (trip: Trip) => string | null;
+  onSave: (trip: Trip) => Promise<string | null>;
   open: boolean;
   trip: Trip | null;
   trips: Trip[];
 }) {
   const [form, setForm] = useState<TripFormState>(emptyTripForm);
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -1499,7 +1519,7 @@ function TripModal({
     return `${prefix}-${String(count).padStart(3, "0")}`;
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
 
@@ -1526,6 +1546,7 @@ function TripModal({
     const payload: Trip = {
       code: form.code.trim() || genCode(),
       driver: form.driver.trim() || "Chưa phân công",
+      id: trip?.id,
       platform: form.platform.trim() || "Website",
       price,
       route,
@@ -1536,13 +1557,18 @@ function TripModal({
       vehicle: form.vehicle.trim() || "Chưa chọn"
     };
 
-    const result = onSave(payload);
-    if (result) {
-      setError(result);
-      return;
-    }
+    setSaving(true);
+    try {
+      const result = await onSave(payload);
+      if (result) {
+        setError(result);
+        return;
+      }
 
-    onClose();
+      onClose();
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -1700,11 +1726,12 @@ function TripModal({
                   Hủy
                 </button>
                 <button
-                  className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#075bbf] px-4 text-sm font-semibold text-white hover:bg-[#073b7a]"
+                  className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#075bbf] px-4 text-sm font-semibold text-white hover:bg-[#073b7a] disabled:cursor-not-allowed disabled:bg-gray-300"
+                  disabled={saving}
                   type="submit"
                 >
                   <Save className="h-4 w-4" />
-                  Lưu
+                  {saving ? "Đang lưu..." : "Lưu"}
                 </button>
               </div>
             </div>
@@ -2875,6 +2902,87 @@ function NotificationComposer() {
       {sentMessage ? <p className="mt-3 rounded-lg bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">{sentMessage}</p> : null}
     </Panel>
   );
+}
+
+function apiTripToDashboardTrip(trip: ApiTrip): Trip {
+  return {
+    code: trip.code,
+    driver: trip.driver,
+    id: trip.id,
+    platform: trip.platform,
+    price: trip.price,
+    route: trip.route,
+    sold: trip.sold,
+    status: normalizeTripStatus(trip.status),
+    time: trip.time,
+    total: trip.total,
+    vehicle: trip.vehicle
+  };
+}
+
+function normalizeTripStatus(status: string): TripStatus {
+  if (statusOptions.includes(status as TripStatus)) {
+    return status as TripStatus;
+  }
+
+  const normalized = status.trim().toUpperCase();
+
+  if (normalized === "RUNNING" || normalized === "IN_PROGRESS") {
+    return "Đang chạy";
+  }
+
+  if (normalized === "COMPLETED" || normalized === "DONE") {
+    return "Hoàn thành";
+  }
+
+  if (normalized === "CANCELLED" || normalized === "CANCELED") {
+    return "Đã hủy";
+  }
+
+  return "Sắp chạy";
+}
+
+function apiBookingToCustomerBooking(booking: ApiBooking): CustomerBooking {
+  return {
+    createdAt: booking.createdAt,
+    customerEmail: booking.customerEmail,
+    customerId: booking.customerId,
+    customerName: booking.customerName,
+    customerPhone: booking.customerPhone,
+    dropoffPoint: booking.dropoffPoint,
+    from: booking.from,
+    id: booking.code,
+    paymentMethod: booking.paymentMethod,
+    paymentStatus: booking.paymentStatus === "Chờ thanh toán" ? "Chờ thanh toán" : "Đã ghi nhận demo",
+    pickupPoint: booking.pickupPoint,
+    price: booking.price,
+    route: booking.route,
+    seatCodes: booking.seatCodes,
+    seats: booking.seats,
+    status: apiBookingStatusToUi(booking.status),
+    to: booking.to,
+    travelDate: booking.travelDate
+  };
+}
+
+function apiBookingStatusToUi(status: ApiBooking["status"]): CustomerBooking["status"] {
+  if (status === "CONFIRMED" || status === "COMPLETED") {
+    return "Đã xác nhận";
+  }
+
+  if (status === "REJECTED") {
+    return "Từ chối";
+  }
+
+  if (status === "CANCELLED") {
+    return "Đã hủy";
+  }
+
+  if (status === "CHANGE_REQUESTED") {
+    return "Yêu cầu hủy/đổi";
+  }
+
+  return "Chờ xác nhận";
 }
 
 function makeAdminBookingRows(customerBookings: CustomerBooking[]) {
