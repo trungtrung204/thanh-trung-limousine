@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   makeDepartureAt,
@@ -32,12 +32,36 @@ function normalizeTripPayload(body: Record<string, unknown>): TransportTripPaylo
   };
 }
 
-export async function POST(request: Request) {
-  const user = await getCurrentUser();
+function isUniqueConstraintError(error: unknown) {
+  const err = error as { code?: string };
+  return err.code === "P2002";
+}
 
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Bạn không có quyền quản trị." }, { status: 403 });
+export async function GET() {
+  await requireAdmin();
+
+  try {
+    const trips = await prisma.trip.findMany({
+      include: {
+        seatHolds: {
+          select: {
+            seatNo: true
+          }
+        }
+      },
+      orderBy: {
+        departureAt: "asc"
+      }
+    });
+
+    return NextResponse.json({ trips: trips.map(mapTripToApi) });
+  } catch {
+    return NextResponse.json({ error: "Không thể tải danh sách chuyến xe." }, { status: 500 });
   }
+}
+
+export async function POST(request: Request) {
+  await requireAdmin();
 
   try {
     const body = (await request.json()) as Record<string, unknown>;
@@ -68,7 +92,11 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ trip: mapTripToApi(trip) }, { status: 201 });
-  } catch {
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      return NextResponse.json({ error: "Mã chuyến đã tồn tại." }, { status: 409 });
+    }
+
     return NextResponse.json({ error: "Không thể tạo chuyến xe." }, { status: 500 });
   }
 }

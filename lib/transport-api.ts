@@ -1,4 +1,4 @@
-import type { Booking, BookingStatus, SeatHold, Trip, User } from "@prisma/client";
+import type { Booking, BookingStatus, Payment, SeatHold, Trip, User } from "@prisma/client";
 
 export type TransportTripPayload = {
   code?: string;
@@ -56,6 +56,7 @@ export type ApiBooking = {
 };
 
 type BookingWithRelations = Booking & {
+  payments?: Payment[];
   seatHolds: SeatHold[];
   trip: Trip;
   user: Pick<User, "email" | "id" | "name" | "phone">;
@@ -115,6 +116,11 @@ export function mapTripToApi(trip: Trip & { seatHolds?: Array<Pick<SeatHold, "se
 
 export function mapBookingToApi(booking: BookingWithRelations): ApiBooking {
   const travelDate = booking.trip.departureAt.toISOString().slice(0, 10);
+  const payment = booking.payments?.[0];
+  const paymentStatus =
+    payment?.status === "PAID" || payment?.status === "DEMO_RECORDED"
+      ? "Đã ghi nhận demo"
+      : "Chờ thanh toán";
 
   return {
     code: booking.code,
@@ -126,8 +132,8 @@ export function mapBookingToApi(booking: BookingWithRelations): ApiBooking {
     dropoffPoint: booking.dropoffPoint || booking.trip.to,
     from: booking.trip.from,
     id: booking.id,
-    paymentMethod: "Chưa chọn",
-    paymentStatus: booking.status === "PENDING_PAYMENT" ? "Chờ thanh toán" : "Đã ghi nhận",
+    paymentMethod: payment?.method || "Chưa chọn",
+    paymentStatus,
     pickupPoint: booking.pickupPoint || booking.trip.from,
     price: booking.totalAmount,
     route: booking.trip.route,

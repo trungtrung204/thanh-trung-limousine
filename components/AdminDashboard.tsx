@@ -338,7 +338,7 @@ export default function AdminDashboard() {
 
   async function refreshAdminTrips() {
     try {
-      const response = await fetch("/api/trips", { cache: "no-store" });
+      const response = await fetch("/api/admin/trips", { cache: "no-store" });
       const data = (await response.json()) as { trips?: ApiTrip[]; error?: string };
       if (!response.ok) {
         throw new Error(data.error || "Không thể tải chuyến xe.");

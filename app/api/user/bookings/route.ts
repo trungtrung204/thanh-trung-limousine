@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { mapBookingToApi } from "@/lib/transport-api";
 
 export async function GET() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Bạn cần đăng nhập để xem vé." }, { status: 401 });
-  }
+  const user = await requireUser();
 
   try {
     const bookings = await prisma.booking.findMany({
       include: {
+        payments: true,
         seatHolds: true,
         trip: true,
         user: {

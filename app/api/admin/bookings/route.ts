@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { mapBookingToApi } from "@/lib/transport-api";
 
 export async function GET() {
-  const user = await getCurrentUser();
-
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Bạn không có quyền quản trị." }, { status: 403 });
-  }
+  await requireAdmin();
 
   try {
     const bookings = await prisma.booking.findMany({
       include: {
+        payments: true,
         seatHolds: true,
         trip: true,
         user: {

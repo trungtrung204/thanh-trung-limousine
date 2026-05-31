@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { makeBookingCode, mapBookingToApi } from "@/lib/transport-api";
 
@@ -18,25 +18,21 @@ function normalizeSeatNos(value: unknown) {
 }
 
 function isUniqueConstraintError(error: unknown) {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    (error as { code?: unknown }).code === "P2002"
-  );
+  const err = error as { code?: string };
+  return err.code === "P2002";
 }
 
 export async function POST(request: Request) {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Bạn cần đăng nhập để đặt vé." }, { status: 401 });
-  }
+  const user = await requireUser();
 
   try {
     const body = (await request.json()) as Record<string, unknown>;
     const tripId = typeof body.tripId === "string" ? body.tripId : "";
     const seatNos = normalizeSeatNos(body.seatNos ?? body.seatCodes);
+    const paymentMethod =
+      typeof body.paymentMethod === "string" && body.paymentMethod.trim()
+        ? body.paymentMethod.trim()
+        : "Thanh toán sau";
     const pickupPoint = typeof body.pickupPoint === "string" ? body.pickupPoint.trim() : "";
     const dropoffPoint = typeof body.dropoffPoint === "string" ? body.dropoffPoint.trim() : "";
 
@@ -57,6 +53,7 @@ export async function POST(request: Request) {
         throw new Error("TOO_MANY_SEATS");
       }
 
+      const totalAmount = trip.price * seatNos.length;
       const createdBooking = await tx.booking.create({
         data: {
           code: makeBookingCode(),
@@ -64,8 +61,19 @@ export async function POST(request: Request) {
           pickupPoint: pickupPoint || trip.from,
           seats: seatNos.length,
           status: "PENDING_PAYMENT",
-          totalAmount: trip.price * seatNos.length,
+          totalAmount,
           tripId: trip.id,
+          userId: user.id
+        }
+      });
+
+      await tx.payment.create({
+        data: {
+          amount: totalAmount,
+          bookingId: createdBooking.id,
+          method: paymentMethod,
+          provider: "demo",
+          status: "PENDING",
           userId: user.id
         }
       });
@@ -88,6 +96,7 @@ export async function POST(request: Request) {
 
       return tx.booking.findUniqueOrThrow({
         include: {
+          payments: true,
           seatHolds: true,
           trip: true,
           user: {

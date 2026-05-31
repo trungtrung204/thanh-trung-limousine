@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { makeDepartureAt, mapTripToApi, splitRoute } from "@/lib/transport-api";
 
@@ -11,13 +11,13 @@ function getString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function isUniqueConstraintError(error: unknown) {
+  const err = error as { code?: string };
+  return err.code === "P2002";
+}
+
 export async function PUT(request: Request, context: RouteContext) {
-  const user = await getCurrentUser();
-
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Bạn không có quyền quản trị." }, { status: 403 });
-  }
-
+  await requireAdmin();
   const { id } = await context.params;
 
   try {
@@ -51,18 +51,17 @@ export async function PUT(request: Request, context: RouteContext) {
     });
 
     return NextResponse.json({ trip: mapTripToApi(trip) });
-  } catch {
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      return NextResponse.json({ error: "Mã chuyến đã tồn tại." }, { status: 409 });
+    }
+
     return NextResponse.json({ error: "Không thể cập nhật chuyến xe." }, { status: 500 });
   }
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
-  const user = await getCurrentUser();
-
-  if (!user || user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Bạn không có quyền quản trị." }, { status: 403 });
-  }
-
+  await requireAdmin();
   const { id } = await context.params;
 
   try {
