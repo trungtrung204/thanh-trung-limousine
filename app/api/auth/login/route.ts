@@ -9,7 +9,7 @@ import {
 } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-const demoAdminEmail = process.env.ADMIN_EMAIL || "admin@thanhtrung.local";
+const fallbackAdminEmail = process.env.ADMIN_EMAIL || "admin@thanhtrung.local";
 
 function normalizeIdentifier(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     }
 
     const emailIdentifier =
-      rawIdentifier.toLowerCase() === "admin" ? demoAdminEmail : rawIdentifier.toLowerCase();
+      rawIdentifier.toLowerCase() === "admin" ? fallbackAdminEmail : rawIdentifier.toLowerCase();
     const phoneIdentifier = normalizePhone(rawIdentifier);
 
     const user = await prisma.user.findFirst({
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     return response;
   } catch {
     return NextResponse.json(
-      { error: "Không thể đăng nhập. Vui lòng kiểm tra kết nối database." },
+      { error: "Không thể đăng nhập. Vui lòng thử lại." },
       { status: 500 }
     );
   }

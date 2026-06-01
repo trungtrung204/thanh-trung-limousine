@@ -30,18 +30,25 @@ enum PaymentStatus {
   DEMO_RECORDED
 }
 
+enum CancellationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
-  id           String    @id @default(cuid())
+  id           String     @id @default(cuid())
   name         String
-  phone        String?   @unique
-  email        String    @unique
+  phone        String?    @unique
+  email        String     @unique
   passwordHash String?
-  role         Role      @default(USER)
+  role         Role       @default(USER)
   bookings     Booking[]
   payments     Payment[]
   feedbacks    Feedback[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  cancellations CancellationRequest[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 model Trip {
@@ -85,6 +92,7 @@ model Booking {
   payments     Payment[]
   tickets      Ticket[]
   feedbacks    Feedback[]
+  cancellations CancellationRequest[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
@@ -94,17 +102,17 @@ model Booking {
 }
 
 model SeatHold {
-  id           String         @id @default(cuid())
+  id           String        @id @default(cuid())
   tripId       String
   bookingId    String?
   seatNo       String
   customerName String?
   expiresAt    DateTime
-  status       BookingStatus  @default(PENDING_PAYMENT)
-  trip         Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  booking      Booking?       @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  status       BookingStatus @default(PENDING_PAYMENT)
+  trip         Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  booking      Booking?      @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   @@unique([tripId, seatNo])
   @@index([bookingId])
@@ -138,7 +146,7 @@ model Ticket {
   bookingId String
   tripId    String
   seatNo    String
-  qrCode    String?
+  qrCode    String?  @unique
   issuedAt  DateTime @default(now())
   booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
@@ -154,6 +162,7 @@ model Feedback {
   userId    String?
   bookingId String?
   tripId    String?
+  name      String?
   rating    Int
   message   String
   status    String   @default("PENDING")
@@ -166,4 +175,22 @@ model Feedback {
   @@index([userId])
   @@index([bookingId])
   @@index([tripId])
+}
+
+model CancellationRequest {
+  id        String             @id @default(cuid())
+  bookingId String
+  userId    String
+  reason    String
+  note      String?
+  phone     String?
+  status    CancellationStatus @default(PENDING)
+  booking   Booking            @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([bookingId])
+  @@index([userId])
+  @@index([status])
 }

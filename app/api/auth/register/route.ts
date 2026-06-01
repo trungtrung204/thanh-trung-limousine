@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { error: "Không thể tạo tài khoản. Vui lòng kiểm tra kết nối database." },
+      { error: "Không thể tạo tài khoản. Vui lòng thử lại." },
       { status: 500 }
     );
   }

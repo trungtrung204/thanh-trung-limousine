@@ -1,20 +1,11 @@
 "use client";
 
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
-import {
-  Bus,
-  Eye,
-  EyeOff,
-  Lock,
-  Mail,
-  Phone,
-  ShieldCheck,
-  UserRound
-} from "lucide-react";
+import { Bus, Eye, EyeOff, Lock, Mail, Phone, ShieldCheck, UserRound } from "lucide-react";
 
 type AuthMode = "login" | "register";
 type AuthApiUser = {
@@ -30,12 +21,10 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
   const [activeMode, setActiveMode] = useState<AuthMode>(mode);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(
-    null
-  );
+  const [message, setMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
   const [form, setForm] = useState({
-    emailOrPhone: "",
     email: "",
+    emailOrPhone: "",
     name: "",
     password: "",
     phone: ""
@@ -60,12 +49,11 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
           router.replace("/");
         }
       } catch {
-        // Stay on the auth screen when the API/database is not ready.
+        // Keep the customer on the form when the session check is unavailable.
       }
     }
 
-    checkCurrentSession();
-
+    void checkCurrentSession();
     return () => {
       cancelled = true;
     };
@@ -73,20 +61,6 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
 
   function updateField(field: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
-  }
-
-  function completeAuth(user: AuthApiUser) {
-    if (user.role !== "USER") {
-      setMessage({ type: "error", text: "Tài khoản này không phải tài khoản khách hàng." });
-      setIsSubmitting(false);
-      return;
-    }
-
-    setMessage({
-      text: "Đăng nhập thành công.",
-      type: "success"
-    });
-    window.setTimeout(() => router.replace("/"), 450);
   }
 
   async function submitAuth(endpoint: "/api/auth/login" | "/api/auth/register", payload: object) {
@@ -104,6 +78,17 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
     return data.user;
   }
 
+  function completeAuth(user: AuthApiUser) {
+    if (user.role !== "USER") {
+      setMessage({ text: "Tài khoản này không thuộc khu vực khách hàng.", type: "error" });
+      setIsSubmitting(false);
+      return;
+    }
+
+    setMessage({ text: "Đăng nhập thành công.", type: "success" });
+    window.setTimeout(() => router.replace("/"), 450);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage(null);
@@ -112,13 +97,13 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
     try {
       if (activeMode === "register") {
         if (!form.name.trim() || !form.email.trim() || !form.password) {
-          setMessage({ type: "error", text: "Vui lòng nhập đầy đủ thông tin đăng ký." });
+          setMessage({ text: "Vui lòng nhập đầy đủ thông tin đăng ký.", type: "error" });
           setIsSubmitting(false);
           return;
         }
 
         if (form.password.length < 6) {
-          setMessage({ type: "error", text: "Mật khẩu cần ít nhất 6 ký tự." });
+          setMessage({ text: "Mật khẩu cần ít nhất 6 ký tự.", type: "error" });
           setIsSubmitting(false);
           return;
         }
@@ -129,13 +114,12 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
           password: form.password,
           phone: form.phone
         });
-
         completeAuth(user);
         return;
       }
 
       if (!form.emailOrPhone.trim() || !form.password) {
-        setMessage({ type: "error", text: "Vui lòng nhập email/số điện thoại và mật khẩu." });
+        setMessage({ text: "Vui lòng nhập email/số điện thoại và mật khẩu.", type: "error" });
         setIsSubmitting(false);
         return;
       }
@@ -145,174 +129,128 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
         password: form.password,
         role: "USER"
       });
-
       completeAuth(user);
     } catch (error) {
       setMessage({
-        type: "error",
-        text: error instanceof Error ? error.message : "Không thể đăng nhập."
+        text: error instanceof Error ? error.message : "Không thể đăng nhập.",
+        type: "error"
       });
       setIsSubmitting(false);
     }
   }
 
+  const isRegister = activeMode === "register";
+
   return (
-    <main className="min-h-screen bg-[#f4f7fb] text-[#111827]">
-      <header className="border-b border-[#dbe7f3] bg-white/95 shadow-[0_10px_30px_rgba(16,24,40,0.06)] backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
+    <main className="min-h-screen bg-[#f5f7fb] text-[#101828]">
+      <header className="border-b border-[#d9e2ef] bg-white">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link className="flex items-center gap-3" href="/">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#0a67d8] text-base font-black text-white">
-              TT
+            <span className="relative h-10 w-10 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-[#d9e2ef]">
+              <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="40px" src="/logo.jpg" />
             </span>
             <span>
-              <span className="block text-lg font-extrabold leading-5 text-[#0a67d8]">
-                Thành Trung
-              </span>
-              <span className="block text-xs font-semibold text-[#667085]">Vé xe khách</span>
+              <span className="block text-base font-black text-[#073b7a]">Thành Trung Limousine</span>
+              <span className="block text-xs font-semibold text-[#667085]">Đặt vé xe khách</span>
             </span>
           </Link>
-          <Link className="text-sm font-bold text-[#0a67d8]" href="/">
-            Về trang chủ
+          <Link className="text-sm font-bold text-[#075bbf]" href="/">
+            Trang chủ
           </Link>
         </div>
       </header>
 
-      <section className="mx-auto grid min-h-[calc(100vh-64px)] max-w-7xl gap-8 px-4 py-10 md:px-6 lg:grid-cols-[minmax(0,0.95fr)_460px] lg:items-center">
-        <motion.div
-          animate={{ opacity: 1, y: 0 }}
-          className="hidden lg:block"
-          initial={{ opacity: 0, y: 18 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-          <div className="max-w-2xl rounded-[32px] bg-white/70 p-8 shadow-[0_24px_80px_rgba(16,24,40,0.08)] ring-1 ring-white/80 backdrop-blur">
-            <p className="inline-flex items-center gap-2 rounded-full bg-[#e8f3ff] px-4 py-2 text-sm font-bold text-[#0a67d8]">
+      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:min-h-[calc(100vh-64px)] lg:grid-cols-[minmax(0,1fr)_440px] lg:items-center">
+        <div className="hidden lg:block">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-md bg-[#eff8ff] px-3 py-2 text-sm font-bold text-[#075bbf]">
               <ShieldCheck className="h-4 w-4" />
               Tài khoản khách hàng
-            </p>
+            </div>
             <h1 className="mt-5 text-5xl font-black leading-tight text-[#073b7a]">
-              Đặt vé nhanh hơn và theo dõi chuyến đi của bạn.
+              Quản lý vé, thanh toán và hành trình trong một nơi.
             </h1>
-            <p className="mt-5 text-lg leading-8 text-[#667085]">
-              Sau khi đăng nhập, mọi yêu cầu đặt xe sẽ được lưu vào hệ thống và gửi về nhà xe
-              để xác nhận.
+            <p className="mt-5 text-base leading-8 text-[#667085]">
+              Đăng nhập để giữ ghế, xem trạng thái thanh toán và nhận vé điện tử sau khi nhà xe xác nhận.
             </p>
-
             <div className="mt-8 grid grid-cols-3 gap-3">
               {[
-                ["60s", "Tạo đơn"],
-                ["24/7", "Hỗ trợ"],
-                ["100%", "Lưu lịch sử"]
+                ["60 giây", "Tạo đơn"],
+                ["QR", "Thanh toán"],
+                ["24/7", "Hỗ trợ"]
               ].map(([value, label]) => (
-                <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-[#edf2f7]" key={label}>
-                  <p className="text-3xl font-extrabold text-[#0a67d8]">{value}</p>
+                <div className="rounded-lg border border-[#e4e7ec] bg-white p-4 shadow-sm" key={label}>
+                  <p className="text-2xl font-black text-[#075bbf]">{value}</p>
                   <p className="mt-1 text-sm font-semibold text-[#667085]">{label}</p>
                 </div>
               ))}
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          animate={{ opacity: 1, y: 0 }}
-          className="overflow-hidden rounded-[28px] bg-white shadow-[0_24px_80px_rgba(16,24,40,0.12)] ring-1 ring-[#e6eef8]"
-          initial={{ opacity: 0, y: 18 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-          <div className="h-1.5 bg-[linear-gradient(90deg,#073b7a,#0a67d8,#ffd43b)]" />
-          <div className="p-6">
-          <div className="mb-6 grid grid-cols-2 rounded-2xl bg-[#f2f4f7] p-1">
-            <button
-              className={
-                activeMode === "login"
-                  ? "rounded-xl bg-white px-4 py-3 text-sm font-extrabold text-[#0a67d8] shadow-sm"
-                  : "rounded-xl px-4 py-3 text-sm font-bold text-[#667085]"
-              }
-              onClick={() => {
-                setActiveMode("login");
-                setMessage(null);
-              }}
-              type="button"
-            >
-              Đăng nhập
-            </button>
-            <button
-              className={
-                activeMode === "register"
-                  ? "rounded-xl bg-white px-4 py-3 text-sm font-extrabold text-[#0a67d8] shadow-sm"
-                  : "rounded-xl px-4 py-3 text-sm font-bold text-[#667085]"
-              }
-              onClick={() => {
-                setActiveMode("register");
-                setMessage(null);
-              }}
-              type="button"
-            >
-              Tạo tài khoản
-            </button>
+        <div className="rounded-lg border border-[#e4e7ec] bg-white shadow-[0_24px_80px_rgba(16,24,40,0.10)]">
+          <div className="border-b border-[#eaecf0] p-6">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-[#eff8ff] text-[#075bbf]">
+                <Bus className="h-5 w-5" />
+              </span>
+              <div>
+                <h1 className="text-2xl font-black">{isRegister ? "Tạo tài khoản" : "Đăng nhập"}</h1>
+                <p className="mt-1 text-sm text-[#667085]">
+                  {isRegister ? "Thông tin ngắn gọn để đặt vé nhanh hơn." : "Tiếp tục đặt vé và xem vé của bạn."}
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <h2 className="text-2xl font-extrabold">
-              {activeMode === "login" ? "Đăng nhập khách hàng" : "Tạo tài khoản khách hàng"}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-[#667085]">
-              {activeMode === "login"
-                ? "Nhập email hoặc số điện thoại đã đăng ký."
-                : "Thông tin này sẽ dùng để nhà xe liên hệ xác nhận vé."}
-            </p>
-          </div>
-
-          <form className="mt-6 space-y-4" onSubmit={handleSubmit} noValidate>
-            {activeMode === "register" ? (
-              <>
-                <Field icon={UserRound} label="Họ và tên">
-                  <input
-                    className="h-full flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0"
-                    onChange={(event) => updateField("name", event.target.value)}
-                    placeholder="Nguyễn Văn A"
-                    value={form.name}
-                  />
-                </Field>
-                <Field icon={Mail} label="Email">
-                  <input
-                    className="h-full flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0"
-                    onChange={(event) => updateField("email", event.target.value)}
-                    placeholder="ban@example.com"
-                    type="email"
-                    value={form.email}
-                  />
-                </Field>
-                <Field icon={Phone} label="Số điện thoại">
-                  <input
-                    className="h-full flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0"
-                    onChange={(event) => updateField("phone", event.target.value)}
-                    placeholder="09xxxxxxxx (không bắt buộc)"
-                    value={form.phone}
-                  />
-                </Field>
-              </>
-            ) : (
-              <Field icon={UserRound} label="Email hoặc số điện thoại">
+          <form className="space-y-4 p-6" noValidate onSubmit={handleSubmit}>
+            {isRegister ? (
+              <Field label="Họ và tên" icon={<UserRound className="h-4 w-4" />}>
                 <input
-                  className="h-full flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0"
-                  onChange={(event) => updateField("emailOrPhone", event.target.value)}
-                  placeholder="email hoặc số điện thoại"
-                  value={form.emailOrPhone}
+                  autoComplete="name"
+                  className="h-full flex-1 border-0 bg-transparent p-0 text-sm focus:ring-0"
+                  onChange={(event) => updateField("name", event.target.value)}
+                  placeholder="Nguyễn Văn A"
+                  value={form.name}
                 />
               </Field>
-            )}
+            ) : null}
 
-            <Field icon={Lock} label="Mật khẩu">
+            <Field label={isRegister ? "Email" : "Email hoặc số điện thoại"} icon={<Mail className="h-4 w-4" />}>
               <input
-                className="h-full flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0"
+                autoComplete={isRegister ? "email" : "username"}
+                className="h-full flex-1 border-0 bg-transparent p-0 text-sm focus:ring-0"
+                onChange={(event) => updateField(isRegister ? "email" : "emailOrPhone", event.target.value)}
+                placeholder={isRegister ? "email@example.com" : "email hoặc số điện thoại"}
+                type={isRegister ? "email" : "text"}
+                value={isRegister ? form.email : form.emailOrPhone}
+              />
+            </Field>
+
+            {isRegister ? (
+              <Field label="Số điện thoại" icon={<Phone className="h-4 w-4" />}>
+                <input
+                  autoComplete="tel"
+                  className="h-full flex-1 border-0 bg-transparent p-0 text-sm focus:ring-0"
+                  onChange={(event) => updateField("phone", event.target.value)}
+                  placeholder="09xxxxxxxx"
+                  value={form.phone}
+                />
+              </Field>
+            ) : null}
+
+            <Field label="Mật khẩu" icon={<Lock className="h-4 w-4" />}>
+              <input
+                autoComplete={isRegister ? "new-password" : "current-password"}
+                className="h-full flex-1 border-0 bg-transparent p-0 text-sm focus:ring-0"
                 onChange={(event) => updateField("password", event.target.value)}
-                placeholder="Tối thiểu 6 ký tự"
+                placeholder="Nhập mật khẩu"
                 type={showPassword ? "text" : "password"}
                 value={form.password}
               />
               <button
                 aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                className="rounded-lg p-1 text-[#667085] hover:bg-[#f2f4f7]"
+                className="rounded-md p-1 text-[#667085] hover:bg-[#f2f4f7]"
                 onClick={() => setShowPassword((value) => !value)}
                 type="button"
               >
@@ -320,54 +258,44 @@ export default function CustomerAuthScreen({ mode = "login" }: { mode?: AuthMode
               </button>
             </Field>
 
-            <AnimatePresence>
-              {message ? (
-                <motion.p
-                  animate={{ opacity: 1, y: 0 }}
-                  className={
-                    message.type === "success"
-                      ? "rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700"
-                      : "rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
-                  }
-                  exit={{ opacity: 0, y: -4 }}
-                  initial={{ opacity: 0, y: -4 }}
-                  role="status"
-                >
-                  {message.text}
-                </motion.p>
-              ) : null}
-            </AnimatePresence>
+            {message ? (
+              <p
+                className={[
+                  "rounded-lg px-3 py-2 text-sm font-bold",
+                  message.type === "success" ? "bg-[#ecfdf3] text-[#027a48]" : "bg-[#fff1f3] text-[#b42318]"
+                ].join(" ")}
+              >
+                {message.text}
+              </p>
+            ) : null}
 
             <button
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#ffd43b] text-base font-extrabold text-[#111827] transition hover:bg-[#ffcb05] disabled:opacity-70"
+              className="inline-flex h-12 w-full items-center justify-center rounded-md bg-[#073b7a] px-4 text-sm font-black text-white hover:bg-[#052f61] disabled:bg-[#98a2b3]"
               disabled={isSubmitting}
               type="submit"
             >
-              <Bus className="h-5 w-5" />
-              {activeMode === "login" ? "Đăng nhập" : "Tạo tài khoản"}
+              {isSubmitting ? "Đang xử lý..." : isRegister ? "Đăng ký" : "Đăng nhập"}
             </button>
+
+            <p className="text-center text-sm text-[#667085]">
+              {isRegister ? "Đã có tài khoản?" : "Chưa có tài khoản?"}{" "}
+              <Link className="font-black text-[#075bbf]" href={isRegister ? "/login" : "/register"}>
+                {isRegister ? "Đăng nhập" : "Đăng ký"}
+              </Link>
+            </p>
           </form>
-          </div>
-        </motion.div>
+        </div>
       </section>
     </main>
   );
 }
 
-function Field({
-  children,
-  icon: Icon,
-  label
-}: {
-  children: React.ReactNode;
-  icon: typeof UserRound;
-  label: string;
-}) {
+function Field({ children, icon, label }: { children: ReactNode; icon: ReactNode; label: string }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-bold text-[#344054]">{label}</span>
-      <span className="flex h-12 items-center gap-3 rounded-2xl border border-[#d0d5dd] bg-white px-4 transition focus-within:border-[#0a67d8] focus-within:ring-4 focus-within:ring-[#e8f3ff]">
-        <Icon className="h-5 w-5 shrink-0 text-[#0a67d8]" />
+      <span className="mb-1 block text-sm font-bold text-[#344054]">{label}</span>
+      <span className="flex h-12 items-center gap-3 rounded-md border border-[#d0d5dd] bg-white px-3 text-[#075bbf] focus-within:border-[#075bbf] focus-within:ring-4 focus-within:ring-[#eff8ff]">
+        {icon}
         {children}
       </span>
     </label>

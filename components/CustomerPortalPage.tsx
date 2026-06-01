@@ -1,1423 +1,1042 @@
 "use client";
 
-import type { FormEvent } from "react";
-import { useCallback, useEffect, useState } from "react";
+import type { FormEvent, ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import type { LucideIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { QRCodeSVG } from "qrcode.react";
 import {
   ArrowLeft,
-  Armchair,
   Bell,
   Bus,
+  CalendarDays,
   Clock3,
-  ClipboardList,
   CreditCard,
   Gift,
   Headphones,
   History,
   Luggage,
-  MapPinned,
-  PackageCheck,
-  Phone,
-  QrCode,
-  ReceiptText,
-  Route,
+  MapPin,
+  MessageSquare,
   Navigation,
+  QrCode,
   RotateCcw,
   Send,
   ShieldCheck,
   Star,
   Ticket,
-  UserCheck,
-  WalletCards
+  UserRound,
+  WalletCards,
+  X
 } from "lucide-react";
-import {
-  addCustomerFeedback,
-  listCustomerNotifications,
-  listCustomerFeedbacks,
-  type CustomerBooking,
-  type CustomerFeedback,
-  type CustomerNotification,
-  type RouteInventory
-} from "@/lib/local-db";
-import type { ApiBooking, ApiTrip } from "@/lib/transport-api";
-import {
-  languageOptions,
-  portalCopy,
-  readStoredLanguage,
-  saveStoredLanguage,
-  type Language
-} from "@/lib/i18n";
+import type { ManualPaymentInfo } from "@/lib/manual-payment";
+import type { ApiBooking } from "@/lib/transport-api";
 
-const pageConfig = {
-  "my-tickets": {
-    icon: QrCode
-  },
-  cancel: {
-    icon: RotateCcw
-  },
-  promotions: {
-    icon: Gift
-  },
-  payment: {
-    icon: WalletCards
-  },
-  tracking: {
-    icon: Navigation
-  },
-  feedback: {
-    icon: Star
-  },
-  luggage: {
-    icon: Luggage
-  },
-  history: {
-    icon: History
-  },
-  operators: {
-    icon: Bus
-  },
-  support: {
-    icon: ShieldCheck
-  }
-} as const;
-
-type SectionKey = keyof typeof pageConfig;
-
-const pageAliases: Record<string, SectionKey> = {
-  "ve-cua-toi": "my-tickets",
-  "doi-huy-ve": "cancel",
-  "ma-giam-gia": "promotions",
-  "thanh-toan": "payment",
-  "theo-doi-chuyen": "tracking",
-  "phan-hoi": "feedback",
-  "hanh-ly": "luggage",
-  "lich-su-chuyen": "history",
-  "nha-xe": "operators",
-  "ho-tro": "support"
+type CustomerSession = {
+  email: string;
+  id: string;
+  name: string;
+  phone: string | null;
+  role: "USER" | "ADMIN" | "DRIVER";
 };
 
+type SectionKey =
+  | "my-tickets"
+  | "cancel"
+  | "promotions"
+  | "payment"
+  | "tracking"
+  | "feedback"
+  | "luggage"
+  | "history"
+  | "operators"
+  | "support";
+
+type FeedbackItem = {
+  bookingId: string;
+  createdAt: string;
+  customerName: string;
+  id: string;
+  message: string;
+  rating: number;
+  route: string;
+  status: string;
+};
+
+const pageAliases: Record<string, SectionKey> = {
+  "doi-huy-ve": "cancel",
+  "hanh-ly": "luggage",
+  "ho-tro": "support",
+  "lich-su-chuyen": "history",
+  "ma-giam-gia": "promotions",
+  "nha-xe": "operators",
+  "phan-hoi": "feedback",
+  "thanh-toan": "payment",
+  "theo-doi-chuyen": "tracking",
+  "ve-cua-toi": "my-tickets"
+};
+
+const navItems: Array<{ href: string; icon: ReactNode; key: SectionKey; label: string }> = [
+  { href: "/user/ve-cua-toi", icon: <Ticket className="h-4 w-4" />, key: "my-tickets", label: "Vé của tôi" },
+  { href: "/user/thanh-toan", icon: <WalletCards className="h-4 w-4" />, key: "payment", label: "Thanh toán" },
+  { href: "/user/doi-huy-ve", icon: <RotateCcw className="h-4 w-4" />, key: "cancel", label: "Đổi/hủy vé" },
+  { href: "/user/lich-su-chuyen", icon: <History className="h-4 w-4" />, key: "history", label: "Lịch sử chuyến" },
+  { href: "/user/theo-doi-chuyen", icon: <Navigation className="h-4 w-4" />, key: "tracking", label: "Theo dõi chuyến" },
+  { href: "/user/phan-hoi", icon: <Star className="h-4 w-4" />, key: "feedback", label: "Phản hồi" },
+  { href: "/user/ma-giam-gia", icon: <Gift className="h-4 w-4" />, key: "promotions", label: "Ưu đãi" },
+  { href: "/user/hanh-ly", icon: <Luggage className="h-4 w-4" />, key: "luggage", label: "Hành lý" },
+  { href: "/user/nha-xe", icon: <Bus className="h-4 w-4" />, key: "operators", label: "Nhà xe" },
+  { href: "/user/ho-tro", icon: <Headphones className="h-4 w-4" />, key: "support", label: "Hỗ trợ" }
+];
+
+const sectionMeta: Record<SectionKey, { desc: string; title: string }> = {
+  cancel: {
+    desc: "Gửi yêu cầu đổi hoặc hủy vé theo chính sách nhà xe.",
+    title: "Đổi/hủy vé"
+  },
+  feedback: {
+    desc: "Gửi phản hồi để nhà xe cải thiện chất lượng phục vụ.",
+    title: "Phản hồi"
+  },
+  history: {
+    desc: "Xem lại các hành trình và mã vé đã đặt.",
+    title: "Lịch sử chuyến"
+  },
+  luggage: {
+    desc: "Thông tin hành lý và hỗ trợ gửi hàng theo chuyến.",
+    title: "Hành lý"
+  },
+  "my-tickets": {
+    desc: "Theo dõi trạng thái thanh toán và vé điện tử.",
+    title: "Vé của tôi"
+  },
+  operators: {
+    desc: "Thông tin vận hành của Thành Trung Limousine.",
+    title: "Nhà xe"
+  },
+  payment: {
+    desc: "Quản lý các đơn chờ thanh toán và nội dung chuyển khoản.",
+    title: "Thanh toán"
+  },
+  promotions: {
+    desc: "Ưu đãi hiện hành cho khách hàng đặt vé trực tuyến.",
+    title: "Ưu đãi"
+  },
+  support: {
+    desc: "Hotline, điểm đón và hỗ trợ sau đặt vé.",
+    title: "Hỗ trợ"
+  },
+  tracking: {
+    desc: "Thông tin giờ đi, điểm đón và trạng thái chuyến.",
+    title: "Theo dõi chuyến"
+  }
+};
+
+const currencyFormatter = new Intl.NumberFormat("vi-VN", {
+  currency: "VND",
+  maximumFractionDigits: 0,
+  style: "currency"
+});
+
+function formatCurrency(value: number) {
+  return currencyFormatter.format(value);
+}
+
+function formatDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  }).format(date);
+}
+
+function displayBookingStatus(booking: ApiBooking) {
+  if (booking.cancellationStatus === "PENDING") {
+    return "Chờ duyệt hủy";
+  }
+
+  if (booking.status === "CANCELLED" || booking.status === "REJECTED") {
+    return "Đã hủy";
+  }
+
+  if (booking.paymentStatus === "Thanh toán thành công" || booking.status === "CONFIRMED") {
+    return "Đã thanh toán";
+  }
+
+  return "Chờ thanh toán";
+}
+
 export default function CustomerPortalPage({ section }: { section: string }) {
-  const pageKey = (section in pageConfig ? section : pageAliases[section] || "my-tickets") as SectionKey;
-  const config = pageConfig[pageKey];
-  const Icon = config.icon;
-  const [customer, setCustomer] = useState<CustomerSession>(null);
-  const [bookings, setBookings] = useState<CustomerBooking[]>([]);
-  const [notifications, setNotifications] = useState<CustomerNotification[]>([]);
-  const [routeInventory, setRouteInventory] = useState<RouteInventory[]>([]);
-  const [language, setLanguage] = useState<Language>("vi");
+  const router = useRouter();
+  const pageKey = (section in sectionMeta ? section : pageAliases[section] || "my-tickets") as SectionKey;
+  const meta = sectionMeta[pageKey];
+  const [customer, setCustomer] = useState<CustomerSession | null>(null);
+  const [bookings, setBookings] = useState<ApiBooking[]>([]);
+  const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
+  const [paymentByBooking, setPaymentByBooking] = useState<Record<string, ManualPaymentInfo>>({});
+  const [cancelTarget, setCancelTarget] = useState<ApiBooking | null>(null);
+  const [toast, setToast] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const refreshCurrentUser = useCallback(async () => {
-    try {
-      const response = await fetch("/api/auth/me", { cache: "no-store" });
-      if (!response.ok) {
-        setCustomer(null);
-        return;
-      }
+  const paidBookings = useMemo(
+    () => bookings.filter((booking) => displayBookingStatus(booking) === "Đã thanh toán"),
+    [bookings]
+  );
+  const pendingBookings = useMemo(
+    () => bookings.filter((booking) => displayBookingStatus(booking) === "Chờ thanh toán"),
+    [bookings]
+  );
 
-      const data = (await response.json()) as { user?: NonNullable<CustomerSession> | null };
-      if (data.user?.role === "USER") {
-        setCustomer({
-          ...data.user,
-          phone: data.user.phone || ""
-        });
-        return;
-      }
-
-      setCustomer(null);
-    } catch {
-      setCustomer(null);
-    }
+  useEffect(() => {
+    void refreshPortal();
   }, []);
 
-  const refreshServerData = useCallback(async () => {
-    try {
-      const [bookingsResponse, tripsResponse] = await Promise.all([
-        fetch("/api/user/bookings", { cache: "no-store" }),
-        fetch("/api/trips", { cache: "no-store" })
-      ]);
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
 
+    const timer = window.setTimeout(() => setToast(""), 3200);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
+  async function refreshPortal() {
+    setLoading(true);
+    try {
+      const currentUserResponse = await fetch("/api/auth/me", { cache: "no-store" });
+      if (currentUserResponse.ok) {
+        const data = (await currentUserResponse.json()) as { user?: CustomerSession | null };
+        setCustomer(data.user?.role === "USER" ? data.user : null);
+      } else {
+        setCustomer(null);
+      }
+
+      const bookingsResponse = await fetch("/api/user/bookings", { cache: "no-store" });
       if (bookingsResponse.ok) {
-        const bookingData = (await bookingsResponse.json()) as { bookings?: ApiBooking[] };
-        setBookings((bookingData.bookings || []).map(apiBookingToCustomerBooking));
+        const data = (await bookingsResponse.json()) as { bookings?: ApiBooking[] };
+        setBookings(data.bookings || []);
       } else {
         setBookings([]);
       }
 
-      if (tripsResponse.ok) {
-        const tripsData = (await tripsResponse.json()) as { trips?: ApiTrip[] };
-        setRouteInventory((tripsData.trips || []).map(apiTripToRouteInventory));
-      } else {
-        setRouteInventory([]);
+      const feedbackResponse = await fetch("/api/feedbacks", { cache: "no-store" });
+      if (feedbackResponse.ok) {
+        const data = (await feedbackResponse.json()) as { feedbacks?: FeedbackItem[] };
+        setFeedbacks(data.feedbacks || []);
       }
     } catch {
       setBookings([]);
-      setRouteInventory([]);
+    } finally {
+      setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    setLanguage(readStoredLanguage());
-    setNotifications(listCustomerNotifications());
-    void refreshCurrentUser();
-    void refreshServerData();
-  }, [refreshCurrentUser, refreshServerData]);
+  }
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
     setCustomer(null);
     setBookings([]);
+    router.push("/");
   }
 
-  function handleLanguageChange(value: string) {
-    const nextLanguage = languageOptions.some((option) => option.code === value)
-      ? (value as Language)
-      : "vi";
-    setLanguage(nextLanguage);
-    saveStoredLanguage(nextLanguage);
+  async function submitCancelRequest(input: { note: string; phone: string; reason: string }) {
+    if (!cancelTarget) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/user/bookings/${cancelTarget.id}/cancel-request`, {
+        body: JSON.stringify(input),
+        headers: { "Content-Type": "application/json" },
+        method: "POST"
+      });
+      const data = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error || "Không thể gửi yêu cầu hủy vé.");
+      }
+
+      setCancelTarget(null);
+      setToast("Đã gửi yêu cầu hủy vé. Nhà xe sẽ xử lý trong mục quản trị.");
+      await refreshPortal();
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Không thể gửi yêu cầu hủy vé.");
+    }
   }
 
-  const visibleBookings = customer
-    ? bookings.filter((booking) => booking.customerId === customer.id)
-    : [];
-  const visibleNotifications = customer
-    ? notifications.filter((notification) => notification.customerId === customer.id)
-    : [];
-  const copy = portalCopy[language];
-  const [title, desc] = copy.sections[pageKey];
-  const languageLabel = languageOptions.find((option) => option.code === language)?.short || "VI";
+  async function loadPayment(booking: ApiBooking) {
+    try {
+      const response = await fetch(`/api/payments/${booking.code}`, { cache: "no-store" });
+      const data = (await response.json()) as { error?: string; payment?: ManualPaymentInfo };
+      if (!response.ok || !data.payment) {
+        throw new Error(data.error || "Không thể tải thông tin thanh toán.");
+      }
+
+      setPaymentByBooking((current) => ({ ...current, [booking.id]: data.payment as ManualPaymentInfo }));
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Không thể tải thông tin thanh toán.");
+    }
+  }
 
   return (
-    <main className="min-h-screen bg-[#f4f7fb] text-[#111827]">
-      <header className="sticky top-0 z-40 border-b border-[#dbe7f3] bg-white/95 shadow-[0_10px_30px_rgba(16,24,40,0.06)] backdrop-blur">
-        <div className="bg-[#073b7a] text-white">
-          <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-4 text-xs font-medium md:px-6">
-            <span className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-[#ffd43b]" />
-              {copy.assurance}
-            </span>
-            <span className="hidden md:inline">{copy.hotline}</span>
-          </div>
-        </div>
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
+    <main className="min-h-screen bg-[#f5f7fb] text-[#101828]">
+      <header className="border-b border-[#d9e2ef] bg-white">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link className="flex items-center gap-3" href="/">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#0a67d8] font-black text-white">
-              TT
+            <span className="relative h-10 w-10 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-[#d9e2ef]">
+              <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="40px" src="/logo.jpg" />
             </span>
             <span>
-              <span className="block text-lg font-extrabold leading-5 text-[#0a67d8]">Thành Trung</span>
-              <span className="block text-xs font-semibold text-[#667085]">Vé xe khách</span>
+              <span className="block text-base font-black text-[#073b7a]">Thành Trung Limousine</span>
+              <span className="block text-xs font-semibold text-[#667085]">Cổng khách hàng</span>
             </span>
           </Link>
-
-          <div className="flex items-center gap-3">
-            <label className="flex h-10 items-center gap-2 rounded-full border border-[#d0d5dd] px-3 text-sm font-extrabold text-[#344054]">
-              {languageLabel}
-              <select
-                aria-label="Chuyển đổi ngôn ngữ"
-                className="border-0 bg-transparent p-0 text-sm font-extrabold text-[#0a67d8] focus:ring-0"
-                onChange={(event) => handleLanguageChange(event.target.value)}
-                value={language}
-              >
-                {languageOptions.map((option) => (
-                  <option key={option.code} value={option.code}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="flex items-center gap-2">
             {customer ? (
-              <button
-                className="rounded-full border border-[#0a67d8] px-4 py-2 text-sm font-bold text-[#0a67d8]"
-                onClick={() => void handleLogout()}
-                type="button"
-              >
-                {copy.auth.logout}
-              </button>
+              <>
+                <span className="hidden text-sm font-bold text-[#344054] sm:inline">{customer.name}</span>
+                <button
+                  className="rounded-md border border-[#d0d5dd] px-3 py-2 text-sm font-bold text-[#344054]"
+                  onClick={handleLogout}
+                  type="button"
+                >
+                  Đăng xuất
+                </button>
+              </>
             ) : (
-              <Link className="rounded-full bg-[#0a67d8] px-4 py-2 text-sm font-bold text-white" href="/login">
-                {copy.auth.login}
+              <Link className="rounded-md bg-[#073b7a] px-4 py-2 text-sm font-bold text-white" href="/login">
+                Đăng nhập
               </Link>
             )}
           </div>
         </div>
       </header>
 
-      <section className="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-10">
-        <Link className="inline-flex items-center gap-2 text-sm font-extrabold text-[#0a67d8]" href="/">
-          <ArrowLeft className="h-4 w-4" />
-          {copy.back}
-        </Link>
+      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <aside className="rounded-lg border border-[#e4e7ec] bg-white p-3 shadow-sm lg:sticky lg:top-20 lg:self-start">
+          <Link className="mb-3 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-bold text-[#075bbf]" href="/">
+            <ArrowLeft className="h-4 w-4" />
+            Đặt vé mới
+          </Link>
+          <nav className="grid gap-1">
+            {navItems.map((item) => (
+              <Link
+                className={[
+                  "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-bold",
+                  item.key === pageKey ? "bg-[#eff8ff] text-[#075bbf]" : "text-[#344054] hover:bg-[#f2f4f7]"
+                ].join(" ")}
+                href={item.href}
+                key={item.key}
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </aside>
 
-        <div className="mt-6 overflow-hidden rounded-[28px] bg-white shadow-[0_18px_60px_rgba(16,24,40,0.08)] ring-1 ring-[#e6eef8]">
-          <div className="h-1.5 bg-[linear-gradient(90deg,#073b7a,#0a67d8,#ffd43b)]" />
-          <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-start">
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#e8f3ff] text-[#075bbf]">
-              <Icon className="h-6 w-6" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-3xl font-black leading-tight">{title}</h1>
-              <p className="mt-2 max-w-2xl leading-7 text-[#667085]">{desc}</p>
+        <section className="min-w-0">
+          <div className="mb-5 rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-black text-[#075bbf]">Tài khoản khách hàng</p>
+                <h1 className="mt-1 text-2xl font-black sm:text-3xl">{meta.title}</h1>
+                <p className="mt-2 text-sm leading-6 text-[#667085]">{meta.desc}</p>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <MiniStat label="Tổng vé" value={String(bookings.length)} />
+                <MiniStat label="Đã thanh toán" value={String(paidBookings.length)} />
+                <MiniStat label="Chờ thanh toán" value={String(pendingBookings.length)} />
+              </div>
             </div>
           </div>
+
+          {loading ? (
+            <EmptyPanel text="Đang tải dữ liệu..." />
+          ) : !customer ? (
+            <LoginRequired />
+          ) : (
+            <PortalContent
+              bookings={bookings}
+              feedbacks={feedbacks}
+              onCancelRequest={setCancelTarget}
+              onLoadPayment={loadPayment}
+              onRefresh={refreshPortal}
+              pageKey={pageKey}
+              paymentByBooking={paymentByBooking}
+              setToast={setToast}
+            />
+          )}
+        </section>
+      </div>
+
+      {toast ? (
+        <div className="fixed bottom-5 left-1/2 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 rounded-lg border border-[#d0d5dd] bg-white px-4 py-3 text-sm font-bold text-[#344054] shadow-lg">
+          {toast}
         </div>
+      ) : null}
 
-        <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <PortalMainContent
-            bookings={visibleBookings}
-            copy={copy}
-            customer={customer}
-            language={language}
-            pageKey={pageKey}
-            routeInventory={routeInventory}
-          />
-
-          <aside className="space-y-5">
-            <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#edf2f7]">
-              <h2 className="flex items-center gap-2 text-lg font-extrabold">
-                <Bell className="h-5 w-5 text-[#0a67d8]" />
-                {copy.customerNotifications}
-              </h2>
-              <div className="mt-4 space-y-3">
-                {visibleNotifications.length ? (
-                  visibleNotifications.slice(0, 6).map((notification) => (
-                    <div className="rounded-xl border border-[#edf2f7] p-3" key={notification.id}>
-                      <p className="text-sm font-extrabold text-[#111827]">{notification.title}</p>
-                      <p className="mt-2 text-sm leading-6 text-[#667085]">{notification.message}</p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="rounded-xl bg-[#f8fafc] p-4 text-sm leading-6 text-[#667085]">
-                    {copy.noNotifications}
-                  </p>
-                )}
-              </div>
-            </section>
-
-            <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#edf2f7]">
-              <h2 className="text-lg font-extrabold">{copy.quickActions}</h2>
-              <div className="mt-4 grid gap-2">
-                {[
-                  [copy.actions[0], "/"],
-                  [copy.actions[1], "/user/promotions"],
-                  [copy.actions[2], "/user/support"]
-                ].map(([labelText, href]) => (
-                  <Link
-                    className="rounded-xl border border-[#edf2f7] px-4 py-3 text-sm font-extrabold text-[#0a67d8] hover:bg-[#e8f3ff]"
-                    href={href}
-                    key={labelText}
-                  >
-                    {labelText}
-                  </Link>
-                ))}
-              </div>
-            </section>
-          </aside>
-        </div>
-      </section>
+      {cancelTarget ? (
+        <CancelRequestModal
+          booking={cancelTarget}
+          onClose={() => setCancelTarget(null)}
+          onSubmit={submitCancelRequest}
+        />
+      ) : null}
     </main>
   );
 }
 
-type TicketCopy = {
-  ticketList: string;
-  loginRequired: string;
-  noTickets: string;
-  ticketFields: {
-    code: string;
-    seats: string;
-    pickup: string;
-    dropoff: string;
-    payment: string;
-    total: string;
-    seatUnit: string;
-    rejectionReason: string;
-  };
-  statuses: {
-    pending: string;
-    confirmed: string;
-    changeRequested: string;
-    rejected: string;
-    canceled: string;
-  };
-};
-
-type CustomerSession = {
-  email: string;
-  id: string;
-  name: string;
-  phone: string;
-  role: "USER" | "ADMIN" | "DRIVER";
-} | null;
-
-type UtilityItem = {
-  icon: LucideIcon;
-  title: string;
-  desc: string;
-  meta: string;
-};
-
-type PortalUtilityPageKey = Exclude<SectionKey, "my-tickets" | "cancel" | "history" | "tracking" | "feedback">;
-
-function PortalMainContent({
+function PortalContent({
   bookings,
-  copy,
-  customer,
-  language,
+  feedbacks,
+  onCancelRequest,
+  onLoadPayment,
+  onRefresh,
   pageKey,
-  routeInventory
+  paymentByBooking,
+  setToast
 }: {
-  bookings: CustomerBooking[];
-  copy: TicketCopy;
-  customer: CustomerSession;
-  language: Language;
+  bookings: ApiBooking[];
+  feedbacks: FeedbackItem[];
+  onCancelRequest: (booking: ApiBooking) => void;
+  onLoadPayment: (booking: ApiBooking) => void;
+  onRefresh: () => Promise<void>;
   pageKey: SectionKey;
-  routeInventory: RouteInventory[];
+  paymentByBooking: Record<string, ManualPaymentInfo>;
+  setToast: (message: string) => void;
 }) {
   if (pageKey === "my-tickets") {
-    return <TicketListSection bookings={bookings} copy={copy} customer={customer} language={language} />;
+    return (
+      <TicketList
+        bookings={bookings}
+        onCancelRequest={onCancelRequest}
+        onLoadPayment={onLoadPayment}
+        paymentByBooking={paymentByBooking}
+      />
+    );
   }
 
-  if (pageKey === "cancel") {
-    return <CancelSection bookings={bookings} copy={copy} customer={customer} language={language} />;
+  if (pageKey === "payment") {
+    return (
+      <TicketList
+        bookings={bookings.filter((booking) => displayBookingStatus(booking) === "Chờ thanh toán")}
+        emptyText="Không có đơn chờ thanh toán."
+        onCancelRequest={onCancelRequest}
+        onLoadPayment={onLoadPayment}
+        paymentByBooking={paymentByBooking}
+      />
+    );
   }
 
   if (pageKey === "history") {
-    return <HistorySection bookings={bookings} copy={copy} customer={customer} language={language} />;
+    return (
+      <TicketList
+        bookings={bookings}
+        emptyText="Chưa có lịch sử đặt vé."
+        onCancelRequest={onCancelRequest}
+        onLoadPayment={onLoadPayment}
+        paymentByBooking={paymentByBooking}
+      />
+    );
   }
 
   if (pageKey === "tracking") {
-    return <TrackingSection bookings={bookings} copy={copy} customer={customer} language={language} routeInventory={routeInventory} />;
+    return <TrackingSection bookings={bookings} />;
   }
 
   if (pageKey === "feedback") {
-    return <FeedbackSection bookings={bookings} copy={copy} customer={customer} language={language} />;
+    return <FeedbackSection bookings={bookings} feedbacks={feedbacks} onRefresh={onRefresh} setToast={setToast} />;
   }
 
-  const content = getUtilityContent(language)[pageKey];
-  return <UtilitySection content={content} />;
+  if (pageKey === "cancel") {
+    return <CancelSection bookings={bookings} onCancelRequest={onCancelRequest} />;
+  }
+
+  return <UtilitySection pageKey={pageKey} />;
 }
 
-function TicketListSection({
+function TicketList({
   bookings,
-  copy,
-  customer,
-  language
+  emptyText = "Bạn chưa có vé nào.",
+  onCancelRequest,
+  onLoadPayment,
+  paymentByBooking
 }: {
-  bookings: CustomerBooking[];
-  copy: TicketCopy;
-  customer: CustomerSession;
-  language: Language;
+  bookings: ApiBooking[];
+  emptyText?: string;
+  onCancelRequest: (booking: ApiBooking) => void;
+  onLoadPayment: (booking: ApiBooking) => void;
+  paymentByBooking: Record<string, ManualPaymentInfo>;
 }) {
-  return (
-    <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#edf2f7]">
-      <h2 className="text-xl font-extrabold">{copy.ticketList}</h2>
-      <div className="mt-4 space-y-4">
-        {customer ? (
-          bookings.length ? (
-            bookings.map((booking) => (
-              <TicketCard booking={booking} copy={copy} key={booking.id} language={language} />
-            ))
-          ) : (
-            <EmptyState text={copy.noTickets} />
-          )
-        ) : (
-          <EmptyState text={copy.loginRequired} />
-        )}
-      </div>
-    </section>
-  );
-}
-
-function CancelSection({
-  bookings,
-  copy,
-  customer,
-  language
-}: {
-  bookings: CustomerBooking[];
-  copy: TicketCopy;
-  customer: CustomerSession;
-  language: Language;
-}) {
-  const content = getCancelContent(language);
-  const rejectedBookings = bookings.filter((booking) => booking.status === "Từ chối");
-  const requestableBookings = bookings.filter(
-    (booking) => booking.status === "Chờ xác nhận" || booking.status === "Đã xác nhận"
-  );
-  const [requestReason, setRequestReason] = useState("");
-  const [requestBookingId, setRequestBookingId] = useState("");
-  const [requestStatus, setRequestStatus] = useState("");
-
-  useEffect(() => {
-    setRequestBookingId((current) => current || requestableBookings[0]?.id || "");
-  }, [requestableBookings]);
-
-  function handleChangeRequest(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const bookingId = requestBookingId || requestableBookings[0]?.id;
-    if (!bookingId) {
-      setRequestStatus(content.noRequestable);
-      return;
-    }
-
-    setRequestStatus("Yêu cầu đã được ghi nhận trên giao diện. API đổi/hủy sẽ được nối với database ở bước tiếp theo.");
-    setRequestReason("");
+  if (!bookings.length) {
+    return <EmptyPanel text={emptyText} />;
   }
 
   return (
-    <section className="space-y-5">
-      <UtilitySection content={content} />
-      <form className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#edf2f7]" onSubmit={handleChangeRequest}>
-        <h2 className="text-xl font-extrabold">{content.requestTitle}</h2>
-        <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-          <select
-            className="h-12 rounded-2xl border-[#d0d5dd] text-sm font-semibold focus:border-[#0a67d8] focus:ring-[#0a67d8]"
-            onChange={(event) => setRequestBookingId(event.target.value)}
-            value={requestBookingId}
-          >
-            {requestableBookings.length ? (
-              requestableBookings.map((booking) => (
-                <option key={booking.id} value={booking.id}>
-                  {booking.route} · {booking.id}
-                </option>
-              ))
-            ) : (
-              <option value="">{content.noRequestable}</option>
-            )}
-          </select>
-          <input
-            className="h-12 rounded-2xl border-[#d0d5dd] text-sm focus:border-[#0a67d8] focus:ring-[#0a67d8]"
-            onChange={(event) => setRequestReason(event.target.value)}
-            placeholder={content.requestPlaceholder}
-            value={requestReason}
-          />
-        </div>
-        <button className="mt-4 inline-flex h-11 items-center gap-2 rounded-2xl bg-[#0a67d8] px-4 text-sm font-extrabold text-white" type="submit">
-          <Send className="h-4 w-4" />
-          {content.requestSubmit}
-        </button>
-        {requestStatus ? <p className="mt-3 rounded-2xl bg-[#ecfdf3] p-3 text-sm font-bold text-[#027a48]">{requestStatus}</p> : null}
-      </form>
-      <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#edf2f7]">
-        <h2 className="text-xl font-extrabold">{content.rejectedTitle}</h2>
-        <div className="mt-4 space-y-4">
-          {!customer ? (
-            <EmptyState text={copy.loginRequired} />
-          ) : rejectedBookings.length ? (
-            rejectedBookings.map((booking) => (
-              <TicketCard booking={booking} copy={copy} key={booking.id} language={language} />
-            ))
-          ) : (
-            <EmptyState text={content.noRejected} />
-          )}
-        </div>
-      </section>
-    </section>
+    <div className="grid gap-4">
+      {bookings.map((booking) => (
+        <TicketCard
+          booking={booking}
+          key={booking.id}
+          onCancelRequest={() => onCancelRequest(booking)}
+          onLoadPayment={() => onLoadPayment(booking)}
+          payment={paymentByBooking[booking.id]}
+        />
+      ))}
+    </div>
   );
-}
-
-function HistorySection({
-  bookings,
-  copy,
-  customer,
-  language
-}: {
-  bookings: CustomerBooking[];
-  copy: TicketCopy;
-  customer: CustomerSession;
-  language: Language;
-}) {
-  const content = getHistoryContent(language);
-
-  if (!customer) {
-    return (
-      <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#edf2f7]">
-        <EmptyState text={copy.loginRequired} />
-      </section>
-    );
-  }
-
-  return (
-    <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#edf2f7]">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-extrabold">{content.title}</h2>
-          <p className="mt-2 text-sm leading-6 text-[#667085]">{content.desc}</p>
-        </div>
-        <span className="rounded-full bg-[#e8f3ff] px-3 py-1 text-sm font-black text-[#0a67d8]">
-          {bookings.length} {content.countLabel}
-        </span>
-      </div>
-      <div className="mt-5 space-y-3">
-        {bookings.length ? (
-          bookings.map((booking) => (
-            <div className="rounded-2xl border border-[#edf2f7] p-4" key={booking.id}>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-extrabold">{booking.route}</h3>
-                  <p className="mt-1 text-sm font-semibold text-[#667085]">
-                    {formatDisplayDate(booking.travelDate, language)} · {booking.pickupPoint || booking.from}
-                  </p>
-                </div>
-                <StatusBadge copy={copy} status={booking.status} />
-              </div>
-              <div className="mt-3 grid gap-3 md:grid-cols-3">
-                <Info label={copy.ticketFields.code} value={booking.id} />
-                <Info label={copy.ticketFields.seats} value={booking.seatCodes?.join(", ") || `${booking.seats}`} />
-                <Info label={copy.ticketFields.total} value={formatCurrency(booking.price, language)} />
-              </div>
-            </div>
-          ))
-        ) : (
-          <EmptyState text={content.empty} />
-        )}
-      </div>
-    </section>
-  );
-}
-
-function TrackingSection({
-  bookings,
-  copy,
-  customer,
-  language,
-  routeInventory
-}: {
-  bookings: CustomerBooking[];
-  copy: TicketCopy;
-  customer: CustomerSession;
-  language: Language;
-  routeInventory: RouteInventory[];
-}) {
-  const progress = useLiveTrackingProgress();
-  const activeBooking =
-    bookings.find((booking) => booking.status === "Đã xác nhận") ||
-    bookings.find((booking) => booking.status === "Chờ xác nhận") ||
-    bookings[0];
-  const activeTrip = routeInventory.find((trip) => trip.route === activeBooking?.route);
-  const content = getTrackingContent(language);
-
-  if (!customer) {
-    return (
-      <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#edf2f7]">
-        <EmptyState text={copy.loginRequired} />
-      </section>
-    );
-  }
-
-  return (
-    <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#edf2f7]">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-extrabold">{content.title}</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#667085]">{content.desc}</p>
-        </div>
-        <span className="rounded-full bg-[#ecfdf3] px-3 py-1 text-sm font-black text-[#027a48]">
-          {content.live}
-        </span>
-      </div>
-
-      <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_310px]">
-        <div className="relative min-h-[360px] overflow-hidden rounded-2xl border border-[#d7ebff] bg-[#e8f3ff]">
-          <div className="absolute inset-0 opacity-60 [background-image:linear-gradient(#bad7f5_1px,transparent_1px),linear-gradient(90deg,#bad7f5_1px,transparent_1px)] [background-size:38px_38px]" />
-          <div className="absolute left-[10%] right-[10%] top-[48%] h-2 rounded-full bg-white shadow-inner">
-            <div className="h-full rounded-full bg-[#0a67d8]" style={{ width: `${progress}%` }} />
-          </div>
-          <div className="absolute left-[8%] top-[42%] rounded-2xl bg-white px-3 py-2 text-sm font-black text-[#0a67d8] shadow">
-            {activeBooking?.pickupPoint || content.pickup}
-          </div>
-          <div className="absolute right-[8%] top-[42%] rounded-2xl bg-white px-3 py-2 text-sm font-black text-[#0a67d8] shadow">
-            {activeBooking?.dropoffPoint || content.dropoff}
-          </div>
-          <div
-            className="absolute top-[calc(48%-20px)] grid h-11 w-11 place-items-center rounded-full bg-[#ffd43b] text-[#111827] shadow-[0_10px_30px_rgba(16,24,40,0.22)] transition-[left] duration-700"
-            style={{ left: `calc(10% + ${progress * 0.8}% - 22px)` }}
-          >
-            <Bus className="h-5 w-5" />
-          </div>
-          <div className="absolute bottom-5 left-5 right-5 rounded-2xl bg-white/95 p-4 shadow">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-bold text-[#667085]">{content.currentTrip}</p>
-                <p className="mt-1 text-lg font-extrabold text-[#111827]">
-                  {activeBooking?.route || content.demoRoute}
-                </p>
-              </div>
-              <span className="rounded-full bg-[#e8f3ff] px-3 py-1 text-sm font-black text-[#0a67d8]">
-                {Math.round(progress)}%
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <aside className="space-y-3">
-          {[
-            [Route, content.route, activeBooking?.route || content.demoRoute],
-            [Bus, content.tripStatus, activeTrip?.status || content.live],
-            [Clock3, content.eta, content.etaValue],
-            [MapPinned, content.pickupLabel, activeBooking?.pickupPoint || activeBooking?.from || content.pickup],
-            [Navigation, content.dropoffLabel, activeBooking?.dropoffPoint || activeBooking?.to || content.dropoff],
-            [UserCheck, content.driver, activeTrip?.driver || content.driverPending],
-            [Phone, content.driverPhone, activeTrip?.vehicle || "0238 888 888"]
-          ].map(([Icon, label, value]) => {
-            const InfoIcon = Icon as LucideIcon;
-            return (
-              <div className="flex gap-3 rounded-2xl border border-[#edf2f7] p-4" key={label as string}>
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e8f3ff] text-[#0a67d8]">
-                  <InfoIcon className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-[#667085]">{label as string}</p>
-                  <p className="mt-1 text-sm font-extrabold text-[#111827]">{value as string}</p>
-                </div>
-              </div>
-            );
-          })}
-        </aside>
-      </div>
-    </section>
-  );
-}
-
-function FeedbackSection({
-  bookings,
-  copy,
-  customer,
-  language
-}: {
-  bookings: CustomerBooking[];
-  copy: TicketCopy;
-  customer: CustomerSession;
-  language: Language;
-}) {
-  const content = getFeedbackContent(language);
-  const [feedbacks, setFeedbacks] = useState<CustomerFeedback[]>([]);
-  const [message, setMessage] = useState("");
-  const [rating, setRating] = useState(5);
-  const [selectedBookingId, setSelectedBookingId] = useState("");
-  const [status, setStatus] = useState("");
-
-  useEffect(() => {
-    if (!customer) {
-      return;
-    }
-
-    setFeedbacks(listCustomerFeedbacks().filter((feedback) => feedback.customerId === customer.id));
-    setSelectedBookingId((current) => current || bookings[0]?.id || "");
-  }, [bookings, customer]);
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const trimmedMessage = message.trim();
-
-    if (!customer) {
-      setStatus(copy.loginRequired);
-      return;
-    }
-
-    if (!trimmedMessage) {
-      setStatus(content.required);
-      return;
-    }
-
-    const booking = bookings.find((item) => item.id === selectedBookingId) || bookings[0];
-    const feedback = addCustomerFeedback({
-      bookingId: booking?.id || "Không có vé",
-      customerId: customer.id,
-      customerName: customer.name,
-      customerPhone: customer.phone,
-      message: trimmedMessage,
-      rating,
-      route: booking?.route || content.noTrip
-    });
-
-    setFeedbacks([feedback, ...listCustomerFeedbacks().filter((item) => item.customerId === customer.id && item.id !== feedback.id)]);
-    setMessage("");
-    setStatus(content.success);
-  }
-
-  if (!customer) {
-    return (
-      <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#edf2f7]">
-        <EmptyState text={copy.loginRequired} />
-      </section>
-    );
-  }
-
-  return (
-    <section className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(300px,0.55fr)]">
-      <form className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#edf2f7]" onSubmit={handleSubmit}>
-        <h2 className="text-xl font-extrabold">{content.title}</h2>
-        <p className="mt-2 text-sm leading-6 text-[#667085]">{content.desc}</p>
-
-        <label className="mt-5 block">
-          <span className="text-sm font-extrabold text-[#344054]">{content.tripLabel}</span>
-          <select
-            className="mt-2 h-12 w-full rounded-2xl border-[#d0d5dd] text-sm font-semibold text-[#111827] focus:border-[#0a67d8] focus:ring-[#0a67d8]"
-            onChange={(event) => setSelectedBookingId(event.target.value)}
-            value={selectedBookingId}
-          >
-            {bookings.length ? (
-              bookings.map((booking) => (
-                <option key={booking.id} value={booking.id}>
-                  {booking.route} · {formatDisplayDate(booking.travelDate, language)} · {booking.id}
-                </option>
-              ))
-            ) : (
-              <option value="">{content.noTrip}</option>
-            )}
-          </select>
-        </label>
-
-        <div className="mt-5">
-          <p className="text-sm font-extrabold text-[#344054]">{content.ratingLabel}</p>
-          <div className="mt-2 flex gap-2">
-            {[1, 2, 3, 4, 5].map((value) => (
-              <button
-                aria-label={`${value} sao`}
-                className={
-                  value <= rating
-                    ? "grid h-11 w-11 place-items-center rounded-xl bg-[#fff7d6] text-[#f79009] ring-1 ring-[#fedf89]"
-                    : "grid h-11 w-11 place-items-center rounded-xl bg-[#f2f4f7] text-[#98a2b3] ring-1 ring-[#edf2f7]"
-                }
-                key={value}
-                onClick={() => setRating(value)}
-                type="button"
-              >
-                <Star className={value <= rating ? "h-5 w-5 fill-[#fdb022]" : "h-5 w-5"} />
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <label className="mt-5 block">
-          <span className="text-sm font-extrabold text-[#344054]">{content.messageLabel}</span>
-          <textarea
-            className="mt-2 min-h-32 w-full rounded-2xl border-[#d0d5dd] text-sm leading-6 focus:border-[#0a67d8] focus:ring-[#0a67d8]"
-            onChange={(event) => setMessage(event.target.value)}
-            placeholder={content.placeholder}
-            value={message}
-          />
-        </label>
-
-        {status ? (
-          <p className="mt-4 rounded-2xl bg-[#ecfdf3] px-4 py-3 text-sm font-bold text-[#027a48]">{status}</p>
-        ) : null}
-
-        <button className="mt-5 inline-flex h-12 items-center gap-2 rounded-2xl bg-[#0a67d8] px-5 text-sm font-extrabold text-white hover:bg-[#075bbf]" type="submit">
-          <Send className="h-4 w-4" />
-          {content.submit}
-        </button>
-      </form>
-
-      <aside className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#edf2f7]">
-        <h2 className="text-lg font-extrabold">{content.sentTitle}</h2>
-        <div className="mt-4 space-y-3">
-          {feedbacks.length ? (
-            feedbacks.slice(0, 5).map((feedback) => (
-              <article className="rounded-2xl border border-[#edf2f7] p-4" key={feedback.id}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-extrabold text-[#111827]">{feedback.route}</p>
-                    <p className="mt-1 text-xs font-semibold text-[#667085]">{feedback.bookingId}</p>
-                  </div>
-                  <span className="rounded-full bg-[#fff7d6] px-2.5 py-1 text-xs font-black text-[#a15c00]">
-                    {feedback.rating}/5
-                  </span>
-                </div>
-                <p className="mt-3 text-sm leading-6 text-[#667085]">{feedback.message}</p>
-              </article>
-            ))
-          ) : (
-            <p className="rounded-2xl bg-[#f8fafc] p-4 text-sm leading-6 text-[#667085]">
-              {content.empty}
-            </p>
-          )}
-        </div>
-      </aside>
-    </section>
-  );
-}
-
-function UtilitySection({
-  content
-}: {
-  content: {
-    title: string;
-    desc: string;
-    items: UtilityItem[];
-    highlight: string;
-  };
-}) {
-  return (
-    <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-[#edf2f7]">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-extrabold">{content.title}</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#667085]">{content.desc}</p>
-        </div>
-        <span className="rounded-full bg-[#ecfdf3] px-3 py-1 text-sm font-black text-[#027a48]">
-          {content.highlight}
-        </span>
-      </div>
-      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {content.items.map((item) => {
-          const Icon = item.icon;
-          return (
-            <article className="rounded-2xl border border-[#edf2f7] p-4" key={item.title}>
-              <div className="flex items-start gap-3">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#e8f3ff] text-[#0a67d8]">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <div>
-                  <h3 className="font-extrabold">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-[#667085]">{item.desc}</p>
-                  <p className="mt-3 text-xs font-black uppercase tracking-wide text-[#0a67d8]">{item.meta}</p>
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function useLiveTrackingProgress() {
-  const [progress, setProgress] = useState(36);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setProgress((current) => (current >= 88 ? 34 : current + 2));
-    }, 1600);
-
-    return () => window.clearInterval(timer);
-  }, []);
-
-  return progress;
-}
-
-function getTrackingContent(language: Language) {
-  if (language === "en") {
-    return {
-      currentTrip: "Current trip",
-      demoRoute: "Vinh - Hoang Mai",
-      desc: "Demo live map for pickup/dropoff progress. The bus marker updates automatically.",
-      driver: "Driver",
-      driverPhone: "Driver hotline",
-      driverPending: "Pending assignment",
-      dropoff: "Hoang Mai station",
-      dropoffLabel: "Dropoff",
-      eta: "ETA",
-      etaValue: "22 minutes",
-      live: "Live demo",
-      pickup: "Thanh Trung office",
-      pickupLabel: "Pickup",
-      route: "Route",
-      title: "Live trip tracking",
-      tripStatus: "Trip status"
-    };
-  }
-
-  if (language === "zh") {
-    return {
-      currentTrip: "当前行程",
-      demoRoute: "荣市 - 黄梅",
-      desc: "演示车辆实时地图，自动显示上下车进度。",
-      driver: "司机",
-      driverPhone: "司机热线",
-      driverPending: "待分配",
-      dropoff: "黄梅车站",
-      dropoffLabel: "下车点",
-      eta: "预计到达",
-      etaValue: "22分钟",
-      live: "实时演示",
-      pickup: "Thanh Trung 办公室",
-      pickupLabel: "上车点",
-      route: "路线",
-      title: "行程实时跟踪",
-      tripStatus: "行程状态"
-    };
-  }
-
-  return {
-    currentTrip: "Chuyến đang theo dõi",
-    demoRoute: "Vinh - Hoàng Mai",
-    desc: "Bản đồ demo theo dõi tiến độ đón/trả. Vị trí xe tự cập nhật để mô phỏng chuyến đang chạy.",
-    driver: "Tài xế",
-    driverPhone: "Hotline tài xế",
-    driverPending: "Chưa phân công",
-    dropoff: "Bến xe Hoàng Mai",
-    dropoffLabel: "Điểm trả",
-    eta: "Dự kiến đến",
-    etaValue: "22 phút",
-    live: "Đang chạy demo",
-    pickup: "VP Thành Trung",
-    pickupLabel: "Điểm đón",
-    route: "Tuyến",
-    title: "Theo dõi chuyến trực tiếp",
-    tripStatus: "Trạng thái chuyến"
-  };
-}
-
-function getFeedbackContent(language: Language) {
-  if (language === "en") {
-    return {
-      desc: "Rate a completed or booked trip. Admin will see the feedback in the Reviews area.",
-      empty: "No feedback has been sent yet.",
-      messageLabel: "Feedback detail",
-      noTrip: "No booking selected",
-      placeholder: "Share vehicle quality, driver attitude, pickup timing, or payment experience...",
-      ratingLabel: "Rating",
-      required: "Please enter your feedback before sending.",
-      sentTitle: "Sent feedback",
-      submit: "Send feedback",
-      success: "Feedback sent to admin.",
-      title: "Send trip feedback",
-      tripLabel: "Select trip"
-    };
-  }
-
-  if (language === "zh") {
-    return {
-      desc: "评价已订或已完成的行程，后台会在评价页看到反馈。",
-      empty: "暂无已发送反馈。",
-      messageLabel: "反馈内容",
-      noTrip: "未选择订单",
-      placeholder: "请填写车辆质量、司机服务、上车时间或支付体验...",
-      ratingLabel: "评分",
-      required: "发送前请输入反馈内容。",
-      sentTitle: "已发送反馈",
-      submit: "发送反馈",
-      success: "反馈已发送到后台。",
-      title: "发送行程反馈",
-      tripLabel: "选择行程"
-    };
-  }
-
-  return {
-    desc: "Đánh giá chuyến đã đặt hoặc đã đi. Admin sẽ thấy phản hồi này trong mục Đánh giá.",
-    empty: "Bạn chưa gửi phản hồi nào.",
-    messageLabel: "Nội dung phản hồi",
-    noTrip: "Chưa có vé để chọn",
-    placeholder: "Nhập chất lượng xe, thái độ tài xế, thời gian đón, thanh toán hoặc góp ý khác...",
-    ratingLabel: "Điểm đánh giá",
-    required: "Vui lòng nhập nội dung phản hồi trước khi gửi.",
-    sentTitle: "Phản hồi đã gửi",
-    submit: "Gửi phản hồi",
-    success: "Đã gửi phản hồi về admin.",
-    title: "Gửi phản hồi chuyến xe",
-    tripLabel: "Chọn chuyến"
-  };
-}
-
-function getUtilityContent(language: Language): Record<
-  PortalUtilityPageKey,
-  { title: string; desc: string; highlight: string; items: UtilityItem[] }
-> {
-  if (language === "en") {
-    return {
-      promotions: {
-        title: "Useful deals",
-        desc: "Store route discounts, payment offers, and group-trip vouchers before checkout.",
-        highlight: "Apply before payment",
-        items: [
-          { icon: Gift, title: "Route voucher", desc: "Suggested code for frequent Vinh, Hoang Mai, and Hanoi trips.", meta: "NGHEAN20" },
-          { icon: WalletCards, title: "Pay-later support", desc: "Keep the seat and pay after the operator confirms pickup details.", meta: "Flexible payment" },
-          { icon: UserCheck, title: "Group discount", desc: "Prioritize reservations with 3 or more seats and shared pickup notes.", meta: "Group trip" }
-        ]
-      },
-      payment: {
-        title: "Payment center",
-        desc: "Follow payment status, method, and invoice notes in one place.",
-        highlight: "Transparent checkout",
-        items: [
-          { icon: CreditCard, title: "Bank transfer", desc: "Show booking code in transfer content so the admin can match payment.", meta: "Manual reconciliation" },
-          { icon: QrCode, title: "QR demo", desc: "Demo QR payments are recorded into the admin daily balance.", meta: "Demo only" },
-          { icon: ReceiptText, title: "Payment receipt", desc: "Keep invoice notes, surcharge, and total fare per booking.", meta: "Receipt ready" }
-        ]
-      },
-      luggage: {
-        title: "Luggage and parcel",
-        desc: "Record luggage, parcel requests, and surcharge notes before boarding.",
-        highlight: "Clear policy",
-        items: [
-          { icon: Luggage, title: "20 kg luggage", desc: "Standard checked luggage is shown with each ticket note.", meta: "Included" },
-          { icon: PackageCheck, title: "Parcel with bus", desc: "Send parcels with receiver name, phone, and dropoff point.", meta: "Driver manifest" },
-          { icon: ClipboardList, title: "Surcharge note", desc: "Oversized luggage can be marked for admin confirmation.", meta: "Before boarding" }
-        ]
-      },
-      operators: {
-        title: "Operator information",
-        desc: "Compare bus type, license plate, amenities, and route coverage.",
-        highlight: "Verified trips",
-        items: [
-          { icon: Bus, title: "Thanh Trung Limousine", desc: "16-seat limousine with clear pickup and operator confirmation.", meta: "Vinh - Hoang Mai" },
-          { icon: Armchair, title: "Premium seats", desc: "Show available seats, sold seats, and selected seats before checkout.", meta: "Seat map" },
-          { icon: ShieldCheck, title: "Operator guarantee", desc: "Admin can confirm, reject, and notify customers with a reason.", meta: "Controlled by admin" }
-        ]
-      },
-      support: {
-        title: "Support hub",
-        desc: "Customer help for boarding, changes, payment, and operator contact.",
-        highlight: "24/7 support",
-        items: [
-          { icon: Phone, title: "Hotline", desc: "Call 1900 2026 or 0238 888 888 for pickup, payment, and ticket changes.", meta: "Immediate help" },
-          { icon: Headphones, title: "Change request", desc: "Send change or cancellation requests with booking code.", meta: "Policy based" },
-          { icon: MapPinned, title: "Pickup guide", desc: "Review pickup/dropoff points before departure.", meta: "Before trip" }
-        ]
-      }
-    };
-  }
-
-  if (language === "zh") {
-    return {
-      promotions: {
-        title: "常用优惠",
-        desc: "在付款前保存路线优惠、支付优惠和多人出行优惠。",
-        highlight: "付款前使用",
-        items: [
-          { icon: Gift, title: "路线优惠码", desc: "为荣市、黄梅、河内等常用路线推荐优惠。", meta: "NGHEAN20" },
-          { icon: WalletCards, title: "确认后付款", desc: "车公司确认上下车点后再完成付款。", meta: "灵活支付" },
-          { icon: UserCheck, title: "多人优惠", desc: "3个座位以上的订单可记录同一上车点备注。", meta: "团体出行" }
-        ]
-      },
-      payment: {
-        title: "支付中心",
-        desc: "集中查看支付状态、支付方式和发票备注。",
-        highlight: "费用清楚",
-        items: [
-          { icon: CreditCard, title: "银行转账", desc: "转账备注填写订单号，方便管理员核对。", meta: "人工核对" },
-          { icon: QrCode, title: "QR演示", desc: "二维码演示支付会记录到后台当日余额。", meta: "仅演示" },
-          { icon: ReceiptText, title: "付款凭证", desc: "保存发票备注、附加费和订单总额。", meta: "凭证记录" }
-        ]
-      },
-      luggage: {
-        title: "行李与寄件",
-        desc: "上车前记录行李、随车寄件和附加费说明。",
-        highlight: "规则明确",
-        items: [
-          { icon: Luggage, title: "20公斤行李", desc: "每张车票显示标准托运行李说明。", meta: "已包含" },
-          { icon: PackageCheck, title: "随车寄件", desc: "记录收件人、电话和下车点。", meta: "司机清单" },
-          { icon: ClipboardList, title: "附加费备注", desc: "超大行李可提交给管理员确认。", meta: "上车前" }
-        ]
-      },
-      operators: {
-        title: "车公司信息",
-        desc: "查看车型、车牌、服务和运营路线。",
-        highlight: "已核实班次",
-        items: [
-          { icon: Bus, title: "Thanh Trung Limousine", desc: "16座商务车，显示清楚上下车点和确认状态。", meta: "荣市 - 黄梅" },
-          { icon: Armchair, title: "座位图", desc: "付款前查看空座、已售座和已选座。", meta: "选座" },
-          { icon: ShieldCheck, title: "车公司确认", desc: "管理员可确认、拒绝，并向乘客发送原因。", meta: "后台处理" }
-        ]
-      },
-      support: {
-        title: "客服中心",
-        desc: "提供上车、改签、支付和联系车公司的帮助。",
-        highlight: "24小时支持",
-        items: [
-          { icon: Phone, title: "热线", desc: "上车、支付或改签问题可拨打 1900 2026 或 0238 888 888。", meta: "快速处理" },
-          { icon: Headphones, title: "改签请求", desc: "使用订单号提交改签或退票请求。", meta: "按政策处理" },
-          { icon: MapPinned, title: "上车指南", desc: "出发前再次查看上下车点。", meta: "行前确认" }
-        ]
-      }
-    };
-  }
-
-  return {
-    promotions: {
-      title: "Ưu đãi hữu ích",
-      desc: "Lưu mã tuyến quen thuộc, ưu đãi thanh toán và voucher đi nhóm trước bước xác nhận.",
-      highlight: "Áp dụng trước thanh toán",
-      items: [
-        { icon: Gift, title: "Mã tuyến quen", desc: "Gợi ý mã cho các tuyến Vinh, Hoàng Mai, Hà Nội hay đặt.", meta: "NGHEAN20" },
-        { icon: WalletCards, title: "Thanh toán sau", desc: "Giữ chỗ trước, thanh toán sau khi nhà xe xác nhận điểm đón.", meta: "Linh hoạt" },
-        { icon: UserCheck, title: "Ưu đãi đi nhóm", desc: "Ưu tiên đơn từ 3 ghế trở lên và cùng ghi chú điểm đón.", meta: "Theo nhóm" }
-      ]
-    },
-    payment: {
-      title: "Trung tâm thanh toán",
-      desc: "Theo dõi trạng thái, phương thức thanh toán và ghi chú hóa đơn của từng vé.",
-      highlight: "Minh bạch chi phí",
-      items: [
-        { icon: CreditCard, title: "Chuyển khoản", desc: "Hiển thị mã đặt chỗ trong nội dung để admin đối soát.", meta: "Đối soát thủ công" },
-        { icon: QrCode, title: "QR demo", desc: "Thanh toán QR demo được ghi nhận vào số dư trong ngày của admin.", meta: "Chỉ mô phỏng" },
-        { icon: ReceiptText, title: "Biên nhận", desc: "Lưu ghi chú hóa đơn, phụ thu và tổng tiền theo từng đơn.", meta: "Sẵn sàng xuất" }
-      ]
-    },
-    luggage: {
-      title: "Hành lý và gửi hàng",
-      desc: "Ghi nhận hành lý, yêu cầu gửi hàng kèm xe và phụ thu trước khi lên xe.",
-      highlight: "Chính sách rõ ràng",
-      items: [
-        { icon: Luggage, title: "Hành lý 20kg", desc: "Hành lý tiêu chuẩn được hiển thị cùng ghi chú vé.", meta: "Đã gồm" },
-        { icon: PackageCheck, title: "Gửi hàng kèm xe", desc: "Ghi người nhận, số điện thoại và điểm trả hàng.", meta: "Gửi tài xế" },
-        { icon: ClipboardList, title: "Phụ thu", desc: "Hành lý quá khổ được đánh dấu để admin xác nhận.", meta: "Trước giờ đi" }
-      ]
-    },
-    operators: {
-      title: "Thông tin nhà xe",
-      desc: "So sánh loại xe, biển số, tiện ích và tuyến đang khai thác.",
-      highlight: "Chuyến đã kiểm tra",
-      items: [
-        { icon: Bus, title: "Thành Trung Limousine", desc: "Limousine 16 chỗ, điểm đón rõ ràng và có xác nhận từ nhà xe.", meta: "Vinh - Hoàng Mai" },
-        { icon: Armchair, title: "Ghế cao cấp", desc: "Hiển thị ghế trống, đã bán và đang chọn trước khi thanh toán.", meta: "Sơ đồ ghế" },
-        { icon: ShieldCheck, title: "Cam kết nhà xe", desc: "Admin có thể xác nhận, từ chối và gửi lý do cho khách.", meta: "Quản trị kiểm soát" }
-      ]
-    },
-    support: {
-      title: "Trung tâm hỗ trợ",
-      desc: "Hỗ trợ khách lên xe, đổi/hủy, thanh toán và liên hệ nhà xe.",
-      highlight: "Hỗ trợ 24/7",
-      items: [
-        { icon: Phone, title: "Hotline", desc: "Gọi 1900 2026 hoặc 0238 888 888 khi cần hỗ trợ đón/trả, thanh toán hoặc đổi vé.", meta: "Khẩn cấp" },
-        { icon: Headphones, title: "Yêu cầu đổi vé", desc: "Gửi yêu cầu đổi/hủy kèm mã đặt chỗ.", meta: "Theo chính sách" },
-        { icon: MapPinned, title: "Hướng dẫn lên xe", desc: "Xem lại điểm đón/trả trước giờ xuất phát.", meta: "Trước chuyến" }
-      ]
-    }
-  };
-}
-
-function getCancelContent(language: Language) {
-  if (language === "en") {
-    return {
-      title: "Change and cancellation tools",
-      desc: "Submit a request, track operator rejection reasons, and keep customer messages visible.",
-      highlight: "Customer informed",
-      rejectedTitle: "Rejected bookings",
-      noRejected: "No rejected bookings. Confirmed and pending bookings remain in My tickets.",
-      defaultReason: "Customer requests trip change or cancellation.",
-      noRequestable: "No booking can be changed or cancelled right now.",
-      requestPlaceholder: "Reason or preferred new trip...",
-      requestSent: "Request sent to admin.",
-      requestSubmit: "Send request",
-      requestTitle: "Request change / cancellation",
-      items: [
-        { icon: RotateCcw, title: "Change trip", desc: "Send a request to change date, time, or seat.", meta: "Before departure" },
-        { icon: Send, title: "Customer message", desc: "The rejection reason is stored and shown to the customer.", meta: "Automatic notice" },
-        { icon: ShieldCheck, title: "Policy check", desc: "Show refund or surcharge notes before cancellation.", meta: "Operator policy" }
-      ]
-    };
-  }
-
-  if (language === "zh") {
-    return {
-      title: "改签与退票工具",
-      desc: "提交请求、查看车公司拒绝原因，并保留乘客通知。",
-      highlight: "乘客已通知",
-      rejectedTitle: "被拒绝的订单",
-      noRejected: "暂无被拒绝订单。已确认和待确认订单仍在我的车票中。",
-      defaultReason: "乘客请求改签或退票。",
-      noRequestable: "暂无可改签或退票的订单。",
-      requestPlaceholder: "原因或希望更改的班次...",
-      requestSent: "请求已发送到后台。",
-      requestSubmit: "发送请求",
-      requestTitle: "申请改签 / 退票",
-      items: [
-        { icon: RotateCcw, title: "改签", desc: "提交日期、时间或座位变更请求。", meta: "出发前" },
-        { icon: Send, title: "乘客通知", desc: "拒绝原因会保存并显示给乘客。", meta: "自动通知" },
-        { icon: ShieldCheck, title: "政策检查", desc: "退票前显示退款或附加费说明。", meta: "车公司政策" }
-      ]
-    };
-  }
-
-  return {
-    title: "Công cụ đổi và hủy vé",
-    desc: "Gửi yêu cầu đổi chuyến, theo dõi lý do nhà xe từ chối và giữ thông báo rõ ràng cho khách.",
-    highlight: "Khách được thông báo",
-    rejectedTitle: "Đơn bị từ chối",
-    noRejected: "Chưa có đơn bị từ chối. Vé đã xác nhận và đang chờ vẫn nằm trong Vé của tôi.",
-    defaultReason: "Khách yêu cầu đổi hoặc hủy vé.",
-    noRequestable: "Chưa có vé có thể đổi hoặc hủy.",
-    requestPlaceholder: "Nhập lý do hoặc chuyến muốn đổi...",
-    requestSent: "Đã gửi yêu cầu đổi/hủy về admin.",
-    requestSubmit: "Gửi yêu cầu",
-    requestTitle: "Yêu cầu đổi / hủy vé",
-    items: [
-      { icon: RotateCcw, title: "Đổi chuyến", desc: "Gửi yêu cầu đổi ngày, giờ đi hoặc vị trí ghế.", meta: "Trước giờ khởi hành" },
-      { icon: Send, title: "Thông báo khách", desc: "Lý do từ chối được lưu và hiển thị cho khách hàng.", meta: "Tự động gửi" },
-      { icon: ShieldCheck, title: "Kiểm tra chính sách", desc: "Hiển thị ghi chú hoàn tiền hoặc phụ thu trước khi hủy.", meta: "Theo nhà xe" }
-    ]
-  };
-}
-
-function getHistoryContent(language: Language) {
-  if (language === "en") {
-    return {
-      title: "Recent trips",
-      desc: "Review routes, pickup points, seat codes, and previous payment totals.",
-      empty: "No completed or saved trips yet.",
-      countLabel: "ticket(s)"
-    };
-  }
-
-  if (language === "zh") {
-    return {
-      title: "最近行程",
-      desc: "查看路线、上车点、座位号和历史付款金额。",
-      empty: "暂无已保存或已完成行程。",
-      countLabel: "张票"
-    };
-  }
-
-  return {
-    title: "Chuyến gần đây",
-    desc: "Xem lại tuyến, điểm đón, mã ghế và tổng tiền các lần đặt trước.",
-    empty: "Chưa có chuyến đã lưu hoặc đã đi.",
-    countLabel: "vé"
-  };
 }
 
 function TicketCard({
   booking,
-  copy,
-  language
+  onCancelRequest,
+  onLoadPayment,
+  payment
 }: {
-  booking: CustomerBooking;
-  copy: TicketCopy;
-  language: Language;
+  booking: ApiBooking;
+  onCancelRequest: () => void;
+  onLoadPayment: () => void;
+  payment?: ManualPaymentInfo;
 }) {
+  const status = displayBookingStatus(booking);
+  const hasTicket = booking.ticketQrCodes.length > 0;
+  const canRequestCancel =
+    !["Đã hủy", "Chờ duyệt hủy"].includes(status) &&
+    booking.status !== "COMPLETED" &&
+    booking.cancellationStatus !== "APPROVED";
+
   return (
-    <article className="rounded-3xl border border-[#e6eef8] bg-white p-4 shadow-[0_10px_30px_rgba(16,24,40,0.04)]">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <article className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h3 className="text-lg font-extrabold">{booking.route}</h3>
-          <p className="mt-1 text-sm font-bold text-[#667085]">
-            {formatDisplayDate(booking.travelDate, language)} · {booking.seats} {copy.ticketFields.seatUnit}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={status} />
+            <span className="rounded-md bg-[#f8fafc] px-2 py-1 text-xs font-black text-[#475467]">
+              {booking.code}
+            </span>
+          </div>
+          <h2 className="mt-3 text-xl font-black text-[#101828]">{booking.route}</h2>
+          <div className="mt-4 grid gap-3 text-sm text-[#344054] sm:grid-cols-2">
+            <InfoLine icon={<CalendarDays className="h-4 w-4" />} label="Ngày đi" value={formatDate(booking.travelDate)} />
+            <InfoLine icon={<Clock3 className="h-4 w-4" />} label="Giờ đi" value={new Date(booking.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} />
+            <InfoLine icon={<MapPin className="h-4 w-4" />} label="Điểm đón" value={booking.pickupPoint} />
+            <InfoLine icon={<MapPin className="h-4 w-4" />} label="Điểm trả" value={booking.dropoffPoint} />
+          </div>
         </div>
-        <StatusBadge copy={copy} status={booking.status} />
+
+        <div className="min-w-[230px] rounded-lg border border-[#eaecf0] bg-[#f8fafc] p-4">
+          <p className="text-sm font-bold text-[#667085]">Ghế</p>
+          <p className="mt-1 text-lg font-black text-[#073b7a]">{booking.seatCodes.join(", ")}</p>
+          <p className="mt-3 text-sm font-bold text-[#667085]">Tổng tiền</p>
+          <p className="mt-1 text-xl font-black text-[#c2410c]">{formatCurrency(booking.price)}</p>
+          {status === "Chờ thanh toán" ? (
+            <button
+              className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#073b7a] px-3 text-sm font-black text-white"
+              onClick={onLoadPayment}
+              type="button"
+            >
+              <CreditCard className="h-4 w-4" />
+              Xem thanh toán
+            </button>
+          ) : null}
+          {canRequestCancel ? (
+            <button
+              className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-[#fecdd3] bg-white px-3 text-sm font-black text-[#be123c]"
+              onClick={onCancelRequest}
+              type="button"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Yêu cầu hủy vé
+            </button>
+          ) : null}
+        </div>
       </div>
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
-        <Info label={copy.ticketFields.code} value={booking.id} />
-        <Info
-          label={copy.ticketFields.seats}
-          value={booking.seatCodes?.join(", ") || `${booking.seats} ${copy.ticketFields.seatUnit}`}
-        />
-        <Info label={copy.ticketFields.pickup} value={booking.pickupPoint || booking.from} />
-        <Info label={copy.ticketFields.dropoff} value={booking.dropoffPoint || booking.to} />
-        <Info label={copy.ticketFields.payment} value={booking.paymentMethod} />
-        <Info label={copy.ticketFields.total} value={formatCurrency(booking.price, language)} />
+
+      {payment ? (
+        <div className="mt-5 grid gap-4 rounded-lg border border-[#b8d7ff] bg-[#eff8ff] p-4 md:grid-cols-[160px_minmax(0,1fr)]">
+          <div className="rounded-lg bg-white p-3">
+            <QRCodeSVG className="h-full w-full" value={payment.qrValue} />
+          </div>
+          <div>
+            <h3 className="font-black text-[#073b7a]">Thanh toán QR</h3>
+            <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+              <PaymentLine label="Số tiền" value={formatCurrency(payment.amount)} />
+              <PaymentLine label="Nội dung chuyển khoản" value={payment.reference} />
+              <PaymentLine label="Ngân hàng" value={payment.bankName} />
+              <PaymentLine label="Trạng thái" value="Chờ xác nhận thanh toán" />
+            </div>
+            <p className="mt-3 text-sm font-semibold text-[#075bbf]">
+              Sau khi nhận được thanh toán, nhà xe sẽ xác nhận vé.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mt-5 rounded-lg border border-[#eaecf0] bg-[#f8fafc] p-4">
+        <div className="mb-4 flex items-center gap-2 font-black text-[#073b7a]">
+          <Navigation className="h-5 w-5" />
+          Hành trình chuyến xe
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          <JourneyStep
+            label="Điểm đón"
+            meta={formatDate(booking.travelDate)}
+            value={booking.pickupPoint || booking.from}
+          />
+          <JourneyStep
+            label="Tuyến"
+            meta={`Ghế ${booking.seatCodes.join(", ")}`}
+            value={booking.route}
+          />
+          <JourneyStep
+            label="Điểm trả"
+            meta={status}
+            value={booking.dropoffPoint || booking.to}
+          />
+        </div>
       </div>
-      {booking.rejectionReason ? (
-        <div className="mt-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm leading-6 text-red-700">
-          <span className="font-extrabold">{copy.ticketFields.rejectionReason}: </span>
-          {booking.rejectionReason}
+
+      {hasTicket ? (
+        <div className="mt-5 rounded-lg border border-[#d1fadf] bg-[#ecfdf3] p-4">
+          <div className="mb-3 flex items-center gap-2 font-black text-[#027a48]">
+            <QrCode className="h-5 w-5" />
+            Vé điện tử
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {booking.ticketQrCodes.map((qrCode, index) => (
+              <div className="rounded-lg bg-white p-3" key={qrCode}>
+                <QRCodeSVG className="h-full w-full" value={qrCode} />
+                <p className="mt-2 text-center text-xs font-black text-[#344054]">
+                  Ghế {booking.tickets[index]?.seatNo || booking.seatCodes[index] || index + 1}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       ) : null}
     </article>
   );
 }
 
-function Info({ label, value }: { label: string; value: string }) {
+function JourneyStep({ label, meta, value }: { label: string; meta: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-[#f8fafc] p-3 ring-1 ring-[#eef2f7]">
-      <p className="text-xs font-bold uppercase tracking-wide text-[#667085]">{label}</p>
-      <p className="mt-1 text-sm font-extrabold text-[#111827]">{value}</p>
+    <div className="rounded-lg bg-white p-3">
+      <p className="text-xs font-black uppercase text-[#667085]">{label}</p>
+      <p className="mt-1 font-black text-[#101828]">{value || "Chưa cập nhật"}</p>
+      <p className="mt-1 text-xs font-bold text-[#075bbf]">{meta}</p>
     </div>
   );
 }
 
-function StatusBadge({ copy, status }: { copy: TicketCopy; status: CustomerBooking["status"] }) {
-  const className =
-    status === "Đã xác nhận"
-      ? "bg-[#ecfdf3] text-[#027a48]"
-      : status === "Từ chối"
-        ? "bg-[#fef3f2] text-[#b42318]"
-        : status === "Đã hủy"
-          ? "bg-[#fef3f2] text-[#b42318]"
-          : "bg-[#fff7d6] text-[#a15c00]";
+function TrackingSection({ bookings }: { bookings: ApiBooking[] }) {
+  const upcoming = bookings.filter((booking) => displayBookingStatus(booking) !== "Đã hủy").slice(0, 5);
 
-  return <span className={`rounded-full px-3 py-1 text-sm font-black ${className}`}>{getStatusText(status, copy)}</span>;
+  if (!upcoming.length) {
+    return <EmptyPanel text="Chưa có chuyến sắp tới để theo dõi." />;
+  }
+
+  return (
+    <div className="grid gap-4">
+      {upcoming.map((booking) => (
+        <article className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm" key={booking.id}>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-black">{booking.route}</h2>
+              <p className="mt-1 text-sm font-semibold text-[#667085]">
+                {formatDate(booking.travelDate)} · Ghế {booking.seatCodes.join(", ")}
+              </p>
+            </div>
+            <StatusBadge status={displayBookingStatus(booking)} />
+          </div>
+          <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+            <InfoLine icon={<MapPin className="h-4 w-4" />} label="Điểm đón" value={booking.pickupPoint} />
+            <InfoLine icon={<MapPin className="h-4 w-4" />} label="Điểm trả" value={booking.dropoffPoint} />
+          </div>
+        </article>
+      ))}
+    </div>
+  );
 }
 
-function EmptyState({ text }: { text: string }) {
+function FeedbackSection({
+  bookings,
+  feedbacks,
+  onRefresh,
+  setToast
+}: {
+  bookings: ApiBooking[];
+  feedbacks: FeedbackItem[];
+  onRefresh: () => Promise<void>;
+  setToast: (message: string) => void;
+}) {
+  const [bookingId, setBookingId] = useState(bookings[0]?.code || "");
+  const [rating, setRating] = useState(5);
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    setBookingId((current) => current || bookings[0]?.code || "");
+  }, [bookings]);
+
+  async function submitFeedback(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!message.trim()) {
+      setToast("Vui lòng nhập nội dung phản hồi.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const selectedBooking = bookings.find((booking) => booking.code === bookingId);
+      const response = await fetch("/api/feedbacks", {
+        body: JSON.stringify({
+          bookingId,
+          message,
+          rating,
+          route: selectedBooking?.route || ""
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST"
+      });
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(data.error || "Không thể gửi phản hồi.");
+      }
+
+      setMessage("");
+      setToast("Đã gửi phản hồi.");
+      await onRefresh();
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Không thể gửi phản hồi.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
-    <div className="rounded-3xl border border-dashed border-[#bad7f5] bg-[#f8fbff] p-8 text-center">
-      <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#e8f3ff] text-[#075bbf]">
-        <Ticket className="h-6 w-6" />
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <form className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm" onSubmit={submitFeedback}>
+        <h2 className="text-xl font-black">Gửi phản hồi</h2>
+        <div className="mt-4 grid gap-3">
+          <label className="block">
+            <span className="mb-1 block text-sm font-bold text-[#344054]">Mã vé</span>
+            <select
+              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              onChange={(event) => setBookingId(event.target.value)}
+              value={bookingId}
+            >
+              {bookings.map((booking) => (
+                <option key={booking.id} value={booking.code}>
+                  {booking.code} · {booking.route}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm font-bold text-[#344054]">Đánh giá</span>
+            <select
+              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              onChange={(event) => setRating(Number(event.target.value))}
+              value={rating}
+            >
+              {[5, 4, 3, 2, 1].map((value) => (
+                <option key={value} value={value}>
+                  {value} sao
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm font-bold text-[#344054]">Nội dung</span>
+            <textarea
+              className="min-h-32 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              onChange={(event) => setMessage(event.target.value)}
+              placeholder="Nhập phản hồi của bạn"
+              value={message}
+            />
+          </label>
+        </div>
+        <button
+          className="mt-4 inline-flex h-11 items-center gap-2 rounded-md bg-[#073b7a] px-4 text-sm font-black text-white disabled:bg-[#98a2b3]"
+          disabled={submitting}
+          type="submit"
+        >
+          <Send className="h-4 w-4" />
+          {submitting ? "Đang gửi..." : "Gửi phản hồi"}
+        </button>
+      </form>
+
+      <section className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+        <h2 className="text-xl font-black">Phản hồi đã gửi</h2>
+        <div className="mt-4 grid gap-3">
+          {feedbacks.length ? (
+            feedbacks.slice(0, 5).map((item) => (
+              <div className="rounded-lg bg-[#f8fafc] p-3" key={item.id}>
+                <p className="text-sm font-black">{item.route}</p>
+                <p className="mt-1 text-sm text-[#667085]">{item.message}</p>
+                <p className="mt-2 text-xs font-bold text-[#075bbf]">{item.rating} sao · {item.status}</p>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm font-semibold text-[#667085]">Chưa có phản hồi.</p>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function CancelSection({
+  bookings,
+  onCancelRequest
+}: {
+  bookings: ApiBooking[];
+  onCancelRequest: (booking: ApiBooking) => void;
+}) {
+  const activeBookings = bookings.filter((booking) => {
+    const status = displayBookingStatus(booking);
+    return status !== "Đã hủy" && status !== "Chờ duyệt hủy" && booking.status !== "COMPLETED";
+  });
+
+  return (
+    <section className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+      <h2 className="text-xl font-black">Yêu cầu đổi/hủy vé</h2>
+      <p className="mt-2 text-sm leading-6 text-[#667085]">
+        Vui lòng liên hệ hotline hoặc gửi thông tin mã vé để nhân sự hỗ trợ kiểm tra chính sách đổi/hủy.
+      </p>
+      <div className="mt-4 grid gap-3">
+        {activeBookings.length ? (
+          activeBookings.map((booking) => (
+            <div className="flex flex-col gap-3 rounded-lg border border-[#eaecf0] p-4 sm:flex-row sm:items-center sm:justify-between" key={booking.id}>
+              <div>
+                <p className="font-black">{booking.route}</p>
+                <p className="mt-1 text-sm font-semibold text-[#667085]">{booking.code} · Ghế {booking.seatCodes.join(", ")}</p>
+              </div>
+              <button
+                className="rounded-md border border-[#d0d5dd] px-3 py-2 text-sm font-bold text-[#344054]"
+                onClick={() => onCancelRequest(booking)}
+                type="button"
+              >
+                Yêu cầu hủy vé
+              </button>
+            </div>
+          ))
+        ) : (
+          <p className="text-sm font-semibold text-[#667085]">Không có vé phù hợp để gửi yêu cầu.</p>
+        )}
       </div>
-      <p className="mx-auto mt-3 max-w-md text-sm font-semibold leading-6 text-[#667085]">{text}</p>
+    </section>
+  );
+}
+
+function UtilitySection({ pageKey }: { pageKey: SectionKey }) {
+  const content: Record<SectionKey, Array<{ icon: ReactNode; text: string; title: string }>> = {
+    cancel: [],
+    feedback: [],
+    history: [],
+    luggage: [
+      { icon: <Luggage className="h-5 w-5" />, text: "Hành lý cá nhân được sắp xếp theo khoang xe và điểm trả.", title: "Hành lý đi cùng" },
+      { icon: <ShieldCheck className="h-5 w-5" />, text: "Vui lòng báo trước với hotline nếu có kiện hàng lớn.", title: "Kiện hàng lớn" }
+    ],
+    "my-tickets": [],
+    operators: [
+      { icon: <Bus className="h-5 w-5" />, text: "Thành Trung Limousine vận hành các tuyến liên tỉnh với lịch chạy rõ ràng.", title: "Đội xe" },
+      { icon: <UserRound className="h-5 w-5" />, text: "Nhân sự điều hành hỗ trợ kiểm tra vé, điểm đón và thanh toán.", title: "Vận hành" }
+    ],
+    payment: [],
+    promotions: [
+      { icon: <Gift className="h-5 w-5" />, text: "Ưu đãi được áp dụng theo từng thời điểm và tuyến xe.", title: "Ưu đãi tuyến" },
+      { icon: <Bell className="h-5 w-5" />, text: "Đăng nhập để theo dõi vé và nhận thông báo mới từ nhà xe.", title: "Thông báo" }
+    ],
+    support: [
+      { icon: <Headphones className="h-5 w-5" />, text: "Hotline 1900 1000 hỗ trợ đặt vé, đổi lịch và điểm đón.", title: "Hotline" },
+      { icon: <MessageSquare className="h-5 w-5" />, text: "Gửi phản hồi trực tiếp trong cổng khách hàng.", title: "Phản hồi" }
+    ],
+    tracking: []
+  };
+
+  return (
+    <section className="grid gap-4 md:grid-cols-2">
+      {(content[pageKey] || []).map((item) => (
+        <div className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm" key={item.title}>
+          <div className="mb-3 grid h-10 w-10 place-items-center rounded-lg bg-[#eff8ff] text-[#075bbf]">
+            {item.icon}
+          </div>
+          <h2 className="font-black">{item.title}</h2>
+          <p className="mt-2 text-sm leading-6 text-[#667085]">{item.text}</p>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function CancelRequestModal({
+  booking,
+  onClose,
+  onSubmit
+}: {
+  booking: ApiBooking;
+  onClose: () => void;
+  onSubmit: (input: { note: string; phone: string; reason: string }) => Promise<void>;
+}) {
+  const [reason, setReason] = useState("");
+  const [note, setNote] = useState("");
+  const [phone, setPhone] = useState(booking.customerPhone || "");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!reason.trim()) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await onSubmit({ note, phone, reason });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-[#101828]/50 px-4 py-6">
+      <form
+        className="w-full max-w-lg rounded-lg border border-[#e4e7ec] bg-white shadow-[0_24px_80px_rgba(16,24,40,0.24)]"
+        onSubmit={handleSubmit}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-[#eaecf0] p-5">
+          <div>
+            <p className="text-sm font-black text-[#075bbf]">Yêu cầu hủy vé</p>
+            <h2 className="mt-1 text-xl font-black text-[#101828]">{booking.route}</h2>
+            <p className="mt-1 text-sm font-semibold text-[#667085]">
+              {booking.code} · Ghế {booking.seatCodes.join(", ")} · {formatCurrency(booking.price)}
+            </p>
+          </div>
+          <button className="rounded-md p-2 text-[#667085] hover:bg-[#f2f4f7]" onClick={onClose} type="button">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="grid gap-4 p-5">
+          <label className="block">
+            <span className="mb-1 block text-sm font-bold text-[#344054]">Lý do hủy vé</span>
+            <select
+              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              onChange={(event) => setReason(event.target.value)}
+              required
+              value={reason}
+            >
+              <option value="">Chọn lý do</option>
+              <option value="Thay đổi lịch trình">Thay đổi lịch trình</option>
+              <option value="Đặt nhầm chuyến hoặc ghế">Đặt nhầm chuyến hoặc ghế</option>
+              <option value="Không còn nhu cầu di chuyển">Không còn nhu cầu di chuyển</option>
+              <option value="Lý do khác">Lý do khác</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm font-bold text-[#344054]">Ghi chú thêm</span>
+            <textarea
+              className="min-h-28 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="Nhập thêm thông tin để nhà xe hỗ trợ nhanh hơn"
+              value={note}
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm font-bold text-[#344054]">Số điện thoại liên hệ</span>
+            <input
+              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              onChange={(event) => setPhone(event.target.value)}
+              placeholder="Số điện thoại"
+              value={phone}
+            />
+          </label>
+        </div>
+        <div className="flex flex-col-reverse gap-2 border-t border-[#eaecf0] p-5 sm:flex-row sm:justify-end">
+          <button
+            className="h-11 rounded-md border border-[#d0d5dd] px-4 text-sm font-black text-[#344054]"
+            onClick={onClose}
+            type="button"
+          >
+            Đóng
+          </button>
+          <button
+            className="h-11 rounded-md bg-[#073b7a] px-4 text-sm font-black text-white disabled:bg-[#98a2b3]"
+            disabled={!reason.trim() || submitting}
+            type="submit"
+          >
+            {submitting ? "Đang gửi..." : "Gửi yêu cầu"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
 
-function apiBookingToCustomerBooking(booking: ApiBooking): CustomerBooking {
-  return {
-    createdAt: booking.createdAt,
-    customerEmail: booking.customerEmail,
-    customerId: booking.customerId,
-    customerName: booking.customerName,
-    customerPhone: booking.customerPhone,
-    dropoffPoint: booking.dropoffPoint,
-    from: booking.from,
-    id: booking.code,
-    paymentMethod: booking.paymentMethod,
-    paymentStatus: booking.paymentStatus === "Chờ thanh toán" ? "Chờ thanh toán" : "Đã ghi nhận demo",
-    pickupPoint: booking.pickupPoint,
-    price: booking.price,
-    route: booking.route,
-    seatCodes: booking.seatCodes,
-    seats: booking.seats,
-    status: booking.status === "CONFIRMED" ? "Đã xác nhận" : booking.status === "REJECTED" ? "Từ chối" : booking.status === "CANCELLED" ? "Đã hủy" : "Chờ xác nhận",
-    to: booking.to,
-    travelDate: booking.travelDate
-  };
+function LoginRequired() {
+  return (
+    <section className="rounded-lg border border-[#e4e7ec] bg-white p-8 text-center shadow-sm">
+      <ShieldCheck className="mx-auto h-8 w-8 text-[#075bbf]" />
+      <h2 className="mt-3 text-xl font-black">Vui lòng đăng nhập</h2>
+      <p className="mt-2 text-sm text-[#667085]">Đăng nhập để xem vé và trạng thái thanh toán của bạn.</p>
+      <Link className="mt-5 inline-flex h-11 items-center rounded-md bg-[#073b7a] px-4 text-sm font-black text-white" href="/login">
+        Đăng nhập
+      </Link>
+    </section>
+  );
 }
 
-function apiTripToRouteInventory(trip: ApiTrip): RouteInventory {
-  return {
-    code: trip.code,
-    driver: trip.driver,
-    price: trip.price,
-    route: trip.route,
-    sold: trip.sold,
-    status: trip.status as RouteInventory["status"],
-    time: trip.time,
-    total: trip.total,
-    vehicle: trip.vehicle
-  };
+function EmptyPanel({ text }: { text: string }) {
+  return (
+    <div className="rounded-lg border border-dashed border-[#b8c4d6] bg-white p-8 text-center text-sm font-bold text-[#667085]">
+      {text}
+    </div>
+  );
 }
 
-function getStatusText(status: CustomerBooking["status"], copy: TicketCopy) {
-  if (status === "Đã xác nhận") {
-    return copy.statuses.confirmed;
-  }
-
-  if (status === "Từ chối") {
-    return copy.statuses.rejected;
-  }
-
-  if (status === "Yêu cầu hủy/đổi") {
-    return copy.statuses.changeRequested;
-  }
-
-  if (status === "Đã hủy") {
-    return copy.statuses.canceled;
-  }
-
-  return copy.statuses.pending;
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-[#e4e7ec] bg-[#f8fafc] px-3 py-2">
+      <p className="text-lg font-black text-[#073b7a]">{value}</p>
+      <p className="text-xs font-bold text-[#667085]">{label}</p>
+    </div>
+  );
 }
 
-function formatCurrency(value: number, language: Language) {
-  const locale = language === "en" ? "en-US" : language === "zh" ? "zh-CN" : "vi-VN";
-  return `${value.toLocaleString(locale)}đ`;
+function StatusBadge({ status }: { status: string }) {
+  const tone =
+    status === "Đã thanh toán"
+      ? "bg-[#ecfdf3] text-[#027a48]"
+      : status === "Đã hủy"
+        ? "bg-[#fff1f3] text-[#b42318]"
+        : status === "Chờ duyệt hủy"
+          ? "bg-[#fef3c7] text-[#92400e]"
+          : "bg-[#fff7ed] text-[#c2410c]";
+
+  return <span className={`rounded-md px-2 py-1 text-xs font-black ${tone}`}>{status}</span>;
 }
 
-function formatDisplayDate(date: string, language: Language) {
-  const locale = language === "en" ? "en-US" : language === "zh" ? "zh-CN" : "vi-VN";
-  const value = new Date(`${date}T00:00:00`);
+function InfoLine({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+  return (
+    <span className="flex items-start gap-2">
+      <span className="mt-0.5 text-[#075bbf]">{icon}</span>
+      <span>
+        <b>{label}:</b> {value || "Chưa cập nhật"}
+      </span>
+    </span>
+  );
+}
 
-  if (Number.isNaN(value.getTime())) {
-    const [year, month, day] = date.split("-");
-    return `${day}/${month}/${year}`;
-  }
-
-  return new Intl.DateTimeFormat(locale, {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric"
-  }).format(value);
+function PaymentLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs font-bold text-[#667085]">{label}</p>
+      <p className="mt-1 break-words font-black text-[#101828]">{value}</p>
+    </div>
+  );
 }

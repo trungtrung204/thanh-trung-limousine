@@ -20,7 +20,7 @@ export async function GET() {
     return NextResponse.json({ trips: trips.map(mapTripToApi) });
   } catch {
     return NextResponse.json(
-      { error: "Không thể tải danh sách chuyến xe từ database." },
+      { error: "Không thể tải danh sách chuyến xe." },
       { status: 500 }
     );
   }

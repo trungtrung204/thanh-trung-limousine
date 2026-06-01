@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Thành Trung Admin",
-  description: "Dashboard quản lý doanh nghiệp vận tải"
+  title: "Thành Trung Limousine",
+  description: "Nền tảng đặt vé xe khách Thành Trung Limousine"
 };
 
 export default function RootLayout({

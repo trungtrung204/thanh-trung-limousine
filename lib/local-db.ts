@@ -31,6 +31,8 @@ export type CustomerBooking = {
   paymentReference?: string;
   paymentStatus?: "Chờ thanh toán" | "Đã ghi nhận demo";
   paidAt?: string;
+  ticketCodes?: string[];
+  ticketQrCodes?: string[];
   rejectionReason?: string;
   rejectedAt?: string;
   changeRequestReason?: string;

@@ -97,6 +97,11 @@ export async function requireUser() {
   return user;
 }
 
+export async function requireUserApi() {
+  const user = await getCurrentUser();
+  return user?.role === "USER" ? user : null;
+}
+
 export async function requireAdmin() {
   const user = await getCurrentUser();
 
@@ -105,6 +110,11 @@ export async function requireAdmin() {
   }
 
   return user;
+}
+
+export async function requireAdminApi() {
+  const user = await getCurrentUser();
+  return user?.role === "ADMIN" ? user : null;
 }
 
 export function normalizeRole(value: unknown): Role | null {

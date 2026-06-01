@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdminApi } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
+  makeArrivalAt,
   makeDepartureAt,
   makeTripCode,
   mapTripToApi,
@@ -10,8 +11,15 @@ import {
 } from "@/lib/transport-api";
 
 function normalizeTripPayload(body: Record<string, unknown>): TransportTripPayload | null {
-  const route = typeof body.route === "string" ? body.route.trim() : "";
-  const price = Number(body.price);
+  const from = typeof body.from === "string" ? body.from.trim() : "";
+  const to = typeof body.to === "string" ? body.to.trim() : "";
+  const route =
+    typeof body.route === "string" && body.route.trim()
+      ? body.route.trim()
+      : from && to
+        ? `${from} - ${to}`
+        : "";
+  const price = normalizeNumber(body.price);
   const total = Number(body.total);
   const time = typeof body.time === "string" && body.time ? body.time : "07:30";
 
@@ -20,16 +28,32 @@ function normalizeTripPayload(body: Record<string, unknown>): TransportTripPaylo
   }
 
   return {
+    arrivalTime: typeof body.arrivalTime === "string" ? body.arrivalTime.trim() : "",
     code: typeof body.code === "string" ? body.code.trim() : "",
     driver: typeof body.driver === "string" ? body.driver.trim() : "",
+    from,
     platform: typeof body.platform === "string" ? body.platform.trim() : "Website",
     price,
     route,
     status: typeof body.status === "string" ? body.status : "Sắp chạy",
+    to,
     time,
     total,
     vehicle: typeof body.vehicle === "string" ? body.vehicle.trim() : ""
   };
+}
+
+function normalizeNumber(value: unknown) {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  if (typeof value !== "string") {
+    return Number(value);
+  }
+
+  const normalized = value.replace(/[^\d]/g, "");
+  return Number(normalized || value);
 }
 
 function isUniqueConstraintError(error: unknown) {
@@ -38,7 +62,10 @@ function isUniqueConstraintError(error: unknown) {
 }
 
 export async function GET() {
-  await requireAdmin();
+  const admin = await requireAdminApi();
+  if (!admin) {
+    return NextResponse.json({ error: "Phiên quản trị đã hết hạn. Vui lòng đăng nhập lại." }, { status: 401 });
+  }
 
   try {
     const trips = await prisma.trip.findMany({
@@ -61,7 +88,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  await requireAdmin();
+  const admin = await requireAdminApi();
+  if (!admin) {
+    return NextResponse.json({ error: "Phiên quản trị đã hết hạn. Vui lòng đăng nhập lại." }, { status: 401 });
+  }
 
   try {
     const body = (await request.json()) as Record<string, unknown>;
@@ -71,11 +101,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Thông tin chuyến xe không hợp lệ." }, { status: 400 });
     }
 
-    const { from, to } = splitRoute(payload.route);
+    const routeParts = splitRoute(payload.route);
+    const from = payload.from || routeParts.from;
+    const to = payload.to || routeParts.to;
     const departureAt = makeDepartureAt(payload.time);
+    const arrivalAt = makeArrivalAt(departureAt, payload.arrivalTime);
     const trip = await prisma.trip.create({
       data: {
         code: payload.code || makeTripCode(),
+        arrivalAt,
         departureAt,
         driverName: payload.driver || "Chưa phân công",
         from,

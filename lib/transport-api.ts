@@ -1,13 +1,25 @@
-import type { Booking, BookingStatus, Payment, SeatHold, Trip, User } from "@prisma/client";
+import type {
+  Booking,
+  BookingStatus,
+  CancellationRequest,
+  Payment,
+  SeatHold,
+  Ticket,
+  Trip,
+  User
+} from "@prisma/client";
 
 export type TransportTripPayload = {
+  arrivalTime?: string;
   code?: string;
   driver?: string;
+  from?: string;
   platform?: string;
   price: number;
   route: string;
   sold?: number;
   status?: string;
+  to?: string;
   time: string;
   total: number;
   vehicle?: string;
@@ -39,16 +51,29 @@ export type ApiBooking = {
   customerId: string;
   customerName: string;
   customerPhone: string;
+  cancellationRequestId: string;
+  cancellationStatus: string;
+  cancellationReason: string;
   dropoffPoint: string;
   id: string;
   paymentMethod: string;
+  paymentProvider: string;
+  paymentReference: string;
   paymentStatus: string;
+  paidAt: string | null;
   pickupPoint: string;
   price: number;
   route: string;
   seatCodes: string[];
   seats: number;
   status: BookingStatus;
+  ticketQrCodes: string[];
+  tickets: Array<{
+    id: string;
+    issuedAt: string;
+    qrCode: string;
+    seatNo: string;
+  }>;
   to: string;
   from: string;
   travelDate: string;
@@ -56,8 +81,10 @@ export type ApiBooking = {
 };
 
 type BookingWithRelations = Booking & {
+  cancellations?: CancellationRequest[];
   payments?: Payment[];
   seatHolds: SeatHold[];
+  tickets?: Ticket[];
   trip: Trip;
   user: Pick<User, "email" | "id" | "name" | "phone">;
 };
@@ -84,6 +111,19 @@ export function makeDepartureAt(time: string, date = new Date()) {
   const departureAt = new Date(date);
   departureAt.setHours(Number(hours) || 7, Number(minutes) || 30, 0, 0);
   return departureAt;
+}
+
+export function makeArrivalAt(departureAt: Date, time?: string) {
+  if (!time) {
+    return null;
+  }
+
+  const arrivalAt = makeDepartureAt(time, departureAt);
+  if (arrivalAt <= departureAt) {
+    arrivalAt.setDate(arrivalAt.getDate() + 1);
+  }
+
+  return arrivalAt;
 }
 
 export function formatTripTime(date: Date) {
@@ -117,14 +157,21 @@ export function mapTripToApi(trip: Trip & { seatHolds?: Array<Pick<SeatHold, "se
 export function mapBookingToApi(booking: BookingWithRelations): ApiBooking {
   const travelDate = booking.trip.departureAt.toISOString().slice(0, 10);
   const payment = booking.payments?.[0];
+  const tickets = booking.tickets || [];
+  const cancellation = (booking.cancellations || [])
+    .slice()
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
   const paymentStatus =
     payment?.status === "PAID" || payment?.status === "DEMO_RECORDED"
-      ? "Đã ghi nhận demo"
+      ? "Thanh toán thành công"
       : "Chờ thanh toán";
 
   return {
     code: booking.code,
     createdAt: booking.createdAt.toISOString(),
+    cancellationReason: cancellation?.reason || "",
+    cancellationRequestId: cancellation?.id || "",
+    cancellationStatus: cancellation?.status || "",
     customerEmail: booking.user.email,
     customerId: booking.user.id,
     customerName: booking.user.name,
@@ -133,13 +180,23 @@ export function mapBookingToApi(booking: BookingWithRelations): ApiBooking {
     from: booking.trip.from,
     id: booking.id,
     paymentMethod: payment?.method || "Chưa chọn",
+    paymentProvider: payment?.provider || "",
+    paymentReference: payment?.reference || "",
     paymentStatus,
+    paidAt: payment?.paidAt?.toISOString() || null,
     pickupPoint: booking.pickupPoint || booking.trip.from,
     price: booking.totalAmount,
     route: booking.trip.route,
     seatCodes: booking.seatHolds.map((seat) => seat.seatNo).sort(),
     seats: booking.seats,
     status: booking.status,
+    ticketQrCodes: tickets.map((ticket) => ticket.qrCode).filter(Boolean) as string[],
+    tickets: tickets.map((ticket) => ({
+      id: ticket.id,
+      issuedAt: ticket.issuedAt.toISOString(),
+      qrCode: ticket.qrCode || "",
+      seatNo: ticket.seatNo
+    })),
     to: booking.trip.to,
     travelDate,
     tripId: booking.tripId

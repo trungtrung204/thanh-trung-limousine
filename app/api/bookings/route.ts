@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/auth";
+import { requireUserApi } from "@/lib/auth";
+import { makePaymentReference } from "@/lib/manual-payment";
 import { prisma } from "@/lib/prisma";
 import { makeBookingCode, mapBookingToApi } from "@/lib/transport-api";
 
@@ -23,7 +24,10 @@ function isUniqueConstraintError(error: unknown) {
 }
 
 export async function POST(request: Request) {
-  const user = await requireUser();
+  const user = await requireUserApi();
+  if (!user) {
+    return NextResponse.json({ error: "Vui lòng đăng nhập để đặt vé." }, { status: 401 });
+  }
 
   try {
     const body = (await request.json()) as Record<string, unknown>;
@@ -54,9 +58,10 @@ export async function POST(request: Request) {
       }
 
       const totalAmount = trip.price * seatNos.length;
+      const bookingCode = makeBookingCode();
       const createdBooking = await tx.booking.create({
         data: {
-          code: makeBookingCode(),
+          code: bookingCode,
           dropoffPoint: dropoffPoint || trip.to,
           pickupPoint: pickupPoint || trip.from,
           seats: seatNos.length,
@@ -72,7 +77,8 @@ export async function POST(request: Request) {
           amount: totalAmount,
           bookingId: createdBooking.id,
           method: paymentMethod,
-          provider: "demo",
+          provider: "manual-qr",
+          reference: makePaymentReference(bookingCode),
           status: "PENDING",
           userId: user.id
         }
@@ -96,8 +102,10 @@ export async function POST(request: Request) {
 
       return tx.booking.findUniqueOrThrow({
         include: {
+          cancellations: true,
           payments: true,
           seatHolds: true,
+          tickets: true,
           trip: true,
           user: {
             select: {
