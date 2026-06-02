@@ -28,8 +28,10 @@ function normalizeTripPayload(body: Record<string, unknown>): TransportTripPaylo
   }
 
   return {
+    arrivalDate: typeof body.arrivalDate === "string" ? body.arrivalDate.trim() : "",
     arrivalTime: typeof body.arrivalTime === "string" ? body.arrivalTime.trim() : "",
     code: typeof body.code === "string" ? body.code.trim() : "",
+    departureDate: typeof body.departureDate === "string" ? body.departureDate.trim() : "",
     driver: typeof body.driver === "string" ? body.driver.trim() : "",
     from,
     platform: typeof body.platform === "string" ? body.platform.trim() : "Website",
@@ -104,8 +106,8 @@ export async function POST(request: Request) {
     const routeParts = splitRoute(payload.route);
     const from = payload.from || routeParts.from;
     const to = payload.to || routeParts.to;
-    const departureAt = makeDepartureAt(payload.time);
-    const arrivalAt = makeArrivalAt(departureAt, payload.arrivalTime);
+    const departureAt = makeDepartureAt(payload.time, payload.departureDate || new Date());
+    const arrivalAt = makeArrivalAt(departureAt, payload.arrivalTime, payload.arrivalDate);
     const trip = await prisma.trip.create({
       data: {
         code: payload.code || makeTripCode(),

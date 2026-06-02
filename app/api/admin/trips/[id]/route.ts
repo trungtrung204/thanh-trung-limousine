@@ -51,10 +51,10 @@ export async function PUT(request: Request, context: RouteContext) {
     const routeParts = splitRoute(route);
     const from = fromInput || routeParts.from;
     const to = toInput || routeParts.to;
-    const departureAt = makeDepartureAt(getString(body.time) || "07:30");
+    const departureAt = makeDepartureAt(getString(body.time) || "07:30", getString(body.departureDate) || new Date());
     const trip = await prisma.trip.update({
       data: {
-        arrivalAt: makeArrivalAt(departureAt, getString(body.arrivalTime)),
+        arrivalAt: makeArrivalAt(departureAt, getString(body.arrivalTime), getString(body.arrivalDate)),
         code: getString(body.code) || undefined,
         departureAt,
         driverName: getString(body.driver) || "Chưa phân công",
@@ -90,11 +90,35 @@ export async function DELETE(_request: Request, context: RouteContext) {
   const { id } = await context.params;
 
   try {
-    await prisma.trip.delete({ where: { id } });
-    return NextResponse.json({ ok: true });
+    const result = await prisma.$transaction(async (tx) => {
+      const bookings = await tx.booking.findMany({
+        select: {
+          id: true
+        },
+        where: {
+          tripId: id
+        }
+      });
+      const bookingIds = bookings.map((booking) => booking.id);
+
+      if (bookingIds.length) {
+        await tx.booking.deleteMany({
+          where: {
+            id: {
+              in: bookingIds
+            }
+          }
+        });
+      }
+
+      await tx.trip.delete({ where: { id } });
+      return { deletedBookings: bookingIds.length };
+    });
+
+    return NextResponse.json({ ok: true, ...result });
   } catch {
     return NextResponse.json(
-      { error: "Không thể xóa chuyến xe. Chuyến có thể đã có vé liên quan." },
+      { error: "Không thể xóa chuyến xe." },
       { status: 409 }
     );
   }

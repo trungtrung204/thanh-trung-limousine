@@ -10,8 +10,10 @@ import type {
 } from "@prisma/client";
 
 export type TransportTripPayload = {
+  arrivalDate?: string;
   arrivalTime?: string;
   code?: string;
+  departureDate?: string;
   driver?: string;
   from?: string;
   platform?: string;
@@ -106,20 +108,39 @@ export function makeBookingCode() {
   return `BK-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`.toUpperCase();
 }
 
-export function makeDepartureAt(time: string, date = new Date()) {
-  const [hours = "7", minutes = "30"] = time.split(":");
-  const departureAt = new Date(date);
-  departureAt.setHours(Number(hours) || 7, Number(minutes) || 30, 0, 0);
-  return departureAt;
+const vietnamTimeZone = "Asia/Ho_Chi_Minh";
+
+function getVietnamDateKey(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    day: "2-digit",
+    month: "2-digit",
+    timeZone: vietnamTimeZone,
+    year: "numeric"
+  }).formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value || String(date.getFullYear());
+  const month = parts.find((part) => part.type === "month")?.value || String(date.getMonth() + 1).padStart(2, "0");
+  const day = parts.find((part) => part.type === "day")?.value || String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
-export function makeArrivalAt(departureAt: Date, time?: string) {
+function makeVietnamDateTime(dateKey: string, time: string) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const [hours = "7", minutes = "30"] = time.split(":");
+  return new Date(Date.UTC(year, month - 1, day, (Number(hours) || 7) - 7, Number(minutes) || 30, 0, 0));
+}
+
+export function makeDepartureAt(time: string, date: Date | string = new Date()) {
+  const dateKey = typeof date === "string" && date ? date : getVietnamDateKey(date instanceof Date ? date : new Date());
+  return makeVietnamDateTime(dateKey, time);
+}
+
+export function makeArrivalAt(departureAt: Date, time?: string, arrivalDate?: string) {
   if (!time) {
     return null;
   }
 
-  const arrivalAt = makeDepartureAt(time, departureAt);
-  if (arrivalAt <= departureAt) {
+  const arrivalAt = makeVietnamDateTime(arrivalDate || getVietnamDateKey(departureAt), time);
+  if (!arrivalDate && arrivalAt <= departureAt) {
     arrivalAt.setDate(arrivalAt.getDate() + 1);
   }
 
@@ -127,7 +148,12 @@ export function makeArrivalAt(departureAt: Date, time?: string) {
 }
 
 export function formatTripTime(date: Date) {
-  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+  return new Intl.DateTimeFormat("vi-VN", {
+    hour: "2-digit",
+    hour12: false,
+    minute: "2-digit",
+    timeZone: vietnamTimeZone
+  }).format(date);
 }
 
 export function mapTripToApi(trip: Trip & { seatHolds?: Array<Pick<SeatHold, "seatNo">> }): ApiTrip {

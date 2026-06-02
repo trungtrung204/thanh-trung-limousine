@@ -108,8 +108,10 @@ type RevenueReport = {
 };
 
 type TripFormState = {
+  arrivalDate: string;
   arrivalTime: string;
   code: string;
+  departureDate: string;
   driver: string;
   from: string;
   id: string;
@@ -195,8 +197,10 @@ const pageMeta: Record<PageKey, { desc: string; title: string }> = {
 };
 
 const emptyTripForm: TripFormState = {
+  arrivalDate: "",
   arrivalTime: "",
   code: "",
+  departureDate: todayInputDate(),
   driver: "",
   from: "",
   id: "",
@@ -219,6 +223,24 @@ function formatCurrency(value: number) {
   return currencyFormatter.format(value);
 }
 
+function todayInputDate() {
+  const now = new Date();
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
+function dateInputFromIso(value: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
 function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -229,7 +251,8 @@ function formatDate(value: string) {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    month: "2-digit"
+    month: "2-digit",
+    timeZone: "Asia/Ho_Chi_Minh"
   }).format(date);
 }
 
@@ -356,6 +379,18 @@ export default function AdminDashboard() {
     const timer = window.setTimeout(() => setToast(""), 3200);
     return () => window.clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    if (!authorized) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      void refreshCancellations();
+    }, 10_000);
+
+    return () => window.clearInterval(timer);
+  }, [authorized]);
 
   async function refreshAll() {
     await Promise.all([
@@ -550,8 +585,10 @@ export default function AdminDashboard() {
     setTripSaving(true);
     try {
       const payload = {
+        arrivalDate: tripForm.arrivalDate,
         arrivalTime: tripForm.arrivalTime,
         code: tripForm.code,
+        departureDate: tripForm.departureDate,
         driver: tripForm.driver,
         from: tripForm.from,
         price: tripForm.price,
@@ -583,19 +620,23 @@ export default function AdminDashboard() {
   }
 
   async function deleteTrip(trip: ApiTrip) {
-    if (!window.confirm(`Xóa chuyến ${trip.code}?`)) {
+    const message =
+      trip.sold > 0
+        ? `Chuyến ${trip.code} đang có ${trip.sold} vé/ghế liên quan. Xóa chuyến sẽ xóa booking và vé của chuyến này. Tiếp tục?`
+        : `Xóa chuyến ${trip.code}?`;
+    if (!window.confirm(message)) {
       return;
     }
 
     try {
       const response = await fetch(`/api/admin/trips/${trip.id}`, { method: "DELETE" });
-      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      const data = (await response.json().catch(() => ({}))) as { deletedBookings?: number; error?: string };
       if (!response.ok) {
         throw new Error(data.error || "Không thể xóa chuyến xe.");
       }
 
-      await Promise.all([refreshTrips(), refreshStats()]);
-      setToast(`Đã xóa chuyến ${trip.code}.`);
+      await Promise.all([refreshTrips(), refreshBookings(), refreshCancellations(), refreshStats(), refreshRevenue()]);
+      setToast(`Đã xóa chuyến ${trip.code}${data.deletedBookings ? ` và ${data.deletedBookings} booking liên quan` : ""}.`);
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Không thể xóa chuyến xe.");
     }
@@ -603,8 +644,10 @@ export default function AdminDashboard() {
 
   function startEditTrip(trip: ApiTrip) {
     setTripForm({
+      arrivalDate: dateInputFromIso(trip.arrivalAt),
       arrivalTime: trip.arrivalAt ? new Date(trip.arrivalAt).toTimeString().slice(0, 5) : "",
       code: trip.code,
+      departureDate: dateInputFromIso(trip.departureAt),
       driver: trip.driver,
       from: trip.from,
       id: trip.id,
@@ -920,6 +963,10 @@ function TripsPage({
           </div>
           <FormInput label="Tuyến" onChange={(value) => update("route", value)} placeholder="Vinh - Hà Nội" required value={form.route} />
           <div className="grid grid-cols-2 gap-3">
+            <FormInput label="Ngày đi" onChange={(value) => update("departureDate", value)} required type="date" value={form.departureDate} />
+            <FormInput label="Ngày dự kiến đến" onChange={(value) => update("arrivalDate", value)} type="date" value={form.arrivalDate} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
             <FormInput label="Giờ đi" onChange={(value) => update("time", value)} required type="time" value={form.time} />
             <FormInput label="Giờ đến" onChange={(value) => update("arrivalTime", value)} type="time" value={form.arrivalTime} />
           </div>
@@ -995,7 +1042,10 @@ function TripsPage({
                   </td>
                   <td className="px-4 py-3 font-bold">
                     <p>{trip.time}</p>
-                    <p className="text-xs text-[#667085]">{trip.arrivalAt ? new Date(trip.arrivalAt).toTimeString().slice(0, 5) : "Chưa có giờ đến"}</p>
+                    <p className="text-xs text-[#667085]">{formatDate(trip.departureAt)}</p>
+                    <p className="text-xs text-[#667085]">
+                      Đến {trip.arrivalAt ? formatDate(trip.arrivalAt) : "chưa có dự kiến"}
+                    </p>
                   </td>
                   <td className="px-4 py-3">{trip.sold}/{trip.total}</td>
                   <td className="px-4 py-3 font-bold">{formatCurrency(trip.price)}</td>
