@@ -5,7 +5,8 @@ import type { Role, User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export const authCookieName = "tt_auth_token";
-export const authMaxAge = 60 * 60 * 24 * 7;
+export const authMaxAge = 60 * 60 * 24 * 30;
+export const shortAuthMaxAge = 60 * 60 * 24;
 
 export type CurrentUser = Pick<User, "email" | "id" | "name" | "phone" | "role">;
 
@@ -35,7 +36,7 @@ export function getAuthCookieOptions(maxAge = authMaxAge) {
   };
 }
 
-export async function createAuthToken(user: CurrentUser) {
+export async function createAuthToken(user: CurrentUser, maxAge = authMaxAge) {
   return new SignJWT({
     email: user.email,
     name: user.name,
@@ -45,7 +46,7 @@ export async function createAuthToken(user: CurrentUser) {
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.id)
     .setIssuedAt()
-    .setExpirationTime(`${authMaxAge}s`)
+    .setExpirationTime(`${maxAge}s`)
     .sign(getJwtSecret());
 }
 

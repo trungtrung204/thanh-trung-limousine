@@ -14,6 +14,7 @@ import {
   Clock3,
   CreditCard,
   Headphones,
+  Loader2,
   Luggage,
   MapPin,
   Menu,
@@ -169,6 +170,7 @@ export default function LandingPage() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [customer, setCustomer] = useState<CustomerSession | null>(null);
+  const [logoutSubmitting, setLogoutSubmitting] = useState(false);
   const [trips, setTrips] = useState<ApiTrip[]>([]);
   const [tripsLoading, setTripsLoading] = useState(true);
   const [toast, setToast] = useState("");
@@ -221,6 +223,29 @@ export default function LandingPage() {
   }, []);
 
   useEffect(() => {
+    if (!customer) {
+      return;
+    }
+
+    async function keepSessionAlive() {
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        if (response.status === 401 || response.status === 403) {
+          setCustomer(null);
+        }
+      } catch {
+        // Keep the current customer state during temporary network issues.
+      }
+    }
+
+    const timer = window.setInterval(() => {
+      void keepSessionAlive();
+    }, 15 * 60 * 1000);
+
+    return () => window.clearInterval(timer);
+  }, [customer]);
+
+  useEffect(() => {
     if (!toast) {
       return;
     }
@@ -263,9 +288,14 @@ export default function LandingPage() {
   }
 
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    setCustomer(null);
-    setToast("Bạn đã đăng xuất.");
+    setLogoutSubmitting(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      setCustomer(null);
+      setToast("Bạn đã đăng xuất.");
+    } finally {
+      setLogoutSubmitting(false);
+    }
   }
 
   function buildSeatSelection(trip: ApiTrip, currentSeats: string[], ticketCount: number) {
@@ -431,10 +461,11 @@ export default function LandingPage() {
                 </span>
                 <button
                   className="rounded-md border border-[#d0d5dd] px-3 py-2 text-sm font-bold text-[#344054] hover:bg-[#f2f4f7]"
+                  disabled={logoutSubmitting}
                   onClick={handleLogout}
                   type="button"
                 >
-                  Đăng xuất
+                  {logoutSubmitting ? "Đang thoát..." : "Đăng xuất"}
                 </button>
               </>
             ) : (
@@ -481,8 +512,13 @@ export default function LandingPage() {
                 Vé của tôi
               </Link>
               {customer ? (
-                <button className="rounded-md px-3 py-2 text-left hover:bg-[#f2f4f7]" onClick={handleLogout} type="button">
-                  Đăng xuất
+                <button
+                  className="rounded-md px-3 py-2 text-left hover:bg-[#f2f4f7] disabled:opacity-60"
+                  disabled={logoutSubmitting}
+                  onClick={handleLogout}
+                  type="button"
+                >
+                  {logoutSubmitting ? "Đang thoát..." : "Đăng xuất"}
                 </button>
               ) : (
                 <Link className="rounded-md px-3 py-2 hover:bg-[#f2f4f7]" href="/login">
@@ -681,11 +717,12 @@ export default function LandingPage() {
               </select>
               <button
                 className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#d0d5dd] px-3 text-sm font-bold text-[#344054]"
+                disabled={tripsLoading}
                 onClick={refreshTrips}
                 type="button"
               >
-                <CalendarDays className="h-4 w-4" />
-                Làm mới
+                {tripsLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarDays className="h-4 w-4" />}
+                {tripsLoading ? "Đang tải..." : "Làm mới"}
               </button>
             </div>
           </div>

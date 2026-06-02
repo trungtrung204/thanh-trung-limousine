@@ -14,6 +14,7 @@ import {
   DollarSign,
   Filter,
   LayoutDashboard,
+  Loader2,
   LogOut,
   Menu,
   MessageSquare,
@@ -286,6 +287,9 @@ export default function AdminDashboard() {
   const [revenue, setRevenue] = useState<RevenueReport>(emptyRevenue);
   const [tripForm, setTripForm] = useState<TripFormState>(emptyTripForm);
   const [tripSaving, setTripSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [logoutSubmitting, setLogoutSubmitting] = useState(false);
+  const [pendingAction, setPendingAction] = useState("");
   const [query, setQuery] = useState("");
   const [toast, setToast] = useState("");
   const [loading, setLoading] = useState(true);
@@ -391,6 +395,30 @@ export default function AdminDashboard() {
     return () => window.clearInterval(timer);
   }, [authorized]);
 
+  useEffect(() => {
+    if (!authorized) {
+      return;
+    }
+
+    async function keepSessionAlive() {
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        if (response.status === 401 || response.status === 403) {
+          setAuthorized(false);
+          setSessionIssue("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.");
+        }
+      } catch {
+        // Keep the current screen during transient network issues.
+      }
+    }
+
+    const timer = window.setInterval(() => {
+      void keepSessionAlive();
+    }, 15 * 60 * 1000);
+
+    return () => window.clearInterval(timer);
+  }, [authorized]);
+
   async function refreshAll() {
     await Promise.all([
       refreshStats(),
@@ -401,6 +429,16 @@ export default function AdminDashboard() {
       refreshCustomers(),
       refreshRevenue()
     ]);
+  }
+
+  async function handleManualRefresh() {
+    setRefreshing(true);
+    try {
+      await refreshAll();
+      setToast("Dữ liệu đã được làm mới.");
+    } finally {
+      setRefreshing(false);
+    }
   }
 
   async function refreshStats() {
@@ -509,11 +547,22 @@ export default function AdminDashboard() {
   }
 
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.replace("/admin/login");
+    setLogoutSubmitting(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.replace("/admin/login");
+    } finally {
+      setLogoutSubmitting(false);
+    }
   }
 
   async function confirmPayment(booking: ApiBooking) {
+    const actionKey = `confirm-${booking.id}`;
+    if (pendingAction) {
+      return;
+    }
+
+    setPendingAction(actionKey);
     try {
       const response = await fetch(`/api/admin/bookings/${booking.id}/confirm-payment`, { method: "POST" });
       const data = (await response.json()) as { booking?: ApiBooking; error?: string };
@@ -527,6 +576,8 @@ export default function AdminDashboard() {
       setToast(`Đã xác nhận thanh toán và chuyến xe cho mã ${updatedBooking.code}.`);
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Không thể xác nhận thanh toán.");
+    } finally {
+      setPendingAction("");
     }
   }
 
@@ -536,6 +587,12 @@ export default function AdminDashboard() {
       return;
     }
 
+    const actionKey = `reject-${booking.id}`;
+    if (pendingAction) {
+      return;
+    }
+
+    setPendingAction(actionKey);
     try {
       const response = await fetch(`/api/admin/bookings/${booking.id}/reject`, {
         body: JSON.stringify({ reason }),
@@ -553,10 +610,18 @@ export default function AdminDashboard() {
       setToast(`Đã từ chối mã ${rejectedBooking.code}.`);
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Không thể từ chối booking.");
+    } finally {
+      setPendingAction("");
     }
   }
 
   async function processCancellation(cancellation: CancellationItem, status: "APPROVED" | "REJECTED") {
+    const actionKey = `cancel-${status}-${cancellation.id}`;
+    if (pendingAction) {
+      return;
+    }
+
+    setPendingAction(actionKey);
     try {
       const response = await fetch(`/api/admin/cancellations/${cancellation.id}`, {
         body: JSON.stringify({ status }),
@@ -576,6 +641,8 @@ export default function AdminDashboard() {
       );
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Không thể xử lý yêu cầu hủy vé.");
+    } finally {
+      setPendingAction("");
     }
   }
 
@@ -627,6 +694,12 @@ export default function AdminDashboard() {
       return;
     }
 
+    const actionKey = `delete-trip-${trip.id}`;
+    if (pendingAction) {
+      return;
+    }
+
+    setPendingAction(actionKey);
     try {
       const response = await fetch(`/api/admin/trips/${trip.id}`, { method: "DELETE" });
       const data = (await response.json().catch(() => ({}))) as { deletedBookings?: number; error?: string };
@@ -638,6 +711,8 @@ export default function AdminDashboard() {
       setToast(`Đã xóa chuyến ${trip.code}${data.deletedBookings ? ` và ${data.deletedBookings} booking liên quan` : ""}.`);
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Không thể xóa chuyến xe.");
+    } finally {
+      setPendingAction("");
     }
   }
 
@@ -773,19 +848,21 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-2">
               <button
                 className="hidden h-10 items-center gap-2 rounded-md border border-[#d0d5dd] px-3 text-sm font-bold text-[#344054] sm:inline-flex"
-                onClick={refreshAll}
+                disabled={refreshing}
+                onClick={handleManualRefresh}
                 type="button"
               >
-                <Filter className="h-4 w-4" />
-                Làm mới
+                {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Filter className="h-4 w-4" />}
+                {refreshing ? "Đang tải..." : "Làm mới"}
               </button>
               <button
                 className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0a4f8f] px-3 text-sm font-bold text-white"
+                disabled={logoutSubmitting}
                 onClick={handleLogout}
                 type="button"
               >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Đăng xuất</span>
+                {logoutSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+                <span className="hidden sm:inline">{logoutSubmitting ? "Đang thoát..." : "Đăng xuất"}</span>
               </button>
             </div>
           </div>
@@ -810,6 +887,7 @@ export default function AdminDashboard() {
               onEdit={startEditTrip}
               onFormChange={setTripForm}
               onSave={saveTrip}
+              pendingAction={pendingAction}
               saving={tripSaving}
               trips={trips}
             />
@@ -819,16 +897,22 @@ export default function AdminDashboard() {
               bookings={filteredBookings}
               onConfirmPayment={confirmPayment}
               onRejectBooking={rejectBooking}
+              pendingAction={pendingAction}
               query={query}
               setQuery={setQuery}
             />
           ) : null}
           {activePage === "customers" ? <CustomersPage customers={customers} /> : null}
           {activePage === "payments" ? (
-            <PaymentsPage bookings={bookings} onConfirmPayment={confirmPayment} onRejectBooking={rejectBooking} />
+            <PaymentsPage
+              bookings={bookings}
+              onConfirmPayment={confirmPayment}
+              onRejectBooking={rejectBooking}
+              pendingAction={pendingAction}
+            />
           ) : null}
           {activePage === "cancellations" ? (
-            <CancellationsPage cancellations={cancellations} onProcess={processCancellation} />
+            <CancellationsPage cancellations={cancellations} onProcess={processCancellation} pendingAction={pendingAction} />
           ) : null}
           {activePage === "feedbacks" ? <FeedbacksPage feedbacks={feedbacks} /> : null}
           {activePage === "revenue" ? <RevenuePage revenue={revenue} /> : null}
@@ -924,6 +1008,7 @@ function TripsPage({
   onEdit,
   onFormChange,
   onSave,
+  pendingAction,
   saving,
   trips
 }: {
@@ -932,6 +1017,7 @@ function TripsPage({
   onEdit: (trip: ApiTrip) => void;
   onFormChange: (form: TripFormState) => void;
   onSave: (event: FormEvent<HTMLFormElement>) => void;
+  pendingAction: string;
   saving: boolean;
   trips: ApiTrip[];
 }) {
@@ -1029,38 +1115,52 @@ function TripsPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eaecf0]">
-              {trips.map((trip) => (
-                <tr key={trip.id}>
-                  <td className="px-4 py-3">
-                    <p className="font-black">{trip.route}</p>
-                    <p className="text-xs font-semibold text-[#667085]">{trip.code} · {trip.vehicle}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="font-bold">{trip.from}</p>
-                    <p className="text-xs text-[#667085]">{trip.to}</p>
-                  </td>
-                  <td className="px-4 py-3 font-bold">
-                    <p>{trip.time}</p>
-                    <p className="text-xs text-[#667085]">{formatDate(trip.departureAt)}</p>
-                    <p className="text-xs text-[#667085]">
-                      Đến {trip.arrivalAt ? formatDate(trip.arrivalAt) : "chưa có dự kiến"}
-                    </p>
-                  </td>
-                  <td className="px-4 py-3">{trip.sold}/{trip.total}</td>
-                  <td className="px-4 py-3 font-bold">{formatCurrency(trip.price)}</td>
-                  <td className="px-4 py-3"><TripStatusBadge status={trip.status} /></td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-2">
-                      <button className="rounded-md border border-[#d0d5dd] p-2 text-[#344054]" onClick={() => onEdit(trip)} type="button">
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button className="rounded-md border border-[#fecdd3] p-2 text-[#be123c]" onClick={() => onDelete(trip)} type="button">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {trips.map((trip) => {
+                const deleting = pendingAction === `delete-trip-${trip.id}`;
+
+                return (
+                  <tr key={trip.id}>
+                    <td className="px-4 py-3">
+                      <p className="font-black">{trip.route}</p>
+                      <p className="text-xs font-semibold text-[#667085]">{trip.code} · {trip.vehicle}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="font-bold">{trip.from}</p>
+                      <p className="text-xs text-[#667085]">{trip.to}</p>
+                    </td>
+                    <td className="px-4 py-3 font-bold">
+                      <p>{trip.time}</p>
+                      <p className="text-xs text-[#667085]">{formatDate(trip.departureAt)}</p>
+                      <p className="text-xs text-[#667085]">
+                        Đến {trip.arrivalAt ? formatDate(trip.arrivalAt) : "chưa có dự kiến"}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3">{trip.sold}/{trip.total}</td>
+                    <td className="px-4 py-3 font-bold">{formatCurrency(trip.price)}</td>
+                    <td className="px-4 py-3"><TripStatusBadge status={trip.status} /></td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          className="rounded-md border border-[#d0d5dd] p-2 text-[#344054] disabled:opacity-60"
+                          disabled={Boolean(pendingAction)}
+                          onClick={() => onEdit(trip)}
+                          type="button"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          className="rounded-md border border-[#fecdd3] p-2 text-[#be123c] disabled:opacity-60"
+                          disabled={Boolean(pendingAction)}
+                          onClick={() => onDelete(trip)}
+                          type="button"
+                        >
+                          {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
               {!trips.length ? (
                 <tr>
                   <td className="px-4 py-8 text-center text-sm font-bold text-[#667085]" colSpan={7}>
@@ -1080,12 +1180,14 @@ function BookingsPage({
   bookings,
   onConfirmPayment,
   onRejectBooking,
+  pendingAction,
   query,
   setQuery
 }: {
   bookings: ApiBooking[];
   onConfirmPayment: (booking: ApiBooking) => void;
   onRejectBooking: (booking: ApiBooking) => void;
+  pendingAction: string;
   query: string;
   setQuery: (value: string) => void;
 }) {
@@ -1107,7 +1209,12 @@ function BookingsPage({
         </label>
       </div>
       <div className="overflow-x-auto">
-        <BookingTable bookings={bookings} onConfirmPayment={onConfirmPayment} onRejectBooking={onRejectBooking} />
+        <BookingTable
+          bookings={bookings}
+          onConfirmPayment={onConfirmPayment}
+          onRejectBooking={onRejectBooking}
+          pendingAction={pendingAction}
+        />
       </div>
     </section>
   );
@@ -1116,11 +1223,13 @@ function BookingsPage({
 function PaymentsPage({
   bookings,
   onConfirmPayment,
-  onRejectBooking
+  onRejectBooking,
+  pendingAction
 }: {
   bookings: ApiBooking[];
   onConfirmPayment: (booking: ApiBooking) => void;
   onRejectBooking: (booking: ApiBooking) => void;
+  pendingAction: string;
 }) {
   return (
     <section className="rounded-lg border border-[#e4e7ec] bg-white shadow-sm">
@@ -1143,6 +1252,8 @@ function PaymentsPage({
           <tbody className="divide-y divide-[#eaecf0]">
             {bookings.map((booking) => {
               const status = bookingStatusLabel(booking);
+              const confirming = pendingAction === `confirm-${booking.id}`;
+              const rejecting = pendingAction === `reject-${booking.id}`;
               return (
                 <tr key={booking.id}>
                   <td className="px-4 py-3">
@@ -1161,18 +1272,22 @@ function PaymentsPage({
                       {status === "Chờ thanh toán" ? (
                         <>
                           <button
-                            className="h-9 rounded-md bg-[#0a4f8f] px-3 text-xs font-black text-white"
+                            className="inline-flex h-9 items-center gap-2 rounded-md bg-[#0a4f8f] px-3 text-xs font-black text-white disabled:bg-[#98a2b3]"
+                            disabled={Boolean(pendingAction)}
                             onClick={() => onConfirmPayment(booking)}
                             type="button"
                           >
-                            Xác nhận thanh toán
+                            {confirming ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                            {confirming ? "Đang xác nhận..." : "Xác nhận thanh toán"}
                           </button>
                           <button
-                            className="h-9 rounded-md border border-[#fecdd3] px-3 text-xs font-black text-[#be123c]"
+                            className="inline-flex h-9 items-center gap-2 rounded-md border border-[#fecdd3] px-3 text-xs font-black text-[#be123c] disabled:opacity-60"
+                            disabled={Boolean(pendingAction)}
                             onClick={() => onRejectBooking(booking)}
                             type="button"
                           >
-                            Từ chối
+                            {rejecting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                            {rejecting ? "Đang từ chối..." : "Từ chối"}
                           </button>
                         </>
                       ) : (
@@ -1199,10 +1314,12 @@ function PaymentsPage({
 
 function CancellationsPage({
   cancellations,
-  onProcess
+  onProcess,
+  pendingAction
 }: {
   cancellations: CancellationItem[];
   onProcess: (cancellation: CancellationItem, status: "APPROVED" | "REJECTED") => void;
+  pendingAction: string;
 }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const rows = cancellations.filter((item) => statusFilter === "all" || item.status === statusFilter);
@@ -1238,50 +1355,59 @@ function CancellationsPage({
             </tr>
           </thead>
           <tbody className="divide-y divide-[#eaecf0]">
-            {rows.map((item) => (
-              <tr key={item.id}>
-                <td className="px-4 py-3">
-                  <p className="font-black">{item.bookingCode}</p>
-                  <p className="text-xs font-semibold text-[#667085]">
-                    Ghế {item.seatCodes.join(", ") || "đã giải phóng"} · {formatDate(item.createdAt)}
-                  </p>
-                </td>
-                <td className="px-4 py-3">
-                  <p className="font-bold">{item.customerName}</p>
-                  <p className="text-xs text-[#667085]">{item.customerPhone || item.customerEmail}</p>
-                </td>
-                <td className="px-4 py-3">{item.route}</td>
-                <td className="px-4 py-3">
-                  <p className="font-semibold">{item.reason}</p>
-                  {item.note ? <p className="mt-1 text-xs text-[#667085]">{item.note}</p> : null}
-                </td>
-                <td className="px-4 py-3"><CancellationStatusBadge status={item.status} /></td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-2">
-                    {item.status === "PENDING" ? (
-                      <>
-                        <button
-                          className="h-9 rounded-md bg-[#0a4f8f] px-3 text-xs font-black text-white"
-                          onClick={() => onProcess(item, "APPROVED")}
-                          type="button"
-                        >
-                          Duyệt hủy
-                        </button>
-                        <button
-                          className="h-9 rounded-md border border-[#fecdd3] px-3 text-xs font-black text-[#be123c]"
-                          onClick={() => onProcess(item, "REJECTED")}
-                          type="button"
-                        >
-                          Từ chối
-                        </button>
-                      </>
-                    ) : (
-                      <span className="text-xs font-bold text-[#667085]">Đã xử lý</span>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {rows.map((item) => {
+              const approving = pendingAction === `cancel-APPROVED-${item.id}`;
+              const rejecting = pendingAction === `cancel-REJECTED-${item.id}`;
+
+              return (
+                <tr key={item.id}>
+                  <td className="px-4 py-3">
+                    <p className="font-black">{item.bookingCode}</p>
+                    <p className="text-xs font-semibold text-[#667085]">
+                      Ghế {item.seatCodes.join(", ") || "đã giải phóng"} · {formatDate(item.createdAt)}
+                    </p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <p className="font-bold">{item.customerName}</p>
+                    <p className="text-xs text-[#667085]">{item.customerPhone || item.customerEmail}</p>
+                  </td>
+                  <td className="px-4 py-3">{item.route}</td>
+                  <td className="px-4 py-3">
+                    <p className="font-semibold">{item.reason}</p>
+                    {item.note ? <p className="mt-1 text-xs text-[#667085]">{item.note}</p> : null}
+                  </td>
+                  <td className="px-4 py-3"><CancellationStatusBadge status={item.status} /></td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end gap-2">
+                      {item.status === "PENDING" ? (
+                        <>
+                          <button
+                            className="inline-flex h-9 items-center gap-2 rounded-md bg-[#0a4f8f] px-3 text-xs font-black text-white disabled:bg-[#98a2b3]"
+                            disabled={Boolean(pendingAction)}
+                            onClick={() => onProcess(item, "APPROVED")}
+                            type="button"
+                          >
+                            {approving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                            {approving ? "Đang duyệt..." : "Duyệt hủy"}
+                          </button>
+                          <button
+                            className="inline-flex h-9 items-center gap-2 rounded-md border border-[#fecdd3] px-3 text-xs font-black text-[#be123c] disabled:opacity-60"
+                            disabled={Boolean(pendingAction)}
+                            onClick={() => onProcess(item, "REJECTED")}
+                            type="button"
+                          >
+                            {rejecting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                            {rejecting ? "Đang từ chối..." : "Từ chối"}
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-xs font-bold text-[#667085]">Đã xử lý</span>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
             {!rows.length ? (
               <tr>
                 <td className="px-4 py-8 text-center text-sm font-bold text-[#667085]" colSpan={6}>
@@ -1585,12 +1711,14 @@ function BookingTable({
   compact,
   onConfirmPayment,
   onRejectBooking,
+  pendingAction = "",
   paymentsOnly
 }: {
   bookings: ApiBooking[];
   compact?: boolean;
   onConfirmPayment?: (booking: ApiBooking) => void;
   onRejectBooking?: (booking: ApiBooking) => void;
+  pendingAction?: string;
   paymentsOnly?: boolean;
 }) {
   const rows = paymentsOnly ? bookings.filter((booking) => bookingStatusLabel(booking) === "Chờ thanh toán") : bookings;
@@ -1611,6 +1739,8 @@ function BookingTable({
       <tbody className="divide-y divide-[#eaecf0]">
         {rows.map((booking) => {
           const status = bookingStatusLabel(booking);
+          const confirming = pendingAction === `confirm-${booking.id}`;
+          const rejecting = pendingAction === `reject-${booking.id}`;
           return (
             <tr key={booking.id}>
               <td className="px-4 py-3">
@@ -1632,21 +1762,24 @@ function BookingTable({
                       <div className="flex flex-wrap justify-end gap-2">
                         {onConfirmPayment ? (
                           <button
-                            className="inline-flex h-9 items-center gap-2 rounded-md bg-[#0a4f8f] px-3 text-xs font-black text-white"
+                            className="inline-flex h-9 items-center gap-2 rounded-md bg-[#0a4f8f] px-3 text-xs font-black text-white disabled:bg-[#98a2b3]"
+                            disabled={Boolean(pendingAction)}
                             onClick={() => onConfirmPayment(booking)}
                             type="button"
                           >
-                            <CheckCircle2 className="h-4 w-4" />
-                            Xác nhận thanh toán & chuyến
+                            {confirming ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                            {confirming ? "Đang xác nhận..." : "Xác nhận thanh toán & chuyến"}
                           </button>
                         ) : null}
                         {onRejectBooking ? (
                           <button
-                            className="inline-flex h-9 items-center rounded-md border border-[#fecdd3] px-3 text-xs font-black text-[#be123c]"
+                            className="inline-flex h-9 items-center gap-2 rounded-md border border-[#fecdd3] px-3 text-xs font-black text-[#be123c] disabled:opacity-60"
+                            disabled={Boolean(pendingAction)}
                             onClick={() => onRejectBooking(booking)}
                             type="button"
                           >
-                            Từ chối
+                            {rejecting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                            {rejecting ? "Đang từ chối..." : "Từ chối"}
                           </button>
                         ) : null}
                       </div>

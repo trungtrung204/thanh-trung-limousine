@@ -16,6 +16,7 @@ import {
   Gift,
   Headphones,
   History,
+  Loader2,
   Luggage,
   MapPin,
   MessageSquare,
@@ -181,6 +182,8 @@ export default function CustomerPortalPage({ section }: { section: string }) {
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
   const [paymentByBooking, setPaymentByBooking] = useState<Record<string, ManualPaymentInfo>>({});
   const [cancelTarget, setCancelTarget] = useState<ApiBooking | null>(null);
+  const [logoutSubmitting, setLogoutSubmitting] = useState(false);
+  const [paymentLoadingId, setPaymentLoadingId] = useState("");
   const [toast, setToast] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -196,6 +199,29 @@ export default function CustomerPortalPage({ section }: { section: string }) {
   useEffect(() => {
     void refreshPortal();
   }, []);
+
+  useEffect(() => {
+    if (!customer) {
+      return;
+    }
+
+    async function keepSessionAlive() {
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        if (response.status === 401 || response.status === 403) {
+          setCustomer(null);
+        }
+      } catch {
+        // Keep the current screen during temporary network issues.
+      }
+    }
+
+    const timer = window.setInterval(() => {
+      void keepSessionAlive();
+    }, 15 * 60 * 1000);
+
+    return () => window.clearInterval(timer);
+  }, [customer]);
 
   useEffect(() => {
     if (!toast) {
@@ -238,10 +264,15 @@ export default function CustomerPortalPage({ section }: { section: string }) {
   }
 
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    setCustomer(null);
-    setBookings([]);
-    router.push("/");
+    setLogoutSubmitting(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      setCustomer(null);
+      setBookings([]);
+      router.push("/");
+    } finally {
+      setLogoutSubmitting(false);
+    }
   }
 
   async function submitCancelRequest(input: { note: string; phone: string; reason: string }) {
@@ -270,6 +301,7 @@ export default function CustomerPortalPage({ section }: { section: string }) {
   }
 
   async function loadPayment(booking: ApiBooking) {
+    setPaymentLoadingId(booking.id);
     try {
       const response = await fetch(`/api/payments/${booking.code}`, { cache: "no-store" });
       const data = (await response.json()) as { error?: string; payment?: ManualPaymentInfo };
@@ -280,6 +312,8 @@ export default function CustomerPortalPage({ section }: { section: string }) {
       setPaymentByBooking((current) => ({ ...current, [booking.id]: data.payment as ManualPaymentInfo }));
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Không thể tải thông tin thanh toán.");
+    } finally {
+      setPaymentLoadingId("");
     }
   }
 
@@ -302,10 +336,11 @@ export default function CustomerPortalPage({ section }: { section: string }) {
                 <span className="hidden text-sm font-bold text-[#344054] sm:inline">{customer.name}</span>
                 <button
                   className="rounded-md border border-[#d0d5dd] px-3 py-2 text-sm font-bold text-[#344054]"
+                  disabled={logoutSubmitting}
                   onClick={handleLogout}
                   type="button"
                 >
-                  Đăng xuất
+                  {logoutSubmitting ? "Đang thoát..." : "Đăng xuất"}
                 </button>
               </>
             ) : (
@@ -368,6 +403,7 @@ export default function CustomerPortalPage({ section }: { section: string }) {
               onLoadPayment={loadPayment}
               onRefresh={refreshPortal}
               pageKey={pageKey}
+              paymentLoadingId={paymentLoadingId}
               paymentByBooking={paymentByBooking}
               setToast={setToast}
             />
@@ -399,6 +435,7 @@ function PortalContent({
   onLoadPayment,
   onRefresh,
   pageKey,
+  paymentLoadingId,
   paymentByBooking,
   setToast
 }: {
@@ -408,6 +445,7 @@ function PortalContent({
   onLoadPayment: (booking: ApiBooking) => void;
   onRefresh: () => Promise<void>;
   pageKey: SectionKey;
+  paymentLoadingId: string;
   paymentByBooking: Record<string, ManualPaymentInfo>;
   setToast: (message: string) => void;
 }) {
@@ -417,6 +455,7 @@ function PortalContent({
         bookings={bookings}
         onCancelRequest={onCancelRequest}
         onLoadPayment={onLoadPayment}
+        paymentLoadingId={paymentLoadingId}
         paymentByBooking={paymentByBooking}
       />
     );
@@ -429,6 +468,7 @@ function PortalContent({
         emptyText="Không có đơn chờ thanh toán."
         onCancelRequest={onCancelRequest}
         onLoadPayment={onLoadPayment}
+        paymentLoadingId={paymentLoadingId}
         paymentByBooking={paymentByBooking}
       />
     );
@@ -441,6 +481,7 @@ function PortalContent({
         emptyText="Chưa có lịch sử đặt vé."
         onCancelRequest={onCancelRequest}
         onLoadPayment={onLoadPayment}
+        paymentLoadingId={paymentLoadingId}
         paymentByBooking={paymentByBooking}
       />
     );
@@ -466,12 +507,14 @@ function TicketList({
   emptyText = "Bạn chưa có vé nào.",
   onCancelRequest,
   onLoadPayment,
+  paymentLoadingId,
   paymentByBooking
 }: {
   bookings: ApiBooking[];
   emptyText?: string;
   onCancelRequest: (booking: ApiBooking) => void;
   onLoadPayment: (booking: ApiBooking) => void;
+  paymentLoadingId: string;
   paymentByBooking: Record<string, ManualPaymentInfo>;
 }) {
   if (!bookings.length) {
@@ -487,6 +530,7 @@ function TicketList({
           onCancelRequest={() => onCancelRequest(booking)}
           onLoadPayment={() => onLoadPayment(booking)}
           payment={paymentByBooking[booking.id]}
+          paymentLoading={paymentLoadingId === booking.id}
         />
       ))}
     </div>
@@ -497,12 +541,14 @@ function TicketCard({
   booking,
   onCancelRequest,
   onLoadPayment,
-  payment
+  payment,
+  paymentLoading
 }: {
   booking: ApiBooking;
   onCancelRequest: () => void;
   onLoadPayment: () => void;
   payment?: ManualPaymentInfo;
+  paymentLoading: boolean;
 }) {
   const status = displayBookingStatus(booking);
   const hasTicket = booking.ticketQrCodes.length > 0;
@@ -537,12 +583,13 @@ function TicketCard({
           <p className="mt-1 text-xl font-black text-[#c2410c]">{formatCurrency(booking.price)}</p>
           {status === "Chờ thanh toán" ? (
             <button
-              className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#073b7a] px-3 text-sm font-black text-white"
+              className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#073b7a] px-3 text-sm font-black text-white disabled:bg-[#98a2b3]"
+              disabled={paymentLoading}
               onClick={onLoadPayment}
               type="button"
             >
-              <CreditCard className="h-4 w-4" />
-              Xem thanh toán
+              {paymentLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+              {paymentLoading ? "Đang tải..." : "Xem thanh toán"}
             </button>
           ) : null}
           {canRequestCancel ? (

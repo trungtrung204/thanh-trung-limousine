@@ -2,9 +2,11 @@ import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import {
   authCookieName,
+  authMaxAge,
   createAuthToken,
   getAuthCookieOptions,
   normalizeRole,
+  shortAuthMaxAge,
   toPublicUser
 } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -62,10 +64,11 @@ export async function POST(request: Request) {
     }
 
     const publicUser = toPublicUser(user);
-    const token = await createAuthToken(publicUser);
     const remember = body.remember !== false;
+    const maxAge = remember ? authMaxAge : shortAuthMaxAge;
+    const token = await createAuthToken(publicUser, maxAge);
     const response = NextResponse.json({ user: publicUser });
-    response.cookies.set(authCookieName, token, getAuthCookieOptions(remember ? undefined : 60 * 60 * 12));
+    response.cookies.set(authCookieName, token, getAuthCookieOptions(maxAge));
     return response;
   } catch {
     return NextResponse.json(
