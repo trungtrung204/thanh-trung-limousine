@@ -600,6 +600,7 @@ function TicketCard({
             value={booking.dropoffPoint || booking.to}
           />
         </div>
+        <JourneyMap booking={booking} />
       </div>
 
       {hasTicket ? (
@@ -634,6 +635,66 @@ function JourneyStep({ label, meta, value }: { label: string; meta: string; valu
   );
 }
 
+function getJourneyOrigin(booking: ApiBooking) {
+  return booking.pickupPoint || booking.from || booking.route.split("-")[0]?.trim() || "";
+}
+
+function getJourneyDestination(booking: ApiBooking) {
+  return booking.dropoffPoint || booking.to || booking.route.split("-")[1]?.trim() || "";
+}
+
+function getDirectionsUrl(booking: ApiBooking) {
+  const params = new URLSearchParams({
+    api: "1",
+    destination: getJourneyDestination(booking),
+    origin: getJourneyOrigin(booking),
+    travelmode: "driving"
+  });
+
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
+
+function getMapEmbedUrl(booking: ApiBooking) {
+  const query = `${getJourneyOrigin(booking)} đến ${getJourneyDestination(booking)}`;
+  const params = new URLSearchParams({
+    output: "embed",
+    q: query
+  });
+
+  return `https://www.google.com/maps?${params.toString()}`;
+}
+
+function JourneyMap({ booking }: { booking: ApiBooking }) {
+  return (
+    <div className="mt-4 overflow-hidden rounded-lg border border-[#d9e2ef] bg-white">
+      <div className="flex flex-col gap-3 border-b border-[#eaecf0] p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-black text-[#073b7a]">Theo dõi trên bản đồ</p>
+          <p className="mt-1 text-xs font-semibold text-[#667085]">
+            {getJourneyOrigin(booking)} → {getJourneyDestination(booking)}
+          </p>
+        </div>
+        <a
+          className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-[#073b7a] px-3 text-xs font-black text-white"
+          href={getDirectionsUrl(booking)}
+          rel="noreferrer"
+          target="_blank"
+        >
+          <Navigation className="h-4 w-4" />
+          Mở Google Maps
+        </a>
+      </div>
+      <iframe
+        className="h-72 w-full border-0"
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        src={getMapEmbedUrl(booking)}
+        title={`Bản đồ hành trình ${booking.code}`}
+      />
+    </div>
+  );
+}
+
 function TrackingSection({ bookings }: { bookings: ApiBooking[] }) {
   const upcoming = bookings.filter((booking) => displayBookingStatus(booking) !== "Đã hủy").slice(0, 5);
 
@@ -658,6 +719,7 @@ function TrackingSection({ bookings }: { bookings: ApiBooking[] }) {
             <InfoLine icon={<MapPin className="h-4 w-4" />} label="Điểm đón" value={booking.pickupPoint} />
             <InfoLine icon={<MapPin className="h-4 w-4" />} label="Điểm trả" value={booking.dropoffPoint} />
           </div>
+          <JourneyMap booking={booking} />
         </article>
       ))}
     </div>

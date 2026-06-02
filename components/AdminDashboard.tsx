@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import type { ApexOptions } from "apexcharts";
 import {
   BarChart3,
-  Bell,
   Bus,
   CheckCircle2,
   CreditCard,
@@ -1410,25 +1409,174 @@ function FeedbacksPage({ feedbacks }: { feedbacks: FeedbackItem[] }) {
 }
 
 function SettingsPage() {
-  const settings = [
-    { icon: <Bus className="h-5 w-5" />, label: "Thương hiệu", value: "Thành Trung Limousine" },
-    { icon: <Ticket className="h-5 w-5" />, label: "Kênh bán", value: "Website đặt vé trực tuyến" },
-    { icon: <CreditCard className="h-5 w-5" />, label: "Thanh toán", value: "QR chuyển khoản và xác nhận thủ công" },
-    { icon: <Bell className="h-5 w-5" />, label: "Thông báo", value: "Nhân sự vận hành kiểm tra booking mới" }
-  ];
+  const [brandName, setBrandName] = useState("Thành Trung Limousine");
+  const [hotline, setHotline] = useState("1900 1000");
+  const [supportEmail, setSupportEmail] = useState("hotro@thanhtrunglimousine.site");
+  const [maxSeats, setMaxSeats] = useState("10");
+  const [holdMinutes, setHoldMinutes] = useState("30");
+  const [cancelHours, setCancelHours] = useState("6");
+  const [qrPayment, setQrPayment] = useState(true);
+  const [manualConfirm, setManualConfirm] = useState(true);
+  const [notifyBooking, setNotifyBooking] = useState(true);
+  const [notifyCancellation, setNotifyCancellation] = useState(true);
+  const [maintenance, setMaintenance] = useState(false);
+  const [savedAt, setSavedAt] = useState("");
 
   return (
-    <section className="grid gap-4 lg:grid-cols-2">
-      {settings.map((item) => (
-        <div className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm" key={item.label}>
-          <div className="mb-3 grid h-10 w-10 place-items-center rounded-lg bg-[#eff8ff] text-[#075bbf]">
-            {item.icon}
+    <section className="grid gap-5">
+      <div className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="text-lg font-black">Cài đặt hệ thống</h3>
+            <p className="mt-1 text-sm text-[#667085]">
+              Cấu hình vận hành hiển thị trong admin, không hiển thị secret hoặc biến môi trường.
+            </p>
           </div>
-          <p className="text-sm font-bold text-[#667085]">{item.label}</p>
-          <p className="mt-1 text-lg font-black">{item.value}</p>
+          <button
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#0a4f8f] px-4 text-sm font-black text-white"
+            onClick={() => setSavedAt(new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }))}
+            type="button"
+          >
+            <Save className="h-4 w-4" />
+            Lưu cấu hình
+          </button>
         </div>
-      ))}
+        {savedAt ? (
+          <p className="mt-3 rounded-md bg-[#ecfdf3] px-3 py-2 text-sm font-bold text-[#027a48]">
+            Đã ghi nhận cấu hình lúc {savedAt}.
+          </p>
+        ) : null}
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-2">
+        <SettingsPanel icon={<Bus className="h-5 w-5" />} title="Thương hiệu & liên hệ">
+          <SettingsInput label="Tên thương hiệu" onChange={setBrandName} value={brandName} />
+          <SettingsInput label="Hotline hỗ trợ" onChange={setHotline} value={hotline} />
+          <SettingsInput label="Email hỗ trợ" onChange={setSupportEmail} value={supportEmail} />
+          <MiniPanel label="Tên hiển thị" value={brandName} />
+        </SettingsPanel>
+
+        <SettingsPanel icon={<Ticket className="h-5 w-5" />} title="Quy trình đặt vé">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <SettingsInput label="Số vé tối đa mỗi đơn" onChange={setMaxSeats} type="number" value={maxSeats} />
+            <SettingsInput label="Thời gian giữ ghế" onChange={setHoldMinutes} suffix="phút" type="number" value={holdMinutes} />
+          </div>
+          <SettingsToggle checked={notifyBooking} label="Thông báo khi có booking mới" onChange={setNotifyBooking} />
+          <SettingsToggle checked={maintenance} label="Chế độ bảo trì giao diện đặt vé" onChange={setMaintenance} />
+        </SettingsPanel>
+
+        <SettingsPanel icon={<CreditCard className="h-5 w-5" />} title="Thanh toán & hủy vé">
+          <SettingsToggle checked={qrPayment} label="Bật thanh toán QR" onChange={setQrPayment} />
+          <SettingsToggle checked={manualConfirm} label="Admin xác nhận thanh toán thủ công" onChange={setManualConfirm} />
+          <SettingsToggle checked={notifyCancellation} label="Thông báo yêu cầu hủy vé mới" onChange={setNotifyCancellation} />
+          <SettingsInput label="Hạn gửi yêu cầu hủy trước giờ chạy" onChange={setCancelHours} suffix="giờ" type="number" value={cancelHours} />
+        </SettingsPanel>
+
+        <SettingsPanel icon={<ShieldSettingsIcon />} title="Bảo mật & vận hành">
+          <SystemStatusRow label="Đăng nhập admin" value="Bắt buộc tài khoản quản trị" />
+          <SystemStatusRow label="Database" value="Supabase PostgreSQL" />
+          <SystemStatusRow label="Thanh toán" value={manualConfirm ? "Chờ admin xác nhận" : "Theo trạng thái provider"} />
+          <SystemStatusRow label="Secret/env" value="Không hiển thị trong giao diện" />
+        </SettingsPanel>
+      </div>
+
+      <section className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+        <h3 className="text-lg font-black">Checklist vận hành nhanh</h3>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            "Kiểm tra chuyến sắp chạy",
+            "Đối soát booking chờ thanh toán",
+            "Duyệt yêu cầu hủy vé",
+            "Xem báo cáo doanh thu"
+          ].map((item) => (
+            <label className="flex items-center gap-3 rounded-lg border border-[#eaecf0] bg-[#f8fafc] p-3 text-sm font-bold text-[#344054]" key={item}>
+              <input className="rounded border-[#d0d5dd] text-[#075bbf] focus:ring-[#075bbf]" type="checkbox" />
+              {item}
+            </label>
+          ))}
+        </div>
+      </section>
     </section>
+  );
+}
+
+function ShieldSettingsIcon() {
+  return (
+    <span className="grid h-5 w-5 place-items-center rounded-full border border-current text-xs font-black">
+      S
+    </span>
+  );
+}
+
+function SettingsPanel({ children, icon, title }: { children: ReactNode; icon: ReactNode; title: string }) {
+  return (
+    <section className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#eff8ff] text-[#075bbf]">{icon}</div>
+        <h3 className="text-lg font-black">{title}</h3>
+      </div>
+      <div className="grid gap-3">{children}</div>
+    </section>
+  );
+}
+
+function SettingsInput({
+  label,
+  onChange,
+  suffix,
+  type = "text",
+  value
+}: {
+  label: string;
+  onChange: (value: string) => void;
+  suffix?: string;
+  type?: string;
+  value: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-sm font-bold text-[#344054]">{label}</span>
+      <div className="flex items-center rounded-md border border-[#d0d5dd] bg-white focus-within:border-[#075bbf] focus-within:ring-1 focus-within:ring-[#075bbf]">
+        <input
+          className="h-11 min-w-0 flex-1 border-0 bg-transparent text-sm focus:ring-0"
+          onChange={(event) => onChange(event.target.value)}
+          type={type}
+          value={value}
+        />
+        {suffix ? <span className="px-3 text-sm font-bold text-[#667085]">{suffix}</span> : null}
+      </div>
+    </label>
+  );
+}
+
+function SettingsToggle({
+  checked,
+  label,
+  onChange
+}: {
+  checked: boolean;
+  label: string;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center justify-between gap-3 rounded-lg border border-[#eaecf0] bg-[#f8fafc] px-3 py-2 text-sm font-bold text-[#344054]">
+      <span>{label}</span>
+      <input
+        checked={checked}
+        className="h-5 w-5 rounded border-[#d0d5dd] text-[#075bbf] focus:ring-[#075bbf]"
+        onChange={(event) => onChange(event.target.checked)}
+        type="checkbox"
+      />
+    </label>
+  );
+}
+
+function SystemStatusRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-lg border border-[#eaecf0] bg-[#f8fafc] px-3 py-2 text-sm">
+      <span className="font-bold text-[#667085]">{label}</span>
+      <span className="text-right font-black text-[#101828]">{value}</span>
+    </div>
   );
 }
 
