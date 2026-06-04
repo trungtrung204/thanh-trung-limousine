@@ -325,7 +325,7 @@ export default function CustomerPortalPage({ section }: { section: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f7fb] text-[#101828]">
+    <main className="min-h-screen bg-[#f3f8fb] text-[#101828]">
       <header className="border-b border-[#d9e2ef] bg-white">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link className="flex items-center gap-3" href="/">
@@ -333,7 +333,7 @@ export default function CustomerPortalPage({ section }: { section: string }) {
               <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="40px" src="/logoicon.png" />
             </span>
             <span>
-              <span className="block text-base font-black text-[#073b7a]">Thành Trung Limousine</span>
+              <span className="block text-base font-black text-[#064e6f]">Thành Trung Limousine</span>
               <span className="block text-xs font-semibold text-[#667085]">Cổng khách hàng</span>
             </span>
           </Link>
@@ -351,7 +351,7 @@ export default function CustomerPortalPage({ section }: { section: string }) {
                 </button>
               </>
             ) : (
-              <Link className="rounded-md bg-[#073b7a] px-4 py-2 text-sm font-bold text-white" href="/login">
+              <Link className="rounded-md bg-[#064e6f] px-4 py-2 text-sm font-bold text-white" href="/login">
                 Đăng nhập
               </Link>
             )}
@@ -361,7 +361,7 @@ export default function CustomerPortalPage({ section }: { section: string }) {
 
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="rounded-lg border border-[#e4e7ec] bg-white p-3 shadow-sm lg:sticky lg:top-20 lg:self-start">
-          <Link className="mb-3 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-bold text-[#075bbf]" href="/">
+          <Link className="mb-3 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-bold text-[#0b6ea8]" href="/">
             <ArrowLeft className="h-4 w-4" />
             Đặt vé mới
           </Link>
@@ -370,7 +370,7 @@ export default function CustomerPortalPage({ section }: { section: string }) {
               <Link
                 className={[
                   "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-bold",
-                  item.key === pageKey ? "bg-[#eff8ff] text-[#075bbf]" : "text-[#344054] hover:bg-[#f2f4f7]"
+                  item.key === pageKey ? "bg-[#e8f7fb] text-[#0b6ea8]" : "text-[#344054] hover:bg-[#f2f4f7]"
                 ].join(" ")}
                 href={item.href}
                 key={item.key}
@@ -386,7 +386,7 @@ export default function CustomerPortalPage({ section }: { section: string }) {
           <div className="mb-5 rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-black text-[#075bbf]">Tài khoản khách hàng</p>
+                <p className="text-sm font-black text-[#0b6ea8]">Tài khoản khách hàng</p>
                 <h1 className="mt-1 text-2xl font-black sm:text-3xl">{meta.title}</h1>
                 <p className="mt-2 text-sm leading-6 text-[#667085]">{meta.desc}</p>
               </div>
@@ -593,12 +593,12 @@ function TicketCard({
 
         <div className="min-w-[230px] rounded-lg border border-[#eaecf0] bg-[#f8fafc] p-4">
           <p className="text-sm font-bold text-[#667085]">Ghế</p>
-          <p className="mt-1 text-lg font-black text-[#073b7a]">{booking.seatCodes.join(", ")}</p>
+          <p className="mt-1 text-lg font-black text-[#064e6f]">{booking.seatCodes.join(", ")}</p>
           <p className="mt-3 text-sm font-bold text-[#667085]">Tổng tiền</p>
           <p className="mt-1 text-xl font-black text-[#c2410c]">{formatCurrency(booking.price)}</p>
           {status === "Chờ thanh toán" ? (
             <button
-              className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#073b7a] px-3 text-sm font-black text-white disabled:bg-[#98a2b3]"
+              className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#064e6f] px-3 text-sm font-black text-white disabled:bg-[#98a2b3]"
               disabled={paymentLoading}
               onClick={onLoadPayment}
               type="button"
@@ -621,19 +621,19 @@ function TicketCard({
       </div>
 
       {payment ? (
-        <div className="mt-5 grid gap-4 rounded-lg border border-[#b8d7ff] bg-[#eff8ff] p-4 md:grid-cols-[160px_minmax(0,1fr)]">
+        <div className="mt-5 grid gap-4 rounded-lg border border-[#b8d7ff] bg-[#e8f7fb] p-4 md:grid-cols-[160px_minmax(0,1fr)]">
           <div className="rounded-lg bg-white p-3">
             <QRCodeSVG className="h-full w-full" value={payment.qrValue} />
           </div>
           <div>
-            <h3 className="font-black text-[#073b7a]">Thanh toán QR</h3>
+            <h3 className="font-black text-[#064e6f]">Thanh toán QR</h3>
             <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
               <PaymentLine label="Số tiền" value={formatCurrency(payment.amount)} />
               <PaymentLine label="Nội dung chuyển khoản" value={payment.reference} />
               <PaymentLine label="Ngân hàng" value={payment.bankName} />
               <PaymentLine label="Trạng thái" value="Chờ xác nhận thanh toán" />
             </div>
-            <p className="mt-3 text-sm font-semibold text-[#075bbf]">
+            <p className="mt-3 text-sm font-semibold text-[#0b6ea8]">
               Sau khi nhận được thanh toán, nhà xe sẽ xác nhận vé.
             </p>
           </div>
@@ -641,7 +641,7 @@ function TicketCard({
       ) : null}
 
       <div className="mt-5 rounded-lg border border-[#eaecf0] bg-[#f8fafc] p-4">
-        <div className="mb-4 flex items-center gap-2 font-black text-[#073b7a]">
+        <div className="mb-4 flex items-center gap-2 font-black text-[#064e6f]">
           <Navigation className="h-5 w-5" />
           Hành trình chuyến xe
         </div>
@@ -692,7 +692,7 @@ function JourneyStep({ label, meta, value }: { label: string; meta: string; valu
     <div className="rounded-lg bg-white p-3">
       <p className="text-xs font-black uppercase text-[#667085]">{label}</p>
       <p className="mt-1 font-black text-[#101828]">{value || "Chưa cập nhật"}</p>
-      <p className="mt-1 text-xs font-bold text-[#075bbf]">{meta}</p>
+      <p className="mt-1 text-xs font-bold text-[#0b6ea8]">{meta}</p>
     </div>
   );
 }
@@ -731,13 +731,13 @@ function JourneyMap({ booking }: { booking: ApiBooking }) {
     <div className="mt-4 overflow-hidden rounded-lg border border-[#d9e2ef] bg-white">
       <div className="flex flex-col gap-3 border-b border-[#eaecf0] p-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-black text-[#073b7a]">Theo dõi trên bản đồ</p>
+          <p className="text-sm font-black text-[#064e6f]">Theo dõi trên bản đồ</p>
           <p className="mt-1 text-xs font-semibold text-[#667085]">
             {getJourneyOrigin(booking)} → {getJourneyDestination(booking)}
           </p>
         </div>
         <a
-          className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-[#073b7a] px-3 text-xs font-black text-white"
+          className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-[#064e6f] px-3 text-xs font-black text-white"
           href={getDirectionsUrl(booking)}
           rel="noreferrer"
           target="_blank"
@@ -897,7 +897,7 @@ function NotificationCenter({ bookings, feedbacks }: { bookings: ApiBooking[]; f
                     ? "bg-[#fff1f3] text-[#b42318]"
                     : item.tone === "orange"
                       ? "bg-[#fff7ed] text-[#c2410c]"
-                      : "bg-[#eff8ff] text-[#075bbf]"
+                      : "bg-[#e8f7fb] text-[#0b6ea8]"
               ].join(" ")}
             >
               <Bell className="h-5 w-5" />
@@ -907,7 +907,7 @@ function NotificationCenter({ bookings, feedbacks }: { bookings: ApiBooking[]; f
               <span className="mt-1 block text-sm leading-6 text-[#667085]">{item.description}</span>
             </span>
           </div>
-          <span className="text-xs font-bold text-[#075bbf]">{formatDate(item.time)}</span>
+          <span className="text-xs font-bold text-[#0b6ea8]">{formatDate(item.time)}</span>
         </Link>
       ))}
     </section>
@@ -978,7 +978,7 @@ function SupportSection({
           <label className="block">
             <span className="mb-1 block text-sm font-bold text-[#344054]">Mã vé</span>
             <select
-              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
               onChange={(event) => setBookingCode(event.target.value)}
               value={bookingCode}
             >
@@ -993,7 +993,7 @@ function SupportSection({
           <label className="block">
             <span className="mb-1 block text-sm font-bold text-[#344054]">Chủ đề</span>
             <select
-              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
               onChange={(event) => setTopic(event.target.value)}
               value={topic}
             >
@@ -1007,7 +1007,7 @@ function SupportSection({
           <label className="block">
             <span className="mb-1 block text-sm font-bold text-[#344054]">Nội dung</span>
             <textarea
-              className="min-h-36 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              className="min-h-36 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
               onChange={(event) => setMessage(event.target.value)}
               placeholder="Nhập nội dung cần nhà xe hỗ trợ"
               value={message}
@@ -1015,7 +1015,7 @@ function SupportSection({
           </label>
         </div>
         <button
-          className="mt-4 inline-flex h-11 items-center gap-2 rounded-md bg-[#073b7a] px-4 text-sm font-black text-white disabled:bg-[#98a2b3]"
+          className="mt-4 inline-flex h-11 items-center gap-2 rounded-md bg-[#064e6f] px-4 text-sm font-black text-white disabled:bg-[#98a2b3]"
           disabled={submitting}
           type="submit"
         >
@@ -1099,7 +1099,7 @@ function FeedbackSection({
           <label className="block">
             <span className="mb-1 block text-sm font-bold text-[#344054]">Mã vé</span>
             <select
-              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
               onChange={(event) => setBookingId(event.target.value)}
               value={bookingId}
             >
@@ -1113,7 +1113,7 @@ function FeedbackSection({
           <label className="block">
             <span className="mb-1 block text-sm font-bold text-[#344054]">Đánh giá</span>
             <select
-              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
               onChange={(event) => setRating(Number(event.target.value))}
               value={rating}
             >
@@ -1127,7 +1127,7 @@ function FeedbackSection({
           <label className="block">
             <span className="mb-1 block text-sm font-bold text-[#344054]">Nội dung</span>
             <textarea
-              className="min-h-32 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              className="min-h-32 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
               onChange={(event) => setMessage(event.target.value)}
               placeholder="Nhập phản hồi của bạn"
               value={message}
@@ -1135,7 +1135,7 @@ function FeedbackSection({
           </label>
         </div>
         <button
-          className="mt-4 inline-flex h-11 items-center gap-2 rounded-md bg-[#073b7a] px-4 text-sm font-black text-white disabled:bg-[#98a2b3]"
+          className="mt-4 inline-flex h-11 items-center gap-2 rounded-md bg-[#064e6f] px-4 text-sm font-black text-white disabled:bg-[#98a2b3]"
           disabled={submitting}
           type="submit"
         >
@@ -1152,7 +1152,7 @@ function FeedbackSection({
               <div className="rounded-lg bg-[#f8fafc] p-3" key={item.id}>
                 <p className="text-sm font-black">{item.route}</p>
                 <p className="mt-1 text-sm text-[#667085]">{item.message}</p>
-                <p className="mt-2 text-xs font-bold text-[#075bbf]">{item.rating} sao · {item.status}</p>
+                <p className="mt-2 text-xs font-bold text-[#0b6ea8]">{item.rating} sao · {item.status}</p>
               </div>
             ))
           ) : (
@@ -1238,7 +1238,7 @@ function UtilitySection({ pageKey }: { pageKey: SectionKey }) {
     <section className="grid gap-4 md:grid-cols-2">
       {(content[pageKey] || []).map((item) => (
         <div className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm" key={item.title}>
-          <div className="mb-3 grid h-10 w-10 place-items-center rounded-lg bg-[#eff8ff] text-[#075bbf]">
+          <div className="mb-3 grid h-10 w-10 place-items-center rounded-lg bg-[#e8f7fb] text-[#0b6ea8]">
             {item.icon}
           </div>
           <h2 className="font-black">{item.title}</h2>
@@ -1285,7 +1285,7 @@ function CancelRequestModal({
       >
         <div className="flex items-start justify-between gap-4 border-b border-[#eaecf0] p-5">
           <div>
-            <p className="text-sm font-black text-[#075bbf]">Yêu cầu hủy vé</p>
+            <p className="text-sm font-black text-[#0b6ea8]">Yêu cầu hủy vé</p>
             <h2 className="mt-1 text-xl font-black text-[#101828]">{booking.route}</h2>
             <p className="mt-1 text-sm font-semibold text-[#667085]">
               {booking.code} · Ghế {booking.seatCodes.join(", ")} · {formatCurrency(booking.price)}
@@ -1299,7 +1299,7 @@ function CancelRequestModal({
           <label className="block">
             <span className="mb-1 block text-sm font-bold text-[#344054]">Lý do hủy vé</span>
             <select
-              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
               onChange={(event) => setReason(event.target.value)}
               required
               value={reason}
@@ -1314,7 +1314,7 @@ function CancelRequestModal({
           <label className="block">
             <span className="mb-1 block text-sm font-bold text-[#344054]">Ghi chú thêm</span>
             <textarea
-              className="min-h-28 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              className="min-h-28 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
               onChange={(event) => setNote(event.target.value)}
               placeholder="Nhập thêm thông tin để nhà xe hỗ trợ nhanh hơn"
               value={note}
@@ -1323,7 +1323,7 @@ function CancelRequestModal({
           <label className="block">
             <span className="mb-1 block text-sm font-bold text-[#344054]">Số điện thoại liên hệ</span>
             <input
-              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
               onChange={(event) => setPhone(event.target.value)}
               placeholder="Số điện thoại"
               value={phone}
@@ -1339,7 +1339,7 @@ function CancelRequestModal({
             Đóng
           </button>
           <button
-            className="h-11 rounded-md bg-[#073b7a] px-4 text-sm font-black text-white disabled:bg-[#98a2b3]"
+            className="h-11 rounded-md bg-[#064e6f] px-4 text-sm font-black text-white disabled:bg-[#98a2b3]"
             disabled={!reason.trim() || submitting}
             type="submit"
           >
@@ -1354,10 +1354,10 @@ function CancelRequestModal({
 function LoginRequired() {
   return (
     <section className="rounded-lg border border-[#e4e7ec] bg-white p-8 text-center shadow-sm">
-      <ShieldCheck className="mx-auto h-8 w-8 text-[#075bbf]" />
+      <ShieldCheck className="mx-auto h-8 w-8 text-[#0b6ea8]" />
       <h2 className="mt-3 text-xl font-black">Vui lòng đăng nhập</h2>
       <p className="mt-2 text-sm text-[#667085]">Đăng nhập để xem vé và trạng thái thanh toán của bạn.</p>
-      <Link className="mt-5 inline-flex h-11 items-center rounded-md bg-[#073b7a] px-4 text-sm font-black text-white" href="/login">
+      <Link className="mt-5 inline-flex h-11 items-center rounded-md bg-[#064e6f] px-4 text-sm font-black text-white" href="/login">
         Đăng nhập
       </Link>
     </section>
@@ -1375,7 +1375,7 @@ function EmptyPanel({ text }: { text: string }) {
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-[#e4e7ec] bg-[#f8fafc] px-3 py-2">
-      <p className="text-lg font-black text-[#073b7a]">{value}</p>
+      <p className="text-lg font-black text-[#064e6f]">{value}</p>
       <p className="text-xs font-bold text-[#667085]">{label}</p>
     </div>
   );
@@ -1397,7 +1397,7 @@ function StatusBadge({ status }: { status: string }) {
 function InfoLine({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
     <span className="flex items-start gap-2">
-      <span className="mt-0.5 text-[#075bbf]">{icon}</span>
+      <span className="mt-0.5 text-[#0b6ea8]">{icon}</span>
       <span>
         <b>{label}:</b> {value || "Chưa cập nhật"}
       </span>

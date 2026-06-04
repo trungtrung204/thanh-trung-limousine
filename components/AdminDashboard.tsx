@@ -766,12 +766,12 @@ export default function AdminDashboard() {
 
   if (sessionIssue && !authorized && !loading) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#f7f9fc] px-4 text-[#344054]">
+      <main className="grid min-h-screen place-items-center bg-[#f3f8fb] px-4 text-[#344054]">
         <div className="max-w-md rounded-lg border border-[#e4e7ec] bg-white px-5 py-4 text-sm font-bold shadow-sm">
           <p>{sessionIssue}</p>
           <div className="mt-4 flex gap-2">
             <button
-              className="rounded-md bg-[#0a4f8f] px-4 py-2 text-white"
+              className="rounded-md bg-[#0b6ea8] px-4 py-2 text-white"
               onClick={() => window.location.reload()}
               type="button"
             >
@@ -792,7 +792,7 @@ export default function AdminDashboard() {
 
   if (!authorized || loading) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#f7f9fc] text-[#344054]">
+      <main className="grid min-h-screen place-items-center bg-[#f3f8fb] text-[#344054]">
         <div className="rounded-lg border border-[#e4e7ec] bg-white px-5 py-4 text-sm font-bold shadow-sm">
           Đang tải khu vực quản trị...
         </div>
@@ -803,7 +803,7 @@ export default function AdminDashboard() {
   const currentPage = pageMeta[activePage];
 
   return (
-    <main className="min-h-screen bg-[#f7f9fc] text-[#101828]">
+    <main className="min-h-screen bg-[#f3f8fb] text-[#101828]">
       {sidebarOpen ? (
         <button
           aria-label="Đóng sidebar"
@@ -815,7 +815,7 @@ export default function AdminDashboard() {
 
       <aside
         className={[
-          "fixed inset-y-0 left-0 z-40 w-72 border-r border-[#d9e2ef] bg-[#083d77] p-4 text-white transition lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-72 border-r border-[#d9e2ef] bg-[#064e6f] p-4 text-white transition lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         ].join(" ")}
       >
@@ -825,7 +825,7 @@ export default function AdminDashboard() {
               <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="44px" src="/logoicon.png" />
             </span>
             <div>
-              <p className="text-sm font-bold text-[#d7ebff]">Thành Trung</p>
+              <p className="text-sm font-bold text-[#d7f0f7]">Thành Trung</p>
               <h1 className="font-black">Limousine Admin</h1>
             </div>
           </div>
@@ -839,7 +839,7 @@ export default function AdminDashboard() {
             <button
               className={[
                 "flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-bold",
-                item.key === activePage ? "bg-white text-[#083d77]" : "text-[#d7ebff] hover:bg-white/10"
+                item.key === activePage ? "bg-white text-[#064e6f]" : "text-[#d7f0f7] hover:bg-white/10"
               ].join(" ")}
               key={item.key}
               onClick={() => {
@@ -884,7 +884,7 @@ export default function AdminDashboard() {
                 {refreshing ? "Đang tải..." : "Làm mới"}
               </button>
               <button
-                className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0a4f8f] px-3 text-sm font-bold text-white"
+                className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0b6ea8] px-3 text-sm font-bold text-white"
                 disabled={logoutSubmitting}
                 onClick={handleLogout}
                 type="button"
@@ -997,7 +997,7 @@ function OverviewPage({
               <h3 className="text-lg font-black">Vận hành hôm nay</h3>
               <p className="mt-1 text-sm text-[#667085]">Tổng quan chuyến, ghế và đơn đang chờ xử lý.</p>
             </div>
-            <span className="rounded-md bg-[#eff8ff] px-3 py-2 text-sm font-black text-[#075bbf]">
+            <span className="rounded-md bg-[#e8f7fb] px-3 py-2 text-sm font-black text-[#0b6ea8]">
               Lấp đầy {seatRate}%
             </span>
           </div>
@@ -1021,7 +1021,7 @@ function OverviewPage({
               <div className="rounded-lg bg-[#f8fafc] p-3" key={feedback.id}>
                 <p className="text-sm font-black">{feedback.customerName}</p>
                 <p className="mt-1 line-clamp-2 text-sm text-[#667085]">{feedback.message}</p>
-                <p className="mt-2 text-xs font-bold text-[#075bbf]">{feedback.rating} sao · {feedback.route}</p>
+                <p className="mt-2 text-xs font-bold text-[#0b6ea8]">{feedback.rating} sao · {feedback.route}</p>
               </div>
             ))}
             {!feedbacks.length ? <p className="text-sm font-semibold text-[#667085]">Chưa có phản hồi.</p> : null}
@@ -1068,7 +1068,7 @@ function TripsPage({
             <h3 className="text-lg font-black">{form.id ? "Sửa chuyến xe" : "Tạo chuyến xe"}</h3>
             <p className="mt-1 text-sm text-[#667085]">Nhập tuyến theo dạng Vinh - Hoàng Mai.</p>
           </div>
-          <Plus className="h-5 w-5 text-[#075bbf]" />
+          <Plus className="h-5 w-5 text-[#0b6ea8]" />
         </div>
         <div className="grid gap-3">
           <FormInput label="Mã chuyến" onChange={(value) => update("code", value)} placeholder="Tự tạo nếu bỏ trống" value={form.code} />
@@ -1094,7 +1094,7 @@ function TripsPage({
           <label className="block">
             <span className="mb-1 block text-sm font-bold text-[#344054]">Trạng thái</span>
             <select
-              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
               onChange={(event) => update("status", event.target.value)}
               value={form.status}
             >
@@ -1108,7 +1108,7 @@ function TripsPage({
         </div>
         <div className="mt-5 flex gap-2">
           <button
-            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-md bg-[#0a4f8f] px-4 text-sm font-black text-white disabled:bg-[#98a2b3]"
+            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-md bg-[#0b6ea8] px-4 text-sm font-black text-white disabled:bg-[#98a2b3]"
             disabled={saving}
             type="submit"
           >
@@ -1302,7 +1302,7 @@ function PaymentsPage({
                       {status === "Chờ thanh toán" ? (
                         <>
                           <button
-                            className="inline-flex h-9 items-center gap-2 rounded-md bg-[#0a4f8f] px-3 text-xs font-black text-white disabled:bg-[#98a2b3]"
+                            className="inline-flex h-9 items-center gap-2 rounded-md bg-[#0b6ea8] px-3 text-xs font-black text-white disabled:bg-[#98a2b3]"
                             disabled={Boolean(pendingAction)}
                             onClick={() => onConfirmPayment(booking)}
                             type="button"
@@ -1362,7 +1362,7 @@ function CancellationsPage({
           <p className="mt-1 text-sm text-[#667085]">Duyệt hoặc từ chối yêu cầu hủy do khách gửi.</p>
         </div>
         <select
-          className="h-10 rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#075bbf] focus:ring-[#075bbf]"
+          className="h-10 rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
           onChange={(event) => setStatusFilter(event.target.value)}
           value={statusFilter}
         >
@@ -1412,7 +1412,7 @@ function CancellationsPage({
                       {item.status === "PENDING" ? (
                         <>
                           <button
-                            className="inline-flex h-9 items-center gap-2 rounded-md bg-[#0a4f8f] px-3 text-xs font-black text-white disabled:bg-[#98a2b3]"
+                            className="inline-flex h-9 items-center gap-2 rounded-md bg-[#0b6ea8] px-3 text-xs font-black text-white disabled:bg-[#98a2b3]"
                             disabled={Boolean(pendingAction)}
                             onClick={() => onProcess(item, "APPROVED")}
                             type="button"
@@ -1556,7 +1556,7 @@ function FeedbacksPage({
           <p className="mt-1 text-sm text-[#667085]">Bao gồm đánh giá chuyến và yêu cầu hỗ trợ khách gửi từ cổng user.</p>
         </div>
         <select
-          className="h-10 rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#075bbf] focus:ring-[#075bbf]"
+          className="h-10 rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
           onChange={(event) => setStatusFilter(event.target.value)}
           value={statusFilter}
         >
@@ -1577,7 +1577,7 @@ function FeedbacksPage({
                 <div>
                   <h4 className="font-black">{feedback.customerName}</h4>
                   <p className="mt-1 text-sm font-semibold text-[#667085]">{feedback.route}</p>
-                  <p className="mt-1 text-xs font-bold text-[#075bbf]">{feedback.bookingId}</p>
+                  <p className="mt-1 text-xs font-bold text-[#0b6ea8]">{feedback.bookingId}</p>
                 </div>
                 <div className="text-right">
                   <span className="rounded-md bg-[#fff7ed] px-2 py-1 text-xs font-black text-[#c2410c]">
@@ -1642,7 +1642,7 @@ function SettingsPage() {
             </p>
           </div>
           <button
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#0a4f8f] px-4 text-sm font-black text-white"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#0b6ea8] px-4 text-sm font-black text-white"
             onClick={() => setSavedAt(new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }))}
             type="button"
           >
@@ -1699,7 +1699,7 @@ function SettingsPage() {
             "Xem báo cáo doanh thu"
           ].map((item) => (
             <label className="flex items-center gap-3 rounded-lg border border-[#eaecf0] bg-[#f8fafc] p-3 text-sm font-bold text-[#344054]" key={item}>
-              <input className="rounded border-[#d0d5dd] text-[#075bbf] focus:ring-[#075bbf]" type="checkbox" />
+              <input className="rounded border-[#d0d5dd] text-[#0b6ea8] focus:ring-[#0b6ea8]" type="checkbox" />
               {item}
             </label>
           ))}
@@ -1721,7 +1721,7 @@ function SettingsPanel({ children, icon, title }: { children: ReactNode; icon: R
   return (
     <section className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
       <div className="mb-4 flex items-center gap-3">
-        <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#eff8ff] text-[#075bbf]">{icon}</div>
+        <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#e8f7fb] text-[#0b6ea8]">{icon}</div>
         <h3 className="text-lg font-black">{title}</h3>
       </div>
       <div className="grid gap-3">{children}</div>
@@ -1745,7 +1745,7 @@ function SettingsInput({
   return (
     <label className="block">
       <span className="mb-1 block text-sm font-bold text-[#344054]">{label}</span>
-      <div className="flex items-center rounded-md border border-[#d0d5dd] bg-white focus-within:border-[#075bbf] focus-within:ring-1 focus-within:ring-[#075bbf]">
+      <div className="flex items-center rounded-md border border-[#d0d5dd] bg-white focus-within:border-[#0b6ea8] focus-within:ring-1 focus-within:ring-[#0b6ea8]">
         <input
           className="h-11 min-w-0 flex-1 border-0 bg-transparent text-sm focus:ring-0"
           onChange={(event) => onChange(event.target.value)}
@@ -1772,7 +1772,7 @@ function SettingsToggle({
       <span>{label}</span>
       <input
         checked={checked}
-        className="h-5 w-5 rounded border-[#d0d5dd] text-[#075bbf] focus:ring-[#075bbf]"
+        className="h-5 w-5 rounded border-[#d0d5dd] text-[#0b6ea8] focus:ring-[#0b6ea8]"
         onChange={(event) => onChange(event.target.checked)}
         type="checkbox"
       />
@@ -1845,7 +1845,7 @@ function BookingTable({
                       <div className="flex flex-wrap justify-end gap-2">
                         {onConfirmPayment ? (
                           <button
-                            className="inline-flex h-9 items-center gap-2 rounded-md bg-[#0a4f8f] px-3 text-xs font-black text-white disabled:bg-[#98a2b3]"
+                            className="inline-flex h-9 items-center gap-2 rounded-md bg-[#0b6ea8] px-3 text-xs font-black text-white disabled:bg-[#98a2b3]"
                             disabled={Boolean(pendingAction)}
                             onClick={() => onConfirmPayment(booking)}
                             type="button"
@@ -1897,7 +1897,7 @@ function RevenueChart({ revenue, type }: { revenue: RevenueReport; type: "daily"
       fontFamily: "inherit",
       toolbar: { show: false }
     },
-    colors: ["#075bbf", "#f59e0b"],
+    colors: ["#0b6ea8", "#f59e0b"],
     dataLabels: { enabled: false },
     grid: {
       borderColor: "#eaecf0"
@@ -1942,7 +1942,7 @@ function RevenueChart({ revenue, type }: { revenue: RevenueReport; type: "daily"
           </h3>
           <p className="mt-1 text-sm text-[#667085]">Tính theo booking đã xác nhận hoặc payment đã thanh toán.</p>
         </div>
-        <BarChart3 className="h-5 w-5 text-[#075bbf]" />
+        <BarChart3 className="h-5 w-5 text-[#0b6ea8]" />
       </div>
       {source.length ? (
         <Chart
@@ -1966,7 +1966,7 @@ function RevenueChart({ revenue, type }: { revenue: RevenueReport; type: "daily"
 function StatCard({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
     <div className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
-      <div className="mb-4 grid h-10 w-10 place-items-center rounded-lg bg-[#eff8ff] text-[#075bbf]">{icon}</div>
+      <div className="mb-4 grid h-10 w-10 place-items-center rounded-lg bg-[#e8f7fb] text-[#0b6ea8]">{icon}</div>
       <p className="text-sm font-bold text-[#667085]">{label}</p>
       <p className="mt-1 text-2xl font-black text-[#101828]">{value}</p>
     </div>
@@ -2001,7 +2001,7 @@ function FormInput({
     <label className="block">
       <span className="mb-1 block text-sm font-bold text-[#344054]">{label}</span>
       <input
-        className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+        className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         required={required}
@@ -2045,7 +2045,7 @@ function FeedbackStatusBadge({ status }: { status: string }) {
     status === "Đã xử lý"
       ? "bg-[#ecfdf3] text-[#027a48]"
       : status === "Đã liên hệ"
-        ? "bg-[#eff8ff] text-[#075bbf]"
+        ? "bg-[#e8f7fb] text-[#0b6ea8]"
         : status === "Đang xử lý"
           ? "bg-[#fef3c7] text-[#92400e]"
           : "bg-[#fff7ed] text-[#c2410c]";
@@ -2061,7 +2061,7 @@ function TripStatusBadge({ status }: { status: string }) {
         ? "bg-[#fff1f3] text-[#b42318]"
         : status === "Hoàn thành"
           ? "bg-[#f4f3ff] text-[#5925dc]"
-          : "bg-[#eff8ff] text-[#075bbf]";
+          : "bg-[#e8f7fb] text-[#0b6ea8]";
   return <span className={`rounded-md px-2 py-1 text-xs font-black ${tone}`}>{status}</span>;
 }
 

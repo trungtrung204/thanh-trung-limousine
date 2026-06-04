@@ -79,15 +79,15 @@ export default function LoginScreen() {
   }
 
   return (
-    <main className="grid min-h-screen bg-[#f5f7fb] text-[#101828] lg:grid-cols-[minmax(0,1fr)_460px]">
-      <section className="relative hidden overflow-hidden bg-[#073b7a] px-10 py-8 text-white lg:flex lg:flex-col lg:justify-between">
+    <main className="grid min-h-screen bg-[#f3f8fb] text-[#101828] lg:grid-cols-[minmax(0,1fr)_460px]">
+      <section className="relative hidden overflow-hidden bg-[#064e6f] px-10 py-8 text-white lg:flex lg:flex-col lg:justify-between">
         <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(#ffffff_1px,transparent_1px),linear-gradient(90deg,#ffffff_1px,transparent_1px)] [background-size:42px_42px]" />
         <div className="relative flex items-center gap-3">
           <div className="relative h-11 w-11 overflow-hidden rounded-lg bg-white shadow-sm">
             <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="44px" src="/logoicon.png" />
           </div>
           <div>
-            <p className="text-sm font-bold text-[#d7ebff]">Thành Trung Limousine</p>
+            <p className="text-sm font-bold text-[#d7f0f7]">Thành Trung Limousine</p>
             <h1 className="text-xl font-black">Admin Operations</h1>
           </div>
         </div>
@@ -100,12 +100,12 @@ export default function LoginScreen() {
           <h2 className="text-5xl font-black leading-tight">
             Điều hành chuyến xe, vé và thanh toán trong một màn hình.
           </h2>
-          <p className="mt-5 max-w-lg text-base leading-7 text-[#d7ebff]">
+          <p className="mt-5 max-w-lg text-base leading-7 text-[#d7f0f7]">
             Dành cho nhân sự vận hành Thành Trung Limousine xử lý lịch chạy, booking, khách hàng và phản hồi.
           </p>
         </div>
 
-        <div className="relative flex items-center gap-2 text-sm font-semibold text-[#d7ebff]">
+        <div className="relative flex items-center gap-2 text-sm font-semibold text-[#d7f0f7]">
           <ShieldCheck className="h-4 w-4 text-[#ffd166]" />
           Truy cập bảo vệ bằng tài khoản quản trị
         </div>
@@ -161,7 +161,7 @@ export default function LoginScreen() {
             <label className="flex items-center gap-2 text-sm font-semibold text-[#344054]">
               <input
                 checked={remember}
-                className="rounded border-[#d0d5dd] text-[#075bbf] focus:ring-[#075bbf]"
+                className="rounded border-[#d0d5dd] text-[#0b6ea8] focus:ring-[#0b6ea8]"
                 onChange={(event) => setRemember(event.target.checked)}
                 type="checkbox"
               />
@@ -180,7 +180,7 @@ export default function LoginScreen() {
             ) : null}
 
             <button
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#073b7a] px-4 text-sm font-black text-white hover:bg-[#052f61] disabled:bg-[#98a2b3]"
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#064e6f] px-4 text-sm font-black text-white hover:bg-[#053d56] disabled:bg-[#98a2b3]"
               disabled={isSubmitting}
               type="submit"
             >
@@ -198,7 +198,7 @@ function Field({ children, icon, label }: { children: ReactNode; icon: ReactNode
   return (
     <label className="block">
       <span className="mb-1 block text-sm font-bold text-[#344054]">{label}</span>
-      <span className="flex h-12 items-center gap-3 rounded-md border border-[#d0d5dd] bg-white px-3 text-[#075bbf] focus-within:border-[#075bbf] focus-within:ring-4 focus-within:ring-[#eff8ff]">
+      <span className="flex h-12 items-center gap-3 rounded-md border border-[#d0d5dd] bg-white px-3 text-[#0b6ea8] focus-within:border-[#0b6ea8] focus-within:ring-4 focus-within:ring-[#e8f7fb]">
         {icon}
         {children}
       </span>

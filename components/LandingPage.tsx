@@ -428,7 +428,7 @@ export default function LandingPage() {
   const totalAmount = activeTrip ? activeTrip.price * passengers : 0;
 
   return (
-    <main className="min-h-screen bg-[#f7f9fc] text-[#101828]">
+    <main className="min-h-screen bg-[#f3f8fb] text-[#101828]">
       <header className="sticky top-0 z-50 border-b border-[#d9e2ef] bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link className="flex items-center gap-3" href="/">
@@ -436,19 +436,19 @@ export default function LandingPage() {
               <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="40px" src="/logoicon.png" />
             </span>
             <span>
-              <span className="block text-base font-black text-[#073b7a]">Thành Trung Limousine</span>
+              <span className="block text-base font-black text-[#064e6f]">Thành Trung Limousine</span>
               <span className="block text-xs font-semibold text-[#667085]">Sàn đặt vé xe khách</span>
             </span>
           </Link>
 
           <nav className="hidden items-center gap-6 text-sm font-bold text-[#344054] md:flex">
-            <a className="font-bold hover:text-[#075bbf]" href="#danh-sach-chuyen">
+            <a className="font-bold hover:text-[#0b6ea8]" href="#danh-sach-chuyen">
               Chuyến xe
             </a>
-            <a className="font-bold hover:text-[#075bbf]" href="#tuyen-pho-bien">
+            <a className="font-bold hover:text-[#0b6ea8]" href="#tuyen-pho-bien">
               Tuyến phổ biến
             </a>
-            <Link className="font-bold hover:text-[#075bbf]" href="/user/ve-cua-toi">
+            <Link className="font-bold hover:text-[#0b6ea8]" href="/user/ve-cua-toi">
               Vé của tôi
             </Link>
           </nav>
@@ -470,11 +470,11 @@ export default function LandingPage() {
               </>
             ) : (
               <>
-                <Link className="rounded-md px-3 py-2 text-sm font-bold text-[#075bbf]" href="/login">
+                <Link className="rounded-md px-3 py-2 text-sm font-bold text-[#0b6ea8]" href="/login">
                   Đăng nhập
                 </Link>
                 <Link
-                  className="rounded-md bg-[#073b7a] px-4 py-2 text-sm font-bold text-white hover:bg-[#052f61]"
+                  className="rounded-md bg-[#064e6f] px-4 py-2 text-sm font-bold text-white hover:bg-[#053d56]"
                   href="/register"
                 >
                   Đăng ký
@@ -496,7 +496,7 @@ export default function LandingPage() {
         {menuOpen ? (
           <div className="border-t border-[#d9e2ef] bg-white p-4 md:hidden">
             <div className="mb-4 flex items-center justify-between">
-              <span className="font-black text-[#073b7a]">Menu</span>
+              <span className="font-black text-[#064e6f]">Menu</span>
               <button aria-label="Đóng menu" onClick={() => setMenuOpen(false)} type="button">
                 <X className="h-5 w-5" />
               </button>
@@ -530,7 +530,7 @@ export default function LandingPage() {
         ) : null}
       </header>
 
-      <section className="relative min-h-[620px] overflow-hidden bg-[#0b3f7a] text-white">
+      <section className="relative min-h-[620px] overflow-hidden bg-[#064e6f] text-white">
         <Image
           alt="Xe limousine Thành Trung trên hành trình liên tỉnh"
           className="object-cover opacity-40"
@@ -560,7 +560,7 @@ export default function LandingPage() {
               ].map(([value, label]) => (
                 <div className="rounded-lg border border-white/15 bg-white/10 p-4" key={label}>
                   <p className="text-2xl font-black text-[#ffd166]">{value}</p>
-                  <p className="mt-1 text-sm font-semibold text-[#d7ebff]">{label}</p>
+                  <p className="mt-1 text-sm font-semibold text-[#d7f0f7]">{label}</p>
                 </div>
               ))}
             </div>
@@ -569,7 +569,7 @@ export default function LandingPage() {
           <div className="self-end rounded-lg bg-white p-4 text-[#101828] shadow-[0_24px_80px_rgba(16,24,40,0.22)]">
             <div className="mb-4 flex items-center justify-between border-b border-[#eaecf0] pb-3">
               <div>
-                <p className="text-sm font-bold text-[#075bbf]">Tìm chuyến xe</p>
+                <p className="text-sm font-bold text-[#0b6ea8]">Tìm chuyến xe</p>
                 <h2 className="text-xl font-black">Bạn muốn đi đâu?</h2>
               </div>
               <Search className="h-5 w-5 text-[#f59e0b]" />
@@ -578,7 +578,7 @@ export default function LandingPage() {
               <label className="block">
                 <span className="mb-1 block text-xs font-bold text-[#667085]">Điểm đi</span>
                 <select
-                  className="h-12 w-full rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#075bbf] focus:ring-[#075bbf]"
+                  className="h-12 w-full rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
                   onChange={(event) => setSearchFrom(event.target.value)}
                   value={searchFrom}
                 >
@@ -593,7 +593,7 @@ export default function LandingPage() {
               <label className="block">
                 <span className="mb-1 block text-xs font-bold text-[#667085]">Điểm đến</span>
                 <select
-                  className="h-12 w-full rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#075bbf] focus:ring-[#075bbf]"
+                  className="h-12 w-full rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
                   onChange={(event) => setSearchTo(event.target.value)}
                   value={searchTo}
                 >
@@ -609,7 +609,7 @@ export default function LandingPage() {
                 <label className="block">
                   <span className="mb-1 block text-xs font-bold text-[#667085]">Ngày đi</span>
                   <input
-                    className="h-12 w-full rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#075bbf] focus:ring-[#075bbf]"
+                    className="h-12 w-full rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
                     min={todayKey()}
                     onChange={(event) => setSearchDate(event.target.value)}
                     type="date"
@@ -619,7 +619,7 @@ export default function LandingPage() {
                 <label className="block">
                   <span className="mb-1 block text-xs font-bold text-[#667085]">Số khách</span>
                   <select
-                    className="h-12 w-full rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#075bbf] focus:ring-[#075bbf]"
+                    className="h-12 w-full rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
                     onChange={(event) => changePassengerCount(Number(event.target.value))}
                     value={passengers}
                   >
@@ -632,7 +632,7 @@ export default function LandingPage() {
                 </label>
               </div>
               <button
-                className="mt-2 inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#073b7a] px-4 text-sm font-black text-white hover:bg-[#052f61]"
+                className="mt-2 inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#064e6f] px-4 text-sm font-black text-white hover:bg-[#053d56]"
                 onClick={handleSearch}
                 type="button"
               >
@@ -646,10 +646,10 @@ export default function LandingPage() {
 
       <section className="mx-auto grid max-w-7xl gap-4 px-4 py-8 sm:px-6 lg:grid-cols-4">
         {[
-          { desc: "Khoang ngồi thoải mái, tiện nghi rõ ràng.", icon: <Bus className="h-6 w-6 text-[#075bbf]" />, title: "Xe limousine" },
-          { desc: "Giữ ghế và nhận mã đơn trực tuyến.", icon: <Ticket className="h-6 w-6 text-[#075bbf]" />, title: "Đặt vé nhanh" },
-          { desc: "Hotline sẵn sàng xử lý thay đổi.", icon: <Headphones className="h-6 w-6 text-[#075bbf]" />, title: "Hỗ trợ 24/7" },
-          { desc: "QR chuyển khoản và xác nhận vé.", icon: <CreditCard className="h-6 w-6 text-[#075bbf]" />, title: "Thanh toán tiện lợi" }
+          { desc: "Khoang ngồi thoải mái, tiện nghi rõ ràng.", icon: <Bus className="h-6 w-6 text-[#0b6ea8]" />, title: "Xe limousine" },
+          { desc: "Giữ ghế và nhận mã đơn trực tuyến.", icon: <Ticket className="h-6 w-6 text-[#0b6ea8]" />, title: "Đặt vé nhanh" },
+          { desc: "Hotline sẵn sàng xử lý thay đổi.", icon: <Headphones className="h-6 w-6 text-[#0b6ea8]" />, title: "Hỗ trợ 24/7" },
+          { desc: "QR chuyển khoản và xác nhận vé.", icon: <CreditCard className="h-6 w-6 text-[#0b6ea8]" />, title: "Thanh toán tiện lợi" }
         ].map((item) => (
           <div className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm" key={item.title}>
             {item.icon}
@@ -662,7 +662,7 @@ export default function LandingPage() {
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6" id="tuyen-pho-bien">
         <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-black text-[#075bbf]">Tuyến phổ biến</p>
+            <p className="text-sm font-black text-[#0b6ea8]">Tuyến phổ biến</p>
             <h2 className="text-2xl font-black text-[#101828] sm:text-3xl">Các hành trình được đặt nhiều</h2>
           </div>
           <p className="max-w-xl text-sm leading-6 text-[#667085]">
@@ -685,7 +685,7 @@ export default function LandingPage() {
               </div>
               <div className="mt-4 flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2 font-bold text-[#344054]">
-                  <Clock3 className="h-4 w-4 text-[#075bbf]" />
+                  <Clock3 className="h-4 w-4 text-[#0b6ea8]" />
                   {trip.time}
                 </span>
                 <span className="font-bold text-[#027a48]">{Math.max(trip.total - trip.sold, 0)} ghế trống</span>
@@ -699,7 +699,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm font-black text-[#075bbf]">Danh sách chuyến</p>
+              <p className="text-sm font-black text-[#0b6ea8]">Danh sách chuyến</p>
               <h2 className="text-2xl font-black text-[#101828] sm:text-3xl">Chọn chuyến phù hợp</h2>
               <p className="mt-2 text-sm text-[#667085]">
                 Lọc nhanh theo tuyến, loại xe và sắp xếp như một sàn đặt vé xe chuyên nghiệp.
@@ -707,7 +707,7 @@ export default function LandingPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               <select
-                className="h-10 rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#075bbf] focus:ring-[#075bbf]"
+                className="h-10 rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
                 onChange={(event) => setSortMode(event.target.value as typeof sortMode)}
                 value={sortMode}
               >
@@ -731,13 +731,13 @@ export default function LandingPage() {
             <aside className="rounded-lg border border-[#e4e7ec] bg-[#f8fafc] p-4 lg:sticky lg:top-24 lg:self-start">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="font-black">Bộ lọc</h3>
-                <SlidersHorizontal className="h-4 w-4 text-[#075bbf]" />
+                <SlidersHorizontal className="h-4 w-4 text-[#0b6ea8]" />
               </div>
               <div className="grid gap-3">
                 <label className="block">
                   <span className="mb-1 block text-sm font-bold text-[#344054]">Loại xe</span>
                   <select
-                    className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+                    className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
                     onChange={(event) => setVehicleFilter(event.target.value)}
                     value={vehicleFilter}
                   >
@@ -755,7 +755,7 @@ export default function LandingPage() {
                       Xác nhận nhanh
                     </span>
                     <span className="inline-flex items-center gap-2">
-                      <Headphones className="h-4 w-4 text-[#075bbf]" />
+                      <Headphones className="h-4 w-4 text-[#0b6ea8]" />
                       Hỗ trợ 24/7
                     </span>
                     <span className="inline-flex items-center gap-2">
@@ -791,12 +791,12 @@ export default function LandingPage() {
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6" id="chon-ghe">
         <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-black text-[#075bbf]">Chọn ghế</p>
+            <p className="text-sm font-black text-[#0b6ea8]">Chọn ghế</p>
             <h2 className="text-2xl font-black text-[#101828] sm:text-3xl">Sơ đồ ghế trực quan</h2>
           </div>
           <div className="flex flex-wrap gap-3 text-xs font-bold text-[#667085]">
             <span className="inline-flex items-center gap-2"><span className="h-3 w-3 rounded bg-white ring-1 ring-[#d0d5dd]" />Trống</span>
-            <span className="inline-flex items-center gap-2"><span className="h-3 w-3 rounded bg-[#075bbf]" />Đang chọn</span>
+            <span className="inline-flex items-center gap-2"><span className="h-3 w-3 rounded bg-[#0b6ea8]" />Đang chọn</span>
             <span className="inline-flex items-center gap-2"><span className="h-3 w-3 rounded bg-[#d0d5dd]" />Đã đặt</span>
             <span className="inline-flex items-center gap-2"><span className="h-3 w-3 rounded bg-[#f2f4f7] ring-1 ring-[#eaecf0]" />Không khả dụng</span>
           </div>
@@ -812,14 +812,14 @@ export default function LandingPage() {
                     {activeTrip.vehicle} · {activeTrip.time} · {formatDate(activeTrip.departureAt)}
                   </p>
                 </div>
-                <span className="rounded-md bg-[#eff8ff] px-3 py-2 text-sm font-black text-[#075bbf]">
+                <span className="rounded-md bg-[#e8f7fb] px-3 py-2 text-sm font-black text-[#0b6ea8]">
                   {formatCurrency(activeTrip.price)}/ghế
                 </span>
               </div>
               <div className="rounded-[28px] border border-[#d9e2ef] bg-[#f8fafc] p-4">
                 <div className="mb-5 flex items-center justify-between rounded-2xl border border-[#d0d5dd] bg-white p-3">
                   <div className="flex items-center gap-3">
-                    <span className="grid h-12 w-12 place-items-center rounded-full bg-[#073b7a] text-white">
+                    <span className="grid h-12 w-12 place-items-center rounded-full bg-[#064e6f] text-white">
                       <Bus className="h-6 w-6" />
                     </span>
                     <div>
@@ -827,7 +827,7 @@ export default function LandingPage() {
                       <p className="text-xs font-bold text-[#667085]">Đầu xe · lối lên xuống</p>
                     </div>
                   </div>
-                  <span className="rounded-full bg-[#eff8ff] px-3 py-1 text-xs font-black text-[#075bbf]">
+                  <span className="rounded-full bg-[#e8f7fb] px-3 py-1 text-xs font-black text-[#0b6ea8]">
                     {activeTrip.total} ghế
                   </span>
                 </div>
@@ -855,7 +855,7 @@ export default function LandingPage() {
                 <label className="flex items-center justify-between gap-4 border-b border-[#edf2f7] pb-3">
                   <span className="text-[#667085]">Số lượng vé</span>
                   <select
-                    className="h-10 rounded-md border-[#d0d5dd] py-0 text-sm font-black text-[#101828] focus:border-[#075bbf] focus:ring-[#075bbf]"
+                    className="h-10 rounded-md border-[#d0d5dd] py-0 text-sm font-black text-[#101828] focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
                     onChange={(event) => changePassengerCount(Number(event.target.value))}
                     value={passengers}
                   >
@@ -874,7 +874,7 @@ export default function LandingPage() {
                 <label className="block">
                   <span className="mb-1 block text-xs font-bold text-[#667085]">Điểm đón</span>
                   <input
-                    className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+                    className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
                     onChange={(event) => setPickupPoint(event.target.value)}
                     value={pickupPoint}
                   />
@@ -882,14 +882,14 @@ export default function LandingPage() {
                 <label className="block">
                   <span className="mb-1 block text-xs font-bold text-[#667085]">Điểm trả</span>
                   <input
-                    className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+                    className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
                     onChange={(event) => setDropoffPoint(event.target.value)}
                     value={dropoffPoint}
                   />
                 </label>
               </div>
               <button
-                className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#073b7a] px-4 text-sm font-black text-white hover:bg-[#052f61] disabled:bg-[#98a2b3]"
+                className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#064e6f] px-4 text-sm font-black text-white hover:bg-[#053d56] disabled:bg-[#98a2b3]"
                 disabled={bookingSubmitting || selectedSeats.length !== passengers}
                 onClick={confirmBooking}
                 type="button"
@@ -904,7 +904,7 @@ export default function LandingPage() {
           </div>
         ) : (
           <div className="rounded-lg border border-dashed border-[#b8c4d6] bg-white p-8 text-center">
-            <Armchair className="mx-auto h-8 w-8 text-[#075bbf]" />
+            <Armchair className="mx-auto h-8 w-8 text-[#0b6ea8]" />
             <p className="mt-3 text-sm font-bold text-[#667085]">Chọn một chuyến xe để xem sơ đồ ghế.</p>
           </div>
         )}
@@ -914,16 +914,16 @@ export default function LandingPage() {
         ) : null}
       </section>
 
-      <section className="bg-[#073b7a] py-10 text-white">
+      <section className="bg-[#064e6f] py-10 text-white">
         <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 md:grid-cols-[minmax(0,1fr)_320px] md:items-center">
           <div>
             <h2 className="text-2xl font-black">Cần hỗ trợ đặt vé?</h2>
-            <p className="mt-2 text-sm leading-6 text-[#d7ebff]">
+            <p className="mt-2 text-sm leading-6 text-[#d7f0f7]">
               Đội ngũ Thành Trung Limousine hỗ trợ kiểm tra chuyến, điểm đón và trạng thái thanh toán.
             </p>
           </div>
           <div className="grid gap-2 text-sm font-bold">
-            <a className="inline-flex items-center gap-2 rounded-md bg-white px-4 py-3 text-[#073b7a]" href="tel:19001000">
+            <a className="inline-flex items-center gap-2 rounded-md bg-white px-4 py-3 text-[#064e6f]" href="tel:19001000">
               <Phone className="h-4 w-4" />
               Hotline 1900 1000
             </a>
@@ -937,7 +937,7 @@ export default function LandingPage() {
 
       <footer className="border-t border-[#d9e2ef] bg-white py-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 text-sm text-[#667085] sm:px-6 md:flex-row md:items-center md:justify-between">
-          <p className="font-bold text-[#073b7a]">Thành Trung Limousine</p>
+          <p className="font-bold text-[#064e6f]">Thành Trung Limousine</p>
           <p>Vé xe khách liên tỉnh · Thanh toán QR · Vé điện tử</p>
         </div>
       </footer>
@@ -959,17 +959,17 @@ function TripCard({ onSelect, trip }: { onSelect: () => void; trip: ApiTrip }) {
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start">
         <div className="grid gap-5 md:grid-cols-[264px_minmax(0,1fr)]">
           <div className="rounded-lg bg-[#f2f6fb] p-5 ring-1 ring-[#e7eef8]">
-            <p className="text-sm font-black text-[#075bbf]">Thành Trung Limousine</p>
+            <p className="text-sm font-black text-[#0b6ea8]">Thành Trung Limousine</p>
             <p className="mt-3 text-xl font-black text-[#101828]">{trip.vehicle || "Limousine"}</p>
             <p className="mt-1 text-xs font-bold text-[#667085]">{formatDate(trip.departureAt)}</p>
             <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
               <div>
-                <p className="text-3xl font-black text-[#073b7a]">{trip.time}</p>
+                <p className="text-3xl font-black text-[#064e6f]">{trip.time}</p>
                 <p className="text-xs font-bold text-[#667085]">{trip.from}</p>
               </div>
               <div className="h-px w-12 bg-[#b8c4d6]" />
               <div className="text-right">
-                <p className="text-3xl font-black text-[#073b7a]">{getArrivalTime(trip)}</p>
+                <p className="text-3xl font-black text-[#064e6f]">{getArrivalTime(trip)}</p>
                 <p className="text-xs font-bold text-[#667085]">{trip.to}</p>
               </div>
             </div>
@@ -988,7 +988,7 @@ function TripCard({ onSelect, trip }: { onSelect: () => void; trip: ApiTrip }) {
             </div>
             <div className="mt-6 grid gap-3 text-sm text-[#344054] md:grid-cols-2">
               <span className="flex items-start gap-2">
-                <MapPin className="mt-0.5 h-4 w-4 text-[#075bbf]" />
+                <MapPin className="mt-0.5 h-4 w-4 text-[#0b6ea8]" />
                 <span><b>Đón:</b> {trip.from}</span>
               </span>
               <span className="flex items-start gap-2">
@@ -1002,7 +1002,7 @@ function TripCard({ onSelect, trip }: { onSelect: () => void; trip: ApiTrip }) {
                   className="inline-flex items-center gap-1 rounded-md bg-[#f8fafc] px-2 py-1 text-xs font-bold text-[#475467]"
                   key={index}
                 >
-                  <Icon className="h-3.5 w-3.5 text-[#075bbf]" />
+                  <Icon className="h-3.5 w-3.5 text-[#0b6ea8]" />
                   {["Xác nhận nhanh", "Hỗ trợ 24/7", "Thanh toán QR", "Đánh giá cao"][index]}
                 </span>
               ))}
@@ -1015,9 +1015,9 @@ function TripCard({ onSelect, trip }: { onSelect: () => void; trip: ApiTrip }) {
           <p className="text-sm font-bold text-[#667085]">mỗi ghế</p>
           <div className="mt-4 rounded-lg border border-[#eaecf0] p-4 text-left">
             <p className="text-sm font-bold text-[#667085]">Số ghế còn</p>
-            <p className="mt-2 text-3xl font-black text-[#073b7a]">{seatsLeft}</p>
+            <p className="mt-2 text-3xl font-black text-[#064e6f]">{seatsLeft}</p>
             <button
-              className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#073b7a] px-4 text-sm font-black text-white hover:bg-[#052f61]"
+              className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#064e6f] px-4 text-sm font-black text-white hover:bg-[#053d56]"
               onClick={onSelect}
               type="button"
             >
@@ -1047,7 +1047,7 @@ function SeatZone({
   return (
     <section className="rounded-2xl border border-[#e4e7ec] bg-white p-3">
       <div className="mb-3 flex items-center justify-between">
-        <h4 className="text-sm font-black text-[#073b7a]">{label}</h4>
+        <h4 className="text-sm font-black text-[#064e6f]">{label}</h4>
         <span className="text-xs font-bold text-[#667085]">{seats.length} ghế</span>
       </div>
       <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 md:grid-cols-6">
@@ -1064,10 +1064,10 @@ function SeatZone({
                 booked
                   ? "cursor-not-allowed border-[#d0d5dd] bg-[#e4e7ec] text-[#98a2b3]"
                   : selected
-                    ? "border-[#073b7a] bg-[#075bbf] text-white"
+                    ? "border-[#064e6f] bg-[#0b6ea8] text-white"
                     : unavailable
                       ? "cursor-not-allowed border-[#eaecf0] bg-[#f2f4f7] text-[#98a2b3]"
-                      : "border-[#d0d5dd] bg-white text-[#344054] hover:border-[#075bbf] hover:bg-[#eff8ff]"
+                      : "border-[#d0d5dd] bg-white text-[#344054] hover:border-[#0b6ea8] hover:bg-[#e8f7fb]"
               ].join(" ")}
               disabled={booked || unavailable}
               key={seatCode}
@@ -1104,7 +1104,7 @@ function PaymentPanel({ booking, payment }: { booking: ApiBooking; payment: Manu
         <div>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-black text-[#075bbf]">Thanh toán QR</p>
+              <p className="text-sm font-black text-[#0b6ea8]">Thanh toán QR</p>
               <h3 className="text-2xl font-black text-[#101828]">Quét mã để thanh toán</h3>
             </div>
             <span className="rounded-md bg-[#fff7ed] px-3 py-2 text-sm font-black text-[#c2410c]">
@@ -1119,11 +1119,11 @@ function PaymentPanel({ booking, payment }: { booking: ApiBooking; payment: Manu
             <SummaryRow label="Nội dung chuyển khoản" value={payment.reference} />
             <SummaryRow label="Trạng thái" value="Chờ xác nhận thanh toán" />
           </div>
-          <p className="mt-4 rounded-lg bg-[#eff8ff] p-3 text-sm font-semibold leading-6 text-[#075bbf]">
+          <p className="mt-4 rounded-lg bg-[#e8f7fb] p-3 text-sm font-semibold leading-6 text-[#0b6ea8]">
             Sau khi nhận được thanh toán, nhà xe sẽ xác nhận vé. Mã đơn của bạn là {payment.bookingCode}.
           </p>
           <Link
-            className="mt-4 inline-flex h-11 items-center justify-center rounded-md bg-[#073b7a] px-4 text-sm font-black text-white"
+            className="mt-4 inline-flex h-11 items-center justify-center rounded-md bg-[#064e6f] px-4 text-sm font-black text-white"
             href="/user/ve-cua-toi"
           >
             Xem vé của tôi
