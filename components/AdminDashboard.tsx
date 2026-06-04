@@ -794,7 +794,7 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="relative h-11 w-11 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-white/30">
-              <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="44px" src="/logo.jpg" />
+              <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="44px" src="/logoicon.png" />
             </span>
             <div>
               <p className="text-sm font-bold text-[#d7ebff]">Thành Trung</p>

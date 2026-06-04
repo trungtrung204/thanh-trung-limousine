@@ -84,7 +84,7 @@ export default function LoginScreen() {
         <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(#ffffff_1px,transparent_1px),linear-gradient(90deg,#ffffff_1px,transparent_1px)] [background-size:42px_42px]" />
         <div className="relative flex items-center gap-3">
           <div className="relative h-11 w-11 overflow-hidden rounded-lg bg-white shadow-sm">
-            <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="44px" src="/logo.jpg" />
+            <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="44px" src="/logoicon.png" />
           </div>
           <div>
             <p className="text-sm font-bold text-[#d7ebff]">Thành Trung Limousine</p>
@@ -116,7 +116,7 @@ export default function LoginScreen() {
           <div className="border-b border-[#eaecf0] p-6">
             <div className="mb-6 flex items-center gap-3 lg:hidden">
               <div className="relative h-10 w-10 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-[#d9e2ef]">
-                <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="40px" src="/logo.jpg" />
+                <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="40px" src="/logoicon.png" />
               </div>
               <div>
                 <p className="text-sm font-bold text-[#667085]">Thành Trung Limousine</p>

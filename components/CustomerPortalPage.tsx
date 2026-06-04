@@ -323,7 +323,7 @@ export default function CustomerPortalPage({ section }: { section: string }) {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link className="flex items-center gap-3" href="/">
             <span className="relative h-10 w-10 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-[#d9e2ef]">
-              <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="40px" src="/logo.jpg" />
+              <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="40px" src="/logoicon.png" />
             </span>
             <span>
               <span className="block text-base font-black text-[#073b7a]">Thành Trung Limousine</span>
