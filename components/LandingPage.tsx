@@ -428,27 +428,45 @@ export default function LandingPage() {
   const totalAmount = activeTrip ? activeTrip.price * passengers : 0;
 
   return (
-    <main className="min-h-screen bg-[#f3f8fb] text-[#101828]">
-      <header className="sticky top-0 z-50 border-b border-[#d9e2ef] bg-white/95 backdrop-blur">
+    <main className="min-h-screen bg-[#eef7ff] text-[#101828]">
+      <header className="sticky top-0 z-50 bg-[#1677e8] text-white shadow-[0_8px_30px_rgba(14,91,180,0.22)]">
+        <div className="border-b border-white/15 bg-[#0f66d7]">
+          <div className="mx-auto flex min-h-10 max-w-7xl items-center justify-between gap-4 px-4 py-2 text-xs font-black sm:px-6">
+            <div className="flex items-center gap-2">
+              <BadgeCheck className="h-4 w-4 text-[#ffd43b]" />
+              <span>Giữ ghế trực tuyến, thanh toán QR, vé điện tử sau xác nhận</span>
+            </div>
+            <div className="hidden items-center gap-4 lg:flex">
+              <span className="inline-flex items-center gap-2">
+                <Headphones className="h-4 w-4 text-[#ffd43b]" />
+                Hỗ trợ 24/7
+              </span>
+              <a className="inline-flex items-center gap-2 rounded-md bg-white px-3 py-1.5 text-[#0f66d7]" href="tel:19001000">
+                <Phone className="h-4 w-4" />
+                Hotline 1900 1000
+              </a>
+            </div>
+          </div>
+        </div>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link className="flex items-center gap-3" href="/">
-            <span className="relative h-10 w-10 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-[#d9e2ef]">
-              <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="40px" src="/logoicon.png" />
+            <span className="relative h-11 w-11 overflow-hidden rounded-xl bg-white shadow-sm ring-2 ring-white/30">
+              <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="44px" src="/logoicon.png" />
             </span>
             <span>
-              <span className="block text-base font-black text-[#064e6f]">Thành Trung Limousine</span>
-              <span className="block text-xs font-semibold text-[#667085]">Sàn đặt vé xe khách</span>
+              <span className="block text-base font-black text-white">Thành Trung Limousine</span>
+              <span className="block text-xs font-semibold text-[#dff2ff]">Sàn đặt vé xe khách</span>
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-6 text-sm font-bold text-[#344054] md:flex">
-            <a className="font-bold hover:text-[#0b6ea8]" href="#danh-sach-chuyen">
+          <nav className="hidden items-center gap-6 text-sm font-black text-white md:flex">
+            <a className="hover:text-[#ffd43b]" href="#danh-sach-chuyen">
               Chuyến xe
             </a>
-            <a className="font-bold hover:text-[#0b6ea8]" href="#tuyen-pho-bien">
+            <a className="hover:text-[#ffd43b]" href="#tuyen-pho-bien">
               Tuyến phổ biến
             </a>
-            <Link className="font-bold hover:text-[#0b6ea8]" href="/user/ve-cua-toi">
+            <Link className="hover:text-[#ffd43b]" href="/user/ve-cua-toi">
               Vé của tôi
             </Link>
           </nav>
@@ -456,11 +474,11 @@ export default function LandingPage() {
           <div className="hidden items-center gap-2 md:flex">
             {customer ? (
               <>
-                <span className="max-w-[180px] truncate text-sm font-bold text-[#344054]">
+                <span className="max-w-[180px] truncate text-sm font-black text-white">
                   {customer.name}
                 </span>
                 <button
-                  className="rounded-md border border-[#d0d5dd] px-3 py-2 text-sm font-bold text-[#344054] hover:bg-[#f2f4f7]"
+                  className="rounded-md border border-white/35 px-3 py-2 text-sm font-bold text-white hover:bg-white/10"
                   disabled={logoutSubmitting}
                   onClick={handleLogout}
                   type="button"
@@ -470,11 +488,11 @@ export default function LandingPage() {
               </>
             ) : (
               <>
-                <Link className="rounded-md px-3 py-2 text-sm font-bold text-[#0b6ea8]" href="/login">
+                <Link className="rounded-md px-3 py-2 text-sm font-black text-white hover:bg-white/10" href="/login">
                   Đăng nhập
                 </Link>
                 <Link
-                  className="rounded-md bg-[#064e6f] px-4 py-2 text-sm font-bold text-white hover:bg-[#053d56]"
+                  className="rounded-md bg-[#ffd43b] px-4 py-2 text-sm font-black text-[#082a48] shadow-sm hover:bg-[#ffc928]"
                   href="/register"
                 >
                   Đăng ký
@@ -485,7 +503,7 @@ export default function LandingPage() {
 
           <button
             aria-label="Mở menu"
-            className="rounded-md border border-[#d0d5dd] p-2 text-[#344054] md:hidden"
+            className="rounded-md border border-white/35 p-2 text-white md:hidden"
             onClick={() => setMenuOpen(true)}
             type="button"
           >
@@ -494,9 +512,9 @@ export default function LandingPage() {
         </div>
 
         {menuOpen ? (
-          <div className="border-t border-[#d9e2ef] bg-white p-4 md:hidden">
+          <div className="border-t border-[#d9e2ef] bg-white p-4 text-[#101828] md:hidden">
             <div className="mb-4 flex items-center justify-between">
-              <span className="font-black text-[#064e6f]">Menu</span>
+              <span className="font-black text-[#1677e8]">Menu</span>
               <button aria-label="Đóng menu" onClick={() => setMenuOpen(false)} type="button">
                 <X className="h-5 w-5" />
               </button>
@@ -530,51 +548,63 @@ export default function LandingPage() {
         ) : null}
       </header>
 
-      <section className="relative min-h-[620px] overflow-hidden bg-[#064e6f] text-white">
+      <section className="relative overflow-hidden bg-[#8ad8ff] text-[#08233f]">
         <Image
-          alt="Xe limousine Thành Trung trên hành trình liên tỉnh"
-          className="object-cover opacity-40"
+          alt="Hành trình du lịch biển miền Trung cùng Thành Trung Limousine"
+          className="object-cover opacity-55"
           fill
           priority
-          src="/landmarks/northern-station.jpg"
+          src="/landmarks/nghe-an-coast.jpg"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,35,71,0.92),rgba(7,59,122,0.74),rgba(7,59,122,0.38))]" />
-        <div className="relative mx-auto grid max-w-7xl gap-8 px-4 pb-14 pt-16 sm:px-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:pt-24">
-          <div className="max-w-3xl">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm font-bold text-[#ffe082]">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(38,160,255,0.20)_0%,rgba(229,248,255,0.78)_58%,rgba(238,247,255,0.98)_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(8,64,115,0)_0%,rgba(8,64,115,0.38)_100%)]" />
+        <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-12 sm:px-6 lg:pt-16">
+          <div className="mx-auto max-w-4xl text-center">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/80 px-4 py-2 text-sm font-black text-[#0f66d7] shadow-sm">
               <BadgeCheck className="h-4 w-4" />
-              Đặt vé xe limousine nhanh, rõ giá, giữ ghế trực tuyến
+              Rực rỡ hành trình, rõ ràng từng ghế
             </div>
-            <h1 className="text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">
+            <h1 className="text-4xl font-black leading-tight text-[#073a6b] sm:text-5xl lg:text-6xl">
               Thành Trung Limousine
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-[#e8f3ff] sm:text-lg">
-              Trải nghiệm đặt vé xe chuyên nghiệp với tìm chuyến nhanh, chọn ghế trực quan,
-              thanh toán QR và vé điện tử sau khi nhà xe xác nhận.
+            <p className="mx-auto mt-5 max-w-2xl text-base font-semibold leading-8 text-[#23415f] sm:text-lg">
+              Tìm chuyến nhanh, chọn ghế trực quan, giá hiển thị rõ ràng và hỗ trợ xuyên suốt hành trình.
             </p>
-            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            <div className="mx-auto mt-7 grid max-w-3xl gap-3 sm:grid-cols-3">
               {[
                 ["4.9/5", "Đánh giá dịch vụ"],
                 ["24/7", "Hỗ trợ đặt vé"],
                 [`${maxTicketsPerBooking} ghế`, "Tối đa mỗi đơn"]
               ].map(([value, label]) => (
-                <div className="rounded-lg border border-white/15 bg-white/10 p-4" key={label}>
-                  <p className="text-2xl font-black text-[#ffd166]">{value}</p>
-                  <p className="mt-1 text-sm font-semibold text-[#d7f0f7]">{label}</p>
+                <div className="rounded-2xl border border-white/70 bg-white/75 p-4 shadow-sm backdrop-blur" key={label}>
+                  <p className="text-2xl font-black text-[#ff8a00]">{value}</p>
+                  <p className="mt-1 text-sm font-bold text-[#0b4f83]">{label}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="self-end rounded-lg bg-white p-4 text-[#101828] shadow-[0_24px_80px_rgba(16,24,40,0.22)]">
-            <div className="mb-4 flex items-center justify-between border-b border-[#eaecf0] pb-3">
-              <div>
-                <p className="text-sm font-bold text-[#0b6ea8]">Tìm chuyến xe</p>
-                <h2 className="text-xl font-black">Bạn muốn đi đâu?</h2>
-              </div>
-              <Search className="h-5 w-5 text-[#f59e0b]" />
+          <div className="mx-auto mt-9 max-w-6xl overflow-hidden rounded-2xl bg-white text-[#101828] shadow-[0_24px_80px_rgba(14,91,180,0.25)] ring-1 ring-white/80">
+            <div className="flex flex-wrap items-center gap-1 border-b border-[#e4e7ec] bg-[#f9fbff] px-4 pt-4">
+              {[
+                { icon: <Bus className="h-5 w-5" />, label: "Xe limousine" },
+                { icon: <Ticket className="h-5 w-5" />, label: "Vé điện tử" },
+                { icon: <Headphones className="h-5 w-5" />, label: "Hỗ trợ 24/7" },
+                { icon: <WalletCards className="h-5 w-5" />, label: "Thanh toán QR" }
+              ].map((item, index) => (
+                <span
+                  className={[
+                    "inline-flex items-center gap-2 rounded-t-xl px-4 py-3 text-sm font-black",
+                    index === 0 ? "bg-white text-[#1677e8] shadow-sm" : "text-[#475467]"
+                  ].join(" ")}
+                  key={item.label}
+                >
+                  {item.icon}
+                  {item.label}
+                </span>
+              ))}
             </div>
-            <div className="grid gap-3">
+            <div className="grid gap-3 p-4 lg:grid-cols-[1fr_1fr_180px_160px_190px] lg:items-end">
               <label className="block">
                 <span className="mb-1 block text-xs font-bold text-[#667085]">Điểm đi</span>
                 <select
@@ -605,34 +635,32 @@ export default function LandingPage() {
                   ))}
                 </select>
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="mb-1 block text-xs font-bold text-[#667085]">Ngày đi</span>
-                  <input
-                    className="h-12 w-full rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
-                    min={todayKey()}
-                    onChange={(event) => setSearchDate(event.target.value)}
-                    type="date"
-                    value={searchDate}
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-1 block text-xs font-bold text-[#667085]">Số khách</span>
-                  <select
-                    className="h-12 w-full rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
-                    onChange={(event) => changePassengerCount(Number(event.target.value))}
-                    value={passengers}
-                  >
-                    {Array.from({ length: maxTicketsPerBooking }, (_, index) => index + 1).map((value) => (
-                      <option key={value} value={value}>
-                        {value} khách
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
+              <label className="block">
+                <span className="mb-1 block text-xs font-bold text-[#667085]">Ngày đi</span>
+                <input
+                  className="h-12 w-full rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
+                  min={todayKey()}
+                  onChange={(event) => setSearchDate(event.target.value)}
+                  type="date"
+                  value={searchDate}
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-bold text-[#667085]">Số khách</span>
+                <select
+                  className="h-12 w-full rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
+                  onChange={(event) => changePassengerCount(Number(event.target.value))}
+                  value={passengers}
+                >
+                  {Array.from({ length: maxTicketsPerBooking }, (_, index) => index + 1).map((value) => (
+                    <option key={value} value={value}>
+                      {value} khách
+                    </option>
+                  ))}
+                </select>
+              </label>
               <button
-                className="mt-2 inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#064e6f] px-4 text-sm font-black text-white hover:bg-[#053d56]"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-[#ffd43b] px-4 text-base font-black text-[#082a48] shadow-sm hover:bg-[#ffc928]"
                 onClick={handleSearch}
                 type="button"
               >
@@ -641,18 +669,34 @@ export default function LandingPage() {
               </button>
             </div>
           </div>
+
+          <div className="mx-auto mt-7 grid max-w-4xl gap-3 rounded-2xl bg-[#073a6b]/90 px-5 py-4 text-white shadow-lg sm:grid-cols-4">
+            {[
+              ["Chắc chắn có chỗ", <BadgeCheck className="h-5 w-5 text-[#ffd43b]" key="icon" />],
+              ["Hỗ trợ 24/7", <Headphones className="h-5 w-5 text-[#ffd43b]" key="icon" />],
+              ["Nhiều tuyến đẹp", <MapPin className="h-5 w-5 text-[#ffd43b]" key="icon" />],
+              ["Thanh toán tiện lợi", <CreditCard className="h-5 w-5 text-[#ffd43b]" key="icon" />]
+            ].map(([label, icon]) => (
+              <div className="flex items-center justify-center gap-2 text-sm font-black" key={label as string}>
+                {icon}
+                {label}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-4 px-4 py-8 sm:px-6 lg:grid-cols-4">
+      <section className="mx-auto grid max-w-7xl gap-4 px-4 py-10 sm:px-6 lg:grid-cols-4">
         {[
-          { desc: "Khoang ngồi thoải mái, tiện nghi rõ ràng.", icon: <Bus className="h-6 w-6 text-[#0b6ea8]" />, title: "Xe limousine" },
-          { desc: "Giữ ghế và nhận mã đơn trực tuyến.", icon: <Ticket className="h-6 w-6 text-[#0b6ea8]" />, title: "Đặt vé nhanh" },
-          { desc: "Hotline sẵn sàng xử lý thay đổi.", icon: <Headphones className="h-6 w-6 text-[#0b6ea8]" />, title: "Hỗ trợ 24/7" },
-          { desc: "QR chuyển khoản và xác nhận vé.", icon: <CreditCard className="h-6 w-6 text-[#0b6ea8]" />, title: "Thanh toán tiện lợi" }
+          { desc: "Khoang ngồi thoải mái, tiện nghi rõ ràng.", icon: <Bus className="h-6 w-6" />, tone: "from-[#1677e8] to-[#27b7ff]", title: "Xe limousine" },
+          { desc: "Giữ ghế và nhận mã đơn trực tuyến.", icon: <Ticket className="h-6 w-6" />, tone: "from-[#ff8a00] to-[#ffd43b]", title: "Đặt vé nhanh" },
+          { desc: "Hotline sẵn sàng xử lý thay đổi.", icon: <Headphones className="h-6 w-6" />, tone: "from-[#00a878] to-[#42e695]", title: "Hỗ trợ 24/7" },
+          { desc: "QR chuyển khoản và xác nhận vé.", icon: <CreditCard className="h-6 w-6" />, tone: "from-[#7048e8] to-[#15aabf]", title: "Thanh toán tiện lợi" }
         ].map((item) => (
-          <div className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm" key={item.title}>
-            {item.icon}
+          <div className="group rounded-2xl border border-[#cfe7ff] bg-white p-5 shadow-[0_10px_30px_rgba(22,119,232,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(22,119,232,0.14)]" key={item.title}>
+            <span className={`grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br ${item.tone} text-white shadow-sm`}>
+              {item.icon}
+            </span>
             <h3 className="mt-3 font-black text-[#101828]">{item.title}</h3>
             <p className="mt-2 text-sm leading-6 text-[#667085]">{item.desc}</p>
           </div>
@@ -671,7 +715,9 @@ export default function LandingPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-3">
           {trips.slice(0, 3).map((trip) => (
-            <div className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm" key={trip.id}>
+            <div className="overflow-hidden rounded-2xl border border-[#cfe7ff] bg-white shadow-[0_12px_28px_rgba(22,119,232,0.10)]" key={trip.id}>
+              <div className="h-2 bg-[linear-gradient(90deg,#1677e8,#22c7ff,#ffd43b)]" />
+              <div className="p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-black text-[#101828]">{trip.route}</h3>
@@ -679,23 +725,24 @@ export default function LandingPage() {
                     {trip.vehicle || "Limousine"} · {formatDate(trip.departureAt)}
                   </p>
                 </div>
-                <span className="rounded-md bg-[#fff7ed] px-2 py-1 text-xs font-black text-[#c2410c]">
+                <span className="rounded-md bg-[#fff0c2] px-2 py-1 text-xs font-black text-[#b54708]">
                   {formatCurrency(trip.price)}
                 </span>
               </div>
               <div className="mt-4 flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2 font-bold text-[#344054]">
-                  <Clock3 className="h-4 w-4 text-[#0b6ea8]" />
+                  <Clock3 className="h-4 w-4 text-[#1677e8]" />
                   {trip.time}
                 </span>
                 <span className="font-bold text-[#027a48]">{Math.max(trip.total - trip.sold, 0)} ghế trống</span>
+              </div>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="border-y border-[#d9e2ef] bg-white py-12" id="danh-sach-chuyen">
+      <section className="border-y border-[#cfe7ff] bg-[#f7fbff] py-12" id="danh-sach-chuyen">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -707,7 +754,7 @@ export default function LandingPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               <select
-                className="h-10 rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
+                className="h-10 rounded-md border-[#badcff] bg-white text-sm font-bold focus:border-[#1677e8] focus:ring-[#1677e8]"
                 onChange={(event) => setSortMode(event.target.value as typeof sortMode)}
                 value={sortMode}
               >
@@ -716,7 +763,7 @@ export default function LandingPage() {
                 <option value="seats">Ghế còn nhiều</option>
               </select>
               <button
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#d0d5dd] px-3 text-sm font-bold text-[#344054]"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#badcff] bg-white px-3 text-sm font-bold text-[#0b4f83]"
                 disabled={tripsLoading}
                 onClick={refreshTrips}
                 type="button"
@@ -728,16 +775,16 @@ export default function LandingPage() {
           </div>
 
           <div className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
-            <aside className="rounded-lg border border-[#e4e7ec] bg-[#f8fafc] p-4 lg:sticky lg:top-24 lg:self-start">
+            <aside className="rounded-2xl border border-[#cfe7ff] bg-white p-4 shadow-[0_12px_30px_rgba(22,119,232,0.08)] lg:sticky lg:top-24 lg:self-start">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="font-black">Bộ lọc</h3>
-                <SlidersHorizontal className="h-4 w-4 text-[#0b6ea8]" />
+                <SlidersHorizontal className="h-4 w-4 text-[#1677e8]" />
               </div>
               <div className="grid gap-3">
                 <label className="block">
                   <span className="mb-1 block text-sm font-bold text-[#344054]">Loại xe</span>
                   <select
-                    className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
+                    className="h-11 w-full rounded-md border-[#badcff] text-sm focus:border-[#1677e8] focus:ring-[#1677e8]"
                     onChange={(event) => setVehicleFilter(event.target.value)}
                     value={vehicleFilter}
                   >
@@ -747,7 +794,7 @@ export default function LandingPage() {
                     <option value="45">Giường nằm</option>
                   </select>
                 </label>
-                <div className="rounded-lg bg-white p-3 text-sm text-[#344054]">
+                <div className="rounded-xl bg-[#eef7ff] p-3 text-sm text-[#344054] ring-1 ring-[#d8ecff]">
                   <p className="font-black text-[#101828]">Tiêu chí phổ biến</p>
                   <div className="mt-3 grid gap-2 font-semibold">
                     <span className="inline-flex items-center gap-2">
@@ -955,25 +1002,27 @@ function TripCard({ onSelect, trip }: { onSelect: () => void; trip: ApiTrip }) {
   const seatsLeft = getSeatsLeft(trip);
 
   return (
-    <article className="rounded-lg border border-[#b8d7ff] bg-white p-5 shadow-[0_8px_24px_rgba(11,63,122,0.10)] transition hover:border-[#7db7ff] hover:shadow-[0_12px_30px_rgba(11,63,122,0.14)]">
+    <article className="overflow-hidden rounded-2xl border border-[#9fd5ff] bg-white shadow-[0_12px_34px_rgba(22,119,232,0.12)] transition hover:-translate-y-0.5 hover:border-[#55b7ff] hover:shadow-[0_18px_42px_rgba(22,119,232,0.18)]">
+      <div className="h-1.5 bg-[linear-gradient(90deg,#1677e8,#22c7ff,#ffd43b,#ff8a00)]" />
+      <div className="p-5">
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start">
         <div className="grid gap-5 md:grid-cols-[264px_minmax(0,1fr)]">
-          <div className="rounded-lg bg-[#f2f6fb] p-5 ring-1 ring-[#e7eef8]">
-            <p className="text-sm font-black text-[#0b6ea8]">Thành Trung Limousine</p>
+          <div className="rounded-2xl bg-[linear-gradient(180deg,#eef7ff_0%,#ffffff_100%)] p-5 ring-1 ring-[#cfe7ff]">
+            <p className="text-sm font-black text-[#1677e8]">Thành Trung Limousine</p>
             <p className="mt-3 text-xl font-black text-[#101828]">{trip.vehicle || "Limousine"}</p>
             <p className="mt-1 text-xs font-bold text-[#667085]">{formatDate(trip.departureAt)}</p>
             <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
               <div>
-                <p className="text-3xl font-black text-[#064e6f]">{trip.time}</p>
+                <p className="text-3xl font-black text-[#073a6b]">{trip.time}</p>
                 <p className="text-xs font-bold text-[#667085]">{trip.from}</p>
               </div>
-              <div className="h-px w-12 bg-[#b8c4d6]" />
+              <div className="h-1 w-12 rounded-full bg-[#badcff]" />
               <div className="text-right">
-                <p className="text-3xl font-black text-[#064e6f]">{getArrivalTime(trip)}</p>
+                <p className="text-3xl font-black text-[#073a6b]">{getArrivalTime(trip)}</p>
                 <p className="text-xs font-bold text-[#667085]">{trip.to}</p>
               </div>
             </div>
-            <p className="mt-3 rounded-md bg-white px-2 py-1 text-center text-xs font-black text-[#475467]">
+            <p className="mt-3 rounded-md bg-white px-2 py-1 text-center text-xs font-black text-[#0b4f83] ring-1 ring-[#d8ecff]">
               {getDurationLabel(trip)}
             </p>
           </div>
@@ -999,10 +1048,10 @@ function TripCard({ onSelect, trip }: { onSelect: () => void; trip: ApiTrip }) {
             <div className="mt-4 flex flex-wrap gap-2">
               {[Wifi, Luggage, ShieldCheck, Star].map((Icon, index) => (
                 <span
-                  className="inline-flex items-center gap-1 rounded-md bg-[#f8fafc] px-2 py-1 text-xs font-bold text-[#475467]"
+                  className="inline-flex items-center gap-1 rounded-md bg-[#eef7ff] px-2 py-1 text-xs font-bold text-[#0b4f83]"
                   key={index}
                 >
-                  <Icon className="h-3.5 w-3.5 text-[#0b6ea8]" />
+                  <Icon className="h-3.5 w-3.5 text-[#1677e8]" />
                   {["Xác nhận nhanh", "Hỗ trợ 24/7", "Thanh toán QR", "Đánh giá cao"][index]}
                 </span>
               ))}
@@ -1011,13 +1060,13 @@ function TripCard({ onSelect, trip }: { onSelect: () => void; trip: ApiTrip }) {
         </div>
 
         <div className="lg:text-right">
-          <p className="text-2xl font-black text-[#c2410c]">{formatCurrency(trip.price)}</p>
+          <p className="text-2xl font-black text-[#d9480f]">{formatCurrency(trip.price)}</p>
           <p className="text-sm font-bold text-[#667085]">mỗi ghế</p>
-          <div className="mt-4 rounded-lg border border-[#eaecf0] p-4 text-left">
+          <div className="mt-4 rounded-2xl border border-[#cfe7ff] bg-[#fbfdff] p-4 text-left">
             <p className="text-sm font-bold text-[#667085]">Số ghế còn</p>
-            <p className="mt-2 text-3xl font-black text-[#064e6f]">{seatsLeft}</p>
+            <p className="mt-2 text-3xl font-black text-[#073a6b]">{seatsLeft}</p>
             <button
-              className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#064e6f] px-4 text-sm font-black text-white hover:bg-[#053d56]"
+              className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#1677e8] px-4 text-sm font-black text-white shadow-sm hover:bg-[#0f66d7]"
               onClick={onSelect}
               type="button"
             >
@@ -1026,6 +1075,7 @@ function TripCard({ onSelect, trip }: { onSelect: () => void; trip: ApiTrip }) {
             </button>
           </div>
         </div>
+      </div>
       </div>
     </article>
   );

@@ -325,24 +325,24 @@ export default function CustomerPortalPage({ section }: { section: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-[#f3f8fb] text-[#101828]">
-      <header className="border-b border-[#d9e2ef] bg-white">
+    <main className="min-h-screen bg-[#eef7ff] text-[#101828]">
+      <header className="border-b border-[#0f66d7] bg-[#1677e8] text-white shadow-[0_8px_30px_rgba(14,91,180,0.20)]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <Link className="flex items-center gap-3" href="/">
-            <span className="relative h-10 w-10 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-[#d9e2ef]">
+            <span className="relative h-10 w-10 overflow-hidden rounded-xl bg-white shadow-sm ring-2 ring-white/30">
               <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="40px" src="/logoicon.png" />
             </span>
             <span>
-              <span className="block text-base font-black text-[#064e6f]">Thành Trung Limousine</span>
-              <span className="block text-xs font-semibold text-[#667085]">Cổng khách hàng</span>
+              <span className="block text-base font-black text-white">Thành Trung Limousine</span>
+              <span className="block text-xs font-semibold text-[#dff2ff]">Cổng khách hàng</span>
             </span>
           </Link>
           <div className="flex items-center gap-2">
             {customer ? (
               <>
-                <span className="hidden text-sm font-bold text-[#344054] sm:inline">{customer.name}</span>
+                <span className="hidden text-sm font-black text-white sm:inline">{customer.name}</span>
                 <button
-                  className="rounded-md border border-[#d0d5dd] px-3 py-2 text-sm font-bold text-[#344054]"
+                  className="rounded-md border border-white/35 px-3 py-2 text-sm font-bold text-white hover:bg-white/10"
                   disabled={logoutSubmitting}
                   onClick={handleLogout}
                   type="button"
@@ -351,7 +351,7 @@ export default function CustomerPortalPage({ section }: { section: string }) {
                 </button>
               </>
             ) : (
-              <Link className="rounded-md bg-[#064e6f] px-4 py-2 text-sm font-bold text-white" href="/login">
+              <Link className="rounded-md bg-[#ffd43b] px-4 py-2 text-sm font-black text-[#082a48]" href="/login">
                 Đăng nhập
               </Link>
             )}
@@ -360,8 +360,8 @@ export default function CustomerPortalPage({ section }: { section: string }) {
       </header>
 
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="rounded-lg border border-[#e4e7ec] bg-white p-3 shadow-sm lg:sticky lg:top-20 lg:self-start">
-          <Link className="mb-3 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-bold text-[#0b6ea8]" href="/">
+        <aside className="rounded-2xl border border-[#cfe7ff] bg-white p-3 shadow-[0_12px_30px_rgba(22,119,232,0.08)] lg:sticky lg:top-20 lg:self-start">
+          <Link className="mb-3 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-black text-[#1677e8]" href="/">
             <ArrowLeft className="h-4 w-4" />
             Đặt vé mới
           </Link>
@@ -370,7 +370,7 @@ export default function CustomerPortalPage({ section }: { section: string }) {
               <Link
                 className={[
                   "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-bold",
-                  item.key === pageKey ? "bg-[#e8f7fb] text-[#0b6ea8]" : "text-[#344054] hover:bg-[#f2f4f7]"
+                  item.key === pageKey ? "bg-[#1677e8] text-white" : "text-[#344054] hover:bg-[#eef7ff]"
                 ].join(" ")}
                 href={item.href}
                 key={item.key}
@@ -383,10 +383,12 @@ export default function CustomerPortalPage({ section }: { section: string }) {
         </aside>
 
         <section className="min-w-0">
-          <div className="mb-5 rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+          <div className="mb-5 overflow-hidden rounded-2xl border border-[#cfe7ff] bg-white shadow-[0_12px_30px_rgba(22,119,232,0.08)]">
+            <div className="h-1.5 bg-[linear-gradient(90deg,#1677e8,#22c7ff,#ffd43b,#ff8a00)]" />
+            <div className="p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-black text-[#0b6ea8]">Tài khoản khách hàng</p>
+                <p className="text-sm font-black text-[#1677e8]">Tài khoản khách hàng</p>
                 <h1 className="mt-1 text-2xl font-black sm:text-3xl">{meta.title}</h1>
                 <p className="mt-2 text-sm leading-6 text-[#667085]">{meta.desc}</p>
               </div>
@@ -395,6 +397,7 @@ export default function CustomerPortalPage({ section }: { section: string }) {
                 <MiniStat label="Đã thanh toán" value={String(paidBookings.length)} />
                 <MiniStat label="Chờ thanh toán" value={String(pendingBookings.length)} />
               </div>
+            </div>
             </div>
           </div>
 
