@@ -45,6 +45,7 @@ type CustomerSession = {
 type SectionKey =
   | "my-tickets"
   | "cancel"
+  | "notifications"
   | "promotions"
   | "payment"
   | "tracking"
@@ -73,6 +74,7 @@ const pageAliases: Record<string, SectionKey> = {
   "ma-giam-gia": "promotions",
   "nha-xe": "operators",
   "phan-hoi": "feedback",
+  "thong-bao": "notifications",
   "thanh-toan": "payment",
   "theo-doi-chuyen": "tracking",
   "ve-cua-toi": "my-tickets"
@@ -80,6 +82,7 @@ const pageAliases: Record<string, SectionKey> = {
 
 const navItems: Array<{ href: string; icon: ReactNode; key: SectionKey; label: string }> = [
   { href: "/user/ve-cua-toi", icon: <Ticket className="h-4 w-4" />, key: "my-tickets", label: "Vé của tôi" },
+  { href: "/user/thong-bao", icon: <Bell className="h-4 w-4" />, key: "notifications", label: "Thông báo" },
   { href: "/user/thanh-toan", icon: <WalletCards className="h-4 w-4" />, key: "payment", label: "Thanh toán" },
   { href: "/user/doi-huy-ve", icon: <RotateCcw className="h-4 w-4" />, key: "cancel", label: "Đổi/hủy vé" },
   { href: "/user/lich-su-chuyen", icon: <History className="h-4 w-4" />, key: "history", label: "Lịch sử chuyến" },
@@ -112,6 +115,10 @@ const sectionMeta: Record<SectionKey, { desc: string; title: string }> = {
     desc: "Theo dõi trạng thái thanh toán và vé điện tử.",
     title: "Vé của tôi"
   },
+  notifications: {
+    desc: "Cập nhật thanh toán, hủy vé, phản hồi và hỗ trợ từ nhà xe.",
+    title: "Thông báo"
+  },
   operators: {
     desc: "Thông tin vận hành của Thành Trung Limousine.",
     title: "Nhà xe"
@@ -125,7 +132,7 @@ const sectionMeta: Record<SectionKey, { desc: string; title: string }> = {
     title: "Ưu đãi"
   },
   support: {
-    desc: "Hotline, điểm đón và hỗ trợ sau đặt vé.",
+    desc: "Gửi yêu cầu hỗ trợ để admin nhà xe tiếp nhận và cập nhật trạng thái.",
     title: "Hỗ trợ"
   },
   tracking: {
@@ -491,12 +498,20 @@ function PortalContent({
     return <TrackingSection bookings={bookings} />;
   }
 
+  if (pageKey === "notifications") {
+    return <NotificationCenter bookings={bookings} feedbacks={feedbacks} />;
+  }
+
   if (pageKey === "feedback") {
     return <FeedbackSection bookings={bookings} feedbacks={feedbacks} onRefresh={onRefresh} setToast={setToast} />;
   }
 
   if (pageKey === "cancel") {
     return <CancelSection bookings={bookings} onCancelRequest={onCancelRequest} />;
+  }
+
+  if (pageKey === "support") {
+    return <SupportSection bookings={bookings} onRefresh={onRefresh} setToast={setToast} />;
   }
 
   return <UtilitySection pageKey={pageKey} />;
@@ -773,6 +788,254 @@ function TrackingSection({ bookings }: { bookings: ApiBooking[] }) {
   );
 }
 
+type NotificationItem = {
+  actionHref: string;
+  description: string;
+  id: string;
+  time: string;
+  title: string;
+  tone: "blue" | "green" | "orange" | "red";
+};
+
+function buildUserNotifications(bookings: ApiBooking[], feedbacks: FeedbackItem[]) {
+  const items: NotificationItem[] = [];
+
+  bookings.forEach((booking) => {
+    const status = displayBookingStatus(booking);
+    if (status === "Đã thanh toán") {
+      items.push({
+        actionHref: "/user/ve-cua-toi",
+        description: `Booking ${booking.code} đã được xác nhận. Vé điện tử sẽ hiển thị trong mục Vé của tôi.`,
+        id: `paid-${booking.id}`,
+        time: booking.paidAt || booking.createdAt,
+        title: "Thanh toán đã xác nhận",
+        tone: "green"
+      });
+    } else if (status === "Chờ thanh toán") {
+      items.push({
+        actionHref: "/user/thanh-toan",
+        description: `Booking ${booking.code} đang chờ thanh toán QR với số tiền ${formatCurrency(booking.price)}.`,
+        id: `payment-${booking.id}`,
+        time: booking.createdAt,
+        title: "Hoàn tất thanh toán",
+        tone: "orange"
+      });
+    }
+
+    if (booking.cancellationStatus === "PENDING") {
+      items.push({
+        actionHref: "/user/doi-huy-ve",
+        description: `Yêu cầu hủy vé ${booking.code} đã gửi và đang chờ admin xử lý.`,
+        id: `cancel-pending-${booking.id}`,
+        time: booking.createdAt,
+        title: "Yêu cầu hủy đang chờ duyệt",
+        tone: "orange"
+      });
+    } else if (booking.cancellationStatus === "APPROVED") {
+      items.push({
+        actionHref: "/user/doi-huy-ve",
+        description: `Admin đã duyệt yêu cầu hủy vé ${booking.code}.`,
+        id: `cancel-approved-${booking.id}`,
+        time: booking.createdAt,
+        title: "Yêu cầu hủy đã được duyệt",
+        tone: "green"
+      });
+    } else if (booking.cancellationStatus === "REJECTED") {
+      items.push({
+        actionHref: "/user/doi-huy-ve",
+        description: `Yêu cầu hủy vé ${booking.code} chưa được chấp nhận. Vui lòng liên hệ hỗ trợ nếu cần thêm thông tin.`,
+        id: `cancel-rejected-${booking.id}`,
+        time: booking.createdAt,
+        title: "Yêu cầu hủy bị từ chối",
+        tone: "red"
+      });
+    }
+  });
+
+  feedbacks.forEach((feedback) => {
+    items.push({
+      actionHref: "/user/phan-hoi",
+      description: `${feedback.route} · ${feedback.message}`,
+      id: `feedback-${feedback.id}`,
+      time: feedback.createdAt,
+      title: `Phản hồi/hỗ trợ: ${feedback.status}`,
+      tone: feedback.status === "Đã xử lý" ? "green" : feedback.status === "Mới" ? "blue" : "orange"
+    });
+  });
+
+  return items.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 12);
+}
+
+function NotificationCenter({ bookings, feedbacks }: { bookings: ApiBooking[]; feedbacks: FeedbackItem[] }) {
+  const notifications = buildUserNotifications(bookings, feedbacks);
+
+  if (!notifications.length) {
+    return <EmptyPanel text="Chưa có thông báo mới." />;
+  }
+
+  return (
+    <section className="grid gap-4">
+      <div className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+        <h2 className="text-xl font-black">Trung tâm thông báo</h2>
+        <p className="mt-2 text-sm leading-6 text-[#667085]">
+          Các cập nhật tại đây được tạo từ trạng thái thanh toán, yêu cầu hủy và phản hồi mà admin xử lý.
+        </p>
+      </div>
+      {notifications.map((item) => (
+        <Link
+          className="flex flex-col gap-3 rounded-lg border border-[#e4e7ec] bg-white p-4 shadow-sm transition hover:border-[#b8d7ff] sm:flex-row sm:items-start sm:justify-between"
+          href={item.actionHref}
+          key={item.id}
+        >
+          <div className="flex gap-3">
+            <span
+              className={[
+                "mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-lg",
+                item.tone === "green"
+                  ? "bg-[#ecfdf3] text-[#027a48]"
+                  : item.tone === "red"
+                    ? "bg-[#fff1f3] text-[#b42318]"
+                    : item.tone === "orange"
+                      ? "bg-[#fff7ed] text-[#c2410c]"
+                      : "bg-[#eff8ff] text-[#075bbf]"
+              ].join(" ")}
+            >
+              <Bell className="h-5 w-5" />
+            </span>
+            <span>
+              <span className="block font-black text-[#101828]">{item.title}</span>
+              <span className="mt-1 block text-sm leading-6 text-[#667085]">{item.description}</span>
+            </span>
+          </div>
+          <span className="text-xs font-bold text-[#075bbf]">{formatDate(item.time)}</span>
+        </Link>
+      ))}
+    </section>
+  );
+}
+
+function SupportSection({
+  bookings,
+  onRefresh,
+  setToast
+}: {
+  bookings: ApiBooking[];
+  onRefresh: () => Promise<void>;
+  setToast: (message: string) => void;
+}) {
+  const [bookingCode, setBookingCode] = useState(bookings[0]?.code || "");
+  const [topic, setTopic] = useState("Hỗ trợ điểm đón/trả");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    setBookingCode((current) => current || bookings[0]?.code || "");
+  }, [bookings]);
+
+  async function submitSupport(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!message.trim()) {
+      setToast("Vui lòng nhập nội dung cần hỗ trợ.");
+      return;
+    }
+
+    const selectedBooking = bookings.find((booking) => booking.code === bookingCode);
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/feedbacks", {
+        body: JSON.stringify({
+          bookingId: bookingCode,
+          message: `[${topic}] ${message}`,
+          rating: 5,
+          route: selectedBooking?.route || ""
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST"
+      });
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(data.error || "Không thể gửi yêu cầu hỗ trợ.");
+      }
+
+      setMessage("");
+      setToast("Đã gửi yêu cầu hỗ trợ. Admin sẽ tiếp nhận trong mục Phản hồi khách hàng.");
+      await onRefresh();
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Không thể gửi yêu cầu hỗ trợ.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <form className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm" onSubmit={submitSupport}>
+        <h2 className="text-xl font-black">Gửi yêu cầu hỗ trợ</h2>
+        <p className="mt-2 text-sm leading-6 text-[#667085]">
+          Yêu cầu sẽ chuyển sang admin để theo dõi và cập nhật trạng thái xử lý.
+        </p>
+        <div className="mt-4 grid gap-3">
+          <label className="block">
+            <span className="mb-1 block text-sm font-bold text-[#344054]">Mã vé</span>
+            <select
+              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              onChange={(event) => setBookingCode(event.target.value)}
+              value={bookingCode}
+            >
+              <option value="">Không gắn mã vé</option>
+              {bookings.map((booking) => (
+                <option key={booking.id} value={booking.code}>
+                  {booking.code} · {booking.route}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm font-bold text-[#344054]">Chủ đề</span>
+            <select
+              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              onChange={(event) => setTopic(event.target.value)}
+              value={topic}
+            >
+              <option>Hỗ trợ điểm đón/trả</option>
+              <option>Thay đổi thông tin hành khách</option>
+              <option>Kiểm tra thanh toán</option>
+              <option>Hành lý/gửi hàng</option>
+              <option>Hỗ trợ khác</option>
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm font-bold text-[#344054]">Nội dung</span>
+            <textarea
+              className="min-h-36 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#075bbf] focus:ring-[#075bbf]"
+              onChange={(event) => setMessage(event.target.value)}
+              placeholder="Nhập nội dung cần nhà xe hỗ trợ"
+              value={message}
+            />
+          </label>
+        </div>
+        <button
+          className="mt-4 inline-flex h-11 items-center gap-2 rounded-md bg-[#073b7a] px-4 text-sm font-black text-white disabled:bg-[#98a2b3]"
+          disabled={submitting}
+          type="submit"
+        >
+          <Send className="h-4 w-4" />
+          {submitting ? "Đang gửi..." : "Gửi hỗ trợ"}
+        </button>
+      </form>
+
+      <section className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+        <h2 className="text-xl font-black">Đầu mối tiếp nhận</h2>
+        <div className="mt-4 grid gap-3 text-sm">
+          <InfoLine icon={<Headphones className="h-4 w-4" />} label="Hotline" value="1900 1000" />
+          <InfoLine icon={<MessageSquare className="h-4 w-4" />} label="Admin xử lý" value="Phản hồi khách hàng" />
+          <InfoLine icon={<Bell className="h-4 w-4" />} label="Theo dõi" value="Mục Thông báo" />
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function FeedbackSection({
   bookings,
   feedbacks,
@@ -954,6 +1217,7 @@ function UtilitySection({ pageKey }: { pageKey: SectionKey }) {
       { icon: <ShieldCheck className="h-5 w-5" />, text: "Vui lòng báo trước với hotline nếu có kiện hàng lớn.", title: "Kiện hàng lớn" }
     ],
     "my-tickets": [],
+    notifications: [],
     operators: [
       { icon: <Bus className="h-5 w-5" />, text: "Thành Trung Limousine vận hành các tuyến liên tỉnh với lịch chạy rõ ràng.", title: "Đội xe" },
       { icon: <UserRound className="h-5 w-5" />, text: "Nhân sự điều hành hỗ trợ kiểm tra vé, điểm đón và thanh toán.", title: "Vận hành" }

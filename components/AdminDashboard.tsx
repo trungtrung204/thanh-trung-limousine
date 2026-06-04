@@ -646,6 +646,34 @@ export default function AdminDashboard() {
     }
   }
 
+  async function updateFeedbackStatus(feedback: FeedbackItem, status: string) {
+    const actionKey = `feedback-${status}-${feedback.id}`;
+    if (pendingAction) {
+      return;
+    }
+
+    setPendingAction(actionKey);
+    try {
+      const response = await fetch(`/api/admin/feedbacks/${feedback.id}`, {
+        body: JSON.stringify({ status }),
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH"
+      });
+      const data = (await response.json()) as { error?: string; feedback?: FeedbackItem };
+      if (!response.ok || !data.feedback) {
+        throw new Error(data.error || "Không thể cập nhật phản hồi.");
+      }
+
+      setFeedbacks((current) => current.map((item) => (item.id === data.feedback?.id ? data.feedback : item)));
+      await refreshStats();
+      setToast(`Đã cập nhật phản hồi của ${data.feedback.customerName}.`);
+    } catch (error) {
+      setToast(error instanceof Error ? error.message : "Không thể cập nhật phản hồi.");
+    } finally {
+      setPendingAction("");
+    }
+  }
+
   async function saveTrip(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setTripSaving(true);
@@ -914,7 +942,9 @@ export default function AdminDashboard() {
           {activePage === "cancellations" ? (
             <CancellationsPage cancellations={cancellations} onProcess={processCancellation} pendingAction={pendingAction} />
           ) : null}
-          {activePage === "feedbacks" ? <FeedbacksPage feedbacks={feedbacks} /> : null}
+          {activePage === "feedbacks" ? (
+            <FeedbacksPage feedbacks={feedbacks} onUpdateStatus={updateFeedbackStatus} pendingAction={pendingAction} />
+          ) : null}
           {activePage === "revenue" ? <RevenuePage revenue={revenue} /> : null}
           {activePage === "settings" ? <SettingsPage /> : null}
         </section>
@@ -1506,29 +1536,82 @@ function RevenuePage({ revenue }: { revenue: RevenueReport }) {
   );
 }
 
-function FeedbacksPage({ feedbacks }: { feedbacks: FeedbackItem[] }) {
+function FeedbacksPage({
+  feedbacks,
+  onUpdateStatus,
+  pendingAction
+}: {
+  feedbacks: FeedbackItem[];
+  onUpdateStatus: (feedback: FeedbackItem, status: string) => void;
+  pendingAction: string;
+}) {
+  const [statusFilter, setStatusFilter] = useState("all");
+  const rows = feedbacks.filter((feedback) => statusFilter === "all" || feedback.status === statusFilter);
+
   return (
     <section className="rounded-lg border border-[#e4e7ec] bg-white shadow-sm">
-      <div className="border-b border-[#eaecf0] p-5">
-        <h3 className="text-lg font-black">Phản hồi khách hàng</h3>
+      <div className="flex flex-col gap-3 border-b border-[#eaecf0] p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-lg font-black">Phản hồi khách hàng</h3>
+          <p className="mt-1 text-sm text-[#667085]">Bao gồm đánh giá chuyến và yêu cầu hỗ trợ khách gửi từ cổng user.</p>
+        </div>
+        <select
+          className="h-10 rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#075bbf] focus:ring-[#075bbf]"
+          onChange={(event) => setStatusFilter(event.target.value)}
+          value={statusFilter}
+        >
+          <option value="all">Tất cả trạng thái</option>
+          <option value="Mới">Mới</option>
+          <option value="Đang xử lý">Đang xử lý</option>
+          <option value="Đã liên hệ">Đã liên hệ</option>
+          <option value="Đã xử lý">Đã xử lý</option>
+        </select>
       </div>
       <div className="grid gap-4 p-5 lg:grid-cols-2">
-        {feedbacks.map((feedback) => (
-          <article className="rounded-lg border border-[#eaecf0] p-4" key={feedback.id}>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h4 className="font-black">{feedback.customerName}</h4>
-                <p className="mt-1 text-sm font-semibold text-[#667085]">{feedback.route}</p>
+        {rows.map((feedback) => {
+          const updating = pendingAction.startsWith("feedback-") && pendingAction.endsWith(feedback.id);
+
+          return (
+            <article className="rounded-lg border border-[#eaecf0] p-4" key={feedback.id}>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h4 className="font-black">{feedback.customerName}</h4>
+                  <p className="mt-1 text-sm font-semibold text-[#667085]">{feedback.route}</p>
+                  <p className="mt-1 text-xs font-bold text-[#075bbf]">{feedback.bookingId}</p>
+                </div>
+                <div className="text-right">
+                  <span className="rounded-md bg-[#fff7ed] px-2 py-1 text-xs font-black text-[#c2410c]">
+                    {feedback.rating} sao
+                  </span>
+                  <div className="mt-2">
+                    <FeedbackStatusBadge status={feedback.status} />
+                  </div>
+                </div>
               </div>
-              <span className="rounded-md bg-[#fff7ed] px-2 py-1 text-xs font-black text-[#c2410c]">
-                {feedback.rating} sao
-              </span>
-            </div>
-            <p className="mt-3 text-sm leading-6 text-[#344054]">{feedback.message}</p>
-            <p className="mt-3 text-xs font-bold text-[#075bbf]">{feedback.status}</p>
-          </article>
-        ))}
-        {!feedbacks.length ? <p className="text-sm font-bold text-[#667085]">Chưa có phản hồi.</p> : null}
+              <p className="mt-3 text-sm leading-6 text-[#344054]">{feedback.message}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {["Đang xử lý", "Đã liên hệ", "Đã xử lý"].map((status) => (
+                  <button
+                    className={[
+                      "inline-flex h-9 items-center gap-2 rounded-md border px-3 text-xs font-black disabled:opacity-60",
+                      status === "Đã xử lý"
+                        ? "border-[#d1fadf] bg-[#ecfdf3] text-[#027a48]"
+                        : "border-[#d0d5dd] bg-white text-[#344054]"
+                    ].join(" ")}
+                    disabled={Boolean(pendingAction) || feedback.status === status}
+                    key={status}
+                    onClick={() => onUpdateStatus(feedback, status)}
+                    type="button"
+                  >
+                    {updating && pendingAction.includes(status) ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    {status}
+                  </button>
+                ))}
+              </div>
+            </article>
+          );
+        })}
+        {!rows.length ? <p className="text-sm font-bold text-[#667085]">Chưa có phản hồi phù hợp.</p> : null}
       </div>
     </section>
   );
@@ -1955,6 +2038,19 @@ function CancellationStatusBadge({ status }: { status: CancellationItem["status"
         : "bg-[#fef3c7] text-[#92400e]";
 
   return <span className={`rounded-md px-2 py-1 text-xs font-black ${tone}`}>{labels[status]}</span>;
+}
+
+function FeedbackStatusBadge({ status }: { status: string }) {
+  const tone =
+    status === "Đã xử lý"
+      ? "bg-[#ecfdf3] text-[#027a48]"
+      : status === "Đã liên hệ"
+        ? "bg-[#eff8ff] text-[#075bbf]"
+        : status === "Đang xử lý"
+          ? "bg-[#fef3c7] text-[#92400e]"
+          : "bg-[#fff7ed] text-[#c2410c]";
+
+  return <span className={`rounded-md px-2 py-1 text-xs font-black ${tone}`}>{status || "Mới"}</span>;
 }
 
 function TripStatusBadge({ status }: { status: string }) {
