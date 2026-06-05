@@ -983,9 +983,14 @@ export default function LandingPage() {
       </section>
 
       <footer className="border-t border-[#d9e2ef] bg-white py-8">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 text-sm text-[#667085] sm:px-6 md:flex-row md:items-center md:justify-between">
-          <p className="font-bold text-[#064e6f]">Thành Trung Limousine</p>
-          <p>Vé xe khách liên tỉnh · Thanh toán QR · Vé điện tử</p>
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 text-sm text-[#667085] sm:px-6">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <p className="font-bold text-[#064e6f]">Thành Trung Limousine</p>
+            <p>Vé xe khách liên tỉnh · Thanh toán QR · Vé điện tử</p>
+          </div>
+          <p className="border-t border-[#eaecf0] pt-3 text-xs leading-5 text-[#98a2b3]">
+            Đây chỉ là sản phẩm demo web do sinh viên thực hiện, không có mục đích vi phạm quyền sở hữu trí tuệ gì khác.
+          </p>
         </div>
       </footer>
 

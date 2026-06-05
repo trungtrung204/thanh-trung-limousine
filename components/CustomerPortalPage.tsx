@@ -421,6 +421,12 @@ export default function CustomerPortalPage({ section }: { section: string }) {
         </section>
       </div>
 
+      <footer className="mx-auto max-w-7xl px-4 pb-8 text-xs leading-5 text-[#98a2b3] sm:px-6">
+        <p className="border-t border-[#d9e2ef] pt-4">
+          Đây chỉ là sản phẩm demo web do sinh viên thực hiện, không có mục đích vi phạm quyền sở hữu trí tuệ gì khác.
+        </p>
+      </footer>
+
       {toast ? (
         <div className="fixed bottom-5 left-1/2 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 rounded-lg border border-[#d0d5dd] bg-white px-4 py-3 text-sm font-bold text-[#344054] shadow-lg">
           {toast}
