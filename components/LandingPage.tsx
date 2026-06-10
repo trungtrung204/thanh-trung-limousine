@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { QRCodeSVG } from "qrcode.react";
 import {
   Armchair,
   BadgeCheck,
@@ -1166,8 +1165,14 @@ function PaymentPanel({ booking, payment }: { booking: ApiBooking; payment: Manu
   return (
     <section className="mt-6 rounded-lg border border-[#b8d7ff] bg-white p-5 shadow-sm">
       <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <div className="rounded-lg border border-[#e4e7ec] bg-[#f8fafc] p-4">
-          <QRCodeSVG className="h-full w-full" value={payment.qrValue} />
+        <div className="overflow-hidden rounded-lg border border-[#e4e7ec] bg-[#f8fafc] p-4">
+          <Image
+            alt={`Mã QR thanh toán cho đơn ${payment.bookingCode}`}
+            className="h-full w-full object-contain"
+            height={512}
+            src="/qr.jpg"
+            width={512}
+          />
         </div>
         <div>
           <div className="flex flex-wrap items-start justify-between gap-3">

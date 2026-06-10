@@ -631,8 +631,14 @@ function TicketCard({
 
       {payment ? (
         <div className="mt-5 grid gap-4 rounded-lg border border-[#b8d7ff] bg-[#e8f7fb] p-4 md:grid-cols-[160px_minmax(0,1fr)]">
-          <div className="rounded-lg bg-white p-3">
-            <QRCodeSVG className="h-full w-full" value={payment.qrValue} />
+          <div className="overflow-hidden rounded-lg bg-white p-3">
+            <Image
+              alt={`Mã QR thanh toán cho đơn ${payment.bookingCode}`}
+              className="h-full w-full object-contain"
+              height={512}
+              src="/qr.jpg"
+              width={512}
+            />
           </div>
           <div>
             <h3 className="font-black text-[#064e6f]">Thanh toán QR</h3>
