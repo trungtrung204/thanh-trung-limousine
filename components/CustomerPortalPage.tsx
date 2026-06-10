@@ -695,6 +695,8 @@ function TicketCard({
               <PaymentLine label="Số tiền" value={formatCurrency(payment.amount)} />
               <PaymentLine label="Nội dung chuyển khoản" value={payment.reference} />
               <PaymentLine label="Ngân hàng" value={payment.bankName} />
+              <PaymentLine label="Chủ tài khoản" value={payment.accountName} />
+              <PaymentLine label="Số tài khoản" value={payment.accountNo} />
               <PaymentLine label="Trạng thái" value="Chờ xác nhận thanh toán" />
             </div>
             <p className="mt-3 text-sm font-semibold text-[#0b6ea8]">

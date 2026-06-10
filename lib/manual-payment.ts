@@ -15,9 +15,9 @@ export function makePaymentReference(bookingCode: string) {
 
 export function getManualPaymentConfig() {
   return {
-    accountName: process.env.MANUAL_QR_ACCOUNT_NAME || "THANH TRUNG LIMOUSINE",
-    accountNo: process.env.MANUAL_QR_ACCOUNT_NO || "0000000000",
-    bankName: process.env.MANUAL_QR_BANK_NAME || "BIDV - PGD Thanh Chuong"
+    accountName: process.env.MANUAL_QR_ACCOUNT_NAME || "NGUYEN DUY TRUNG",
+    accountNo: process.env.MANUAL_QR_ACCOUNT_NO || "2555 0550 55",
+    bankName: process.env.MANUAL_QR_BANK_NAME || "TECHCOMBANK"
   };
 }
 
