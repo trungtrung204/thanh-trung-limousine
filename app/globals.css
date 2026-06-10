@@ -90,6 +90,58 @@ textarea::placeholder {
   font-weight: 700 !important;
 }
 
+@keyframes adminFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.admin-page-enter {
+  animation: adminFadeUp 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.admin-surface {
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.admin-surface:hover {
+  border-color: #b7d7ff;
+  box-shadow: 0 18px 44px rgba(15, 102, 215, 0.12);
+  transform: translateY(-2px);
+}
+
+.admin-soft-button {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.admin-soft-button:hover:not(:disabled) {
+  box-shadow: 0 10px 24px rgba(15, 102, 215, 0.14);
+  transform: translateY(-1px);
+}
+
+.admin-table-row {
+  transition:
+    background-color 150ms ease,
+    transform 150ms ease;
+}
+
+.admin-table-row:hover {
+  background: #f7fbff;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

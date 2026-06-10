@@ -766,19 +766,19 @@ export default function AdminDashboard() {
 
   if (sessionIssue && !authorized && !loading) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#f3f8fb] px-4 text-[#344054]">
-        <div className="max-w-md rounded-lg border border-[#e4e7ec] bg-white px-5 py-4 text-sm font-bold shadow-sm">
+      <main className="grid min-h-screen place-items-center bg-[#eef6ff] px-4 text-[#344054]">
+        <div className="admin-page-enter max-w-md rounded-2xl border border-[#d6e8ff] bg-white px-5 py-4 text-sm font-bold shadow-[0_18px_44px_rgba(15,102,215,0.12)]">
           <p>{sessionIssue}</p>
           <div className="mt-4 flex gap-2">
             <button
-              className="rounded-md bg-[#0b6ea8] px-4 py-2 text-white"
+              className="admin-soft-button rounded-md bg-[#1677e8] px-4 py-2 text-white"
               onClick={() => window.location.reload()}
               type="button"
             >
               Làm mới
             </button>
             <button
-              className="rounded-md border border-[#d0d5dd] px-4 py-2 text-[#344054]"
+              className="admin-soft-button rounded-md border border-[#badcff] px-4 py-2 text-[#344054]"
               onClick={() => router.replace("/admin/login")}
               type="button"
             >
@@ -792,9 +792,12 @@ export default function AdminDashboard() {
 
   if (!authorized || loading) {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#f3f8fb] text-[#344054]">
-        <div className="rounded-lg border border-[#e4e7ec] bg-white px-5 py-4 text-sm font-bold shadow-sm">
-          Đang tải khu vực quản trị...
+      <main className="grid min-h-screen place-items-center bg-[#eef6ff] text-[#344054]">
+        <div className="admin-page-enter rounded-2xl border border-[#d6e8ff] bg-white px-5 py-4 text-sm font-bold shadow-[0_18px_44px_rgba(15,102,215,0.12)]">
+          <span className="inline-flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin text-[#1677e8]" />
+            Đang tải khu vực quản trị...
+          </span>
         </div>
       </main>
     );
@@ -803,7 +806,7 @@ export default function AdminDashboard() {
   const currentPage = pageMeta[activePage];
 
   return (
-    <main className="min-h-screen bg-[#f3f8fb] text-[#101828]">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(34,199,255,0.22),transparent_34rem),linear-gradient(180deg,#eef6ff_0%,#f8fbff_42%,#f3f7fb_100%)] text-[#101828]">
       {sidebarOpen ? (
         <button
           aria-label="Đóng sidebar"
@@ -815,13 +818,13 @@ export default function AdminDashboard() {
 
       <aside
         className={[
-          "fixed inset-y-0 left-0 z-40 w-72 border-r border-[#d9e2ef] bg-[#064e6f] p-4 text-white transition lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-72 border-r border-white/10 bg-[linear-gradient(180deg,#072843_0%,#0f66d7_52%,#064e6f_100%)] p-4 text-white shadow-[16px_0_48px_rgba(5,35,71,0.22)] transition-transform duration-300 ease-out lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         ].join(" ")}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="relative h-11 w-11 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-white/30">
+            <span className="relative h-11 w-11 overflow-hidden rounded-xl bg-white shadow-sm ring-2 ring-white/25">
               <Image alt="Logo Thành Trung Limousine" className="object-cover" fill sizes="44px" src="/logoicon.png" />
             </span>
             <div>
@@ -834,12 +837,19 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        <nav className="mt-8 grid gap-1">
+        <div className="mt-6 rounded-2xl border border-white/10 bg-white/10 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#bfe9ff]">Vận hành</p>
+          <p className="mt-1 text-sm font-bold text-white">Bảng điều phối nhà xe</p>
+        </div>
+
+        <nav className="mt-6 grid gap-1.5">
           {navItems.map((item) => (
             <button
               className={[
-                "flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-bold",
-                item.key === activePage ? "bg-white text-[#064e6f]" : "text-[#d7f0f7] hover:bg-white/10"
+                "admin-soft-button relative flex items-center gap-3 overflow-hidden rounded-xl px-3 py-2.5 text-left text-sm font-bold",
+                item.key === activePage
+                  ? "bg-white text-[#0f66d7] shadow-[0_12px_28px_rgba(0,0,0,0.16)] before:absolute before:left-0 before:top-2 before:h-7 before:w-1 before:rounded-r-full before:bg-[#ffd43b] before:content-['']"
+                  : "text-[#d7f0f7] hover:bg-white/15 hover:text-white"
               ].join(" ")}
               key={item.key}
               onClick={() => {
@@ -848,34 +858,38 @@ export default function AdminDashboard() {
               }}
               type="button"
             >
-              {item.icon}
-              {item.label}
+              <span className="relative z-10">{item.icon}</span>
+              <span className="relative z-10">{item.label}</span>
             </button>
           ))}
         </nav>
       </aside>
 
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-20 border-b border-[#d9e2ef] bg-white/95 backdrop-blur">
+        <header className="sticky top-0 z-20 border-b border-[#d6e8ff] bg-white/85 shadow-[0_10px_30px_rgba(15,102,215,0.06)] backdrop-blur-xl">
           <div className="flex min-h-16 items-center justify-between gap-4 px-4 py-3 sm:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <button
                 aria-label="Mở sidebar"
-                className="rounded-md border border-[#d0d5dd] p-2 text-[#344054] lg:hidden"
+                className="admin-soft-button rounded-md border border-[#badcff] bg-white p-2 text-[#344054] lg:hidden"
                 onClick={() => setSidebarOpen(true)}
                 type="button"
               >
                 <Menu className="h-5 w-5" />
               </button>
               <div className="min-w-0">
-                <p className="text-sm font-black text-[#0a6ea8]">Thành Trung Limousine Admin</p>
+                <p className="text-sm font-black text-[#1677e8]">Thành Trung Limousine Admin</p>
                 <h2 className="truncate text-xl font-black">{currentPage.title}</h2>
                 <p className="hidden text-sm text-[#667085] sm:block">{currentPage.desc}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <span className="hidden items-center gap-2 rounded-full border border-[#bbf7d0] bg-[#ecfdf3] px-3 py-2 text-xs font-black text-[#027a48] lg:inline-flex">
+                <span className="h-2 w-2 rounded-full bg-[#12b76a] shadow-[0_0_0_4px_rgba(18,183,106,0.12)]" />
+                Online
+              </span>
               <button
-                className="hidden h-10 items-center gap-2 rounded-md border border-[#d0d5dd] px-3 text-sm font-bold text-[#344054] sm:inline-flex"
+                className="admin-soft-button hidden h-10 items-center gap-2 rounded-md border border-[#badcff] bg-white px-3 text-sm font-bold text-[#0b4f83] sm:inline-flex"
                 disabled={refreshing}
                 onClick={handleManualRefresh}
                 type="button"
@@ -884,7 +898,7 @@ export default function AdminDashboard() {
                 {refreshing ? "Đang tải..." : "Làm mới"}
               </button>
               <button
-                className="inline-flex h-10 items-center gap-2 rounded-md bg-[#0b6ea8] px-3 text-sm font-bold text-white"
+                className="admin-soft-button inline-flex h-10 items-center gap-2 rounded-md bg-[#1677e8] px-3 text-sm font-bold text-white"
                 disabled={logoutSubmitting}
                 onClick={handleLogout}
                 type="button"
@@ -896,7 +910,7 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        <section className="px-4 py-6 sm:px-6">
+        <section className="admin-page-enter px-4 py-6 sm:px-6">
           {activePage === "overview" ? (
             <OverviewPage
               bookings={bookings}
@@ -981,6 +995,28 @@ function OverviewPage({
 
   return (
     <div className="grid gap-5">
+      <section className="overflow-hidden rounded-3xl border border-[#badcff] bg-[linear-gradient(135deg,#0f66d7_0%,#22c7ff_52%,#ffd43b_140%)] p-5 text-white shadow-[0_22px_60px_rgba(15,102,215,0.22)]">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
+          <div>
+            <p className="text-sm font-black uppercase tracking-[0.18em] text-[#dff2ff]">Command Center</p>
+            <h3 className="mt-2 text-2xl font-black sm:text-3xl">Điều phối Thành Trung Limousine</h3>
+            <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#eaf7ff]">
+              Theo dõi dòng tiền, ghế bán, chuyến đang vận hành và các yêu cầu cần xử lý trong một màn hình.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-white/25 bg-white/15 p-4 backdrop-blur">
+              <p className="text-xs font-bold text-[#dff2ff]">Tỉ lệ lấp đầy</p>
+              <p className="mt-1 text-3xl font-black">{seatRate}%</p>
+            </div>
+            <div className="rounded-2xl border border-white/25 bg-white/15 p-4 backdrop-blur">
+              <p className="text-xs font-bold text-[#dff2ff]">Chờ xử lý</p>
+              <p className="mt-1 text-3xl font-black">{pendingPayments.length + pendingCancellations}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <StatCard icon={<DollarSign className="h-5 w-5" />} label="Doanh thu" value={formatCurrency(revenue.totalRevenue || stats.totalRevenue)} />
         <StatCard icon={<DollarSign className="h-5 w-5" />} label="Hôm nay" value={formatCurrency(revenue.todayRevenue)} />
@@ -991,13 +1027,13 @@ function OverviewPage({
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <section className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+        <section className="admin-surface overflow-hidden rounded-2xl border border-[#d6e8ff] bg-white p-5 shadow-[0_12px_30px_rgba(15,102,215,0.07)]">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-black">Vận hành hôm nay</h3>
               <p className="mt-1 text-sm text-[#667085]">Tổng quan chuyến, ghế và đơn đang chờ xử lý.</p>
             </div>
-            <span className="rounded-md bg-[#e8f7fb] px-3 py-2 text-sm font-black text-[#0b6ea8]">
+            <span className="rounded-full bg-[#eef7ff] px-3 py-2 text-sm font-black text-[#1677e8] ring-1 ring-[#cfe7ff]">
               Lấp đầy {seatRate}%
             </span>
           </div>
@@ -1009,16 +1045,16 @@ function OverviewPage({
           <div className="mt-5">
             <RevenueChart revenue={revenue} type="daily" />
           </div>
-          <div className="mt-5 overflow-hidden rounded-lg border border-[#eaecf0]">
+          <div className="mt-5 overflow-hidden rounded-2xl border border-[#d6e8ff]">
             <BookingTable bookings={bookings.slice(0, 6)} compact />
           </div>
         </section>
 
-        <section className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+        <section className="admin-surface rounded-2xl border border-[#d6e8ff] bg-white p-5 shadow-[0_12px_30px_rgba(15,102,215,0.07)]">
           <h3 className="text-lg font-black">Phản hồi mới</h3>
           <div className="mt-4 grid gap-3">
             {feedbacks.slice(0, 4).map((feedback) => (
-              <div className="rounded-lg bg-[#f8fafc] p-3" key={feedback.id}>
+              <div className="rounded-2xl bg-[#f7fbff] p-3 ring-1 ring-[#e4f0ff]" key={feedback.id}>
                 <p className="text-sm font-black">{feedback.customerName}</p>
                 <p className="mt-1 line-clamp-2 text-sm text-[#667085]">{feedback.message}</p>
                 <p className="mt-2 text-xs font-bold text-[#0b6ea8]">{feedback.rating} sao · {feedback.route}</p>
@@ -1062,13 +1098,15 @@ function TripsPage({
 
   return (
     <div className="grid gap-5 xl:grid-cols-[380px_minmax(0,1fr)]">
-      <form className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm" onSubmit={onSave}>
+      <form className="admin-surface rounded-2xl border border-[#d6e8ff] bg-white p-5 shadow-[0_12px_30px_rgba(15,102,215,0.07)]" onSubmit={onSave}>
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-black">{form.id ? "Sửa chuyến xe" : "Tạo chuyến xe"}</h3>
             <p className="mt-1 text-sm text-[#667085]">Nhập tuyến theo dạng Vinh - Hoàng Mai.</p>
           </div>
-          <Plus className="h-5 w-5 text-[#0b6ea8]" />
+          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#eef7ff] text-[#1677e8] ring-1 ring-[#cfe7ff]">
+            <Plus className="h-5 w-5" />
+          </span>
         </div>
         <div className="grid gap-3">
           <FormInput label="Mã chuyến" onChange={(value) => update("code", value)} placeholder="Tự tạo nếu bỏ trống" value={form.code} />
@@ -1094,7 +1132,7 @@ function TripsPage({
           <label className="block">
             <span className="mb-1 block text-sm font-bold text-[#344054]">Trạng thái</span>
             <select
-              className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
+              className="h-11 w-full rounded-md border-[#c7ddf8] text-sm focus:border-[#1677e8] focus:ring-[#1677e8]"
               onChange={(event) => update("status", event.target.value)}
               value={form.status}
             >
@@ -1108,7 +1146,7 @@ function TripsPage({
         </div>
         <div className="mt-5 flex gap-2">
           <button
-            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-md bg-[#0b6ea8] px-4 text-sm font-black text-white disabled:bg-[#98a2b3]"
+            className="admin-soft-button inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-md bg-[#1677e8] px-4 text-sm font-black text-white disabled:bg-[#98a2b3]"
             disabled={saving}
             type="submit"
           >
@@ -1117,7 +1155,7 @@ function TripsPage({
           </button>
           {form.id ? (
             <button
-              className="h-11 rounded-md border border-[#d0d5dd] px-4 text-sm font-bold text-[#344054]"
+              className="admin-soft-button h-11 rounded-md border border-[#badcff] bg-white px-4 text-sm font-bold text-[#344054]"
               onClick={() => onFormChange(emptyTripForm)}
               type="button"
             >
@@ -1127,13 +1165,13 @@ function TripsPage({
         </div>
       </form>
 
-      <section className="rounded-lg border border-[#e4e7ec] bg-white shadow-sm">
-        <div className="border-b border-[#eaecf0] p-5">
+      <section className="admin-surface overflow-hidden rounded-2xl border border-[#d6e8ff] bg-white shadow-[0_12px_30px_rgba(15,102,215,0.07)]">
+        <div className="border-b border-[#e4f0ff] bg-[#fbfdff] p-5">
           <h3 className="text-lg font-black">Danh sách chuyến xe</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="bg-[#f8fafc] text-xs font-black text-[#667085]">
+            <thead className="bg-[#f7fbff] text-xs font-black text-[#667085]">
               <tr>
                 <th className="px-4 py-3">Chuyến</th>
                 <th className="px-4 py-3">Điểm đón/trả</th>
@@ -1149,7 +1187,7 @@ function TripsPage({
                 const deleting = pendingAction === `delete-trip-${trip.id}`;
 
                 return (
-                  <tr key={trip.id}>
+                  <tr className="admin-table-row" key={trip.id}>
                     <td className="px-4 py-3">
                       <p className="font-black">{trip.route}</p>
                       <p className="text-xs font-semibold text-[#667085]">{trip.code} · {trip.vehicle}</p>
@@ -1171,7 +1209,7 @@ function TripsPage({
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
                         <button
-                          className="rounded-md border border-[#d0d5dd] p-2 text-[#344054] disabled:opacity-60"
+                          className="admin-soft-button rounded-md border border-[#badcff] bg-white p-2 text-[#344054] disabled:opacity-60"
                           disabled={Boolean(pendingAction)}
                           onClick={() => onEdit(trip)}
                           type="button"
@@ -1179,7 +1217,7 @@ function TripsPage({
                           <Pencil className="h-4 w-4" />
                         </button>
                         <button
-                          className="rounded-md border border-[#fecdd3] p-2 text-[#be123c] disabled:opacity-60"
+                          className="admin-soft-button rounded-md border border-[#fecdd3] bg-white p-2 text-[#be123c] disabled:opacity-60"
                           disabled={Boolean(pendingAction)}
                           onClick={() => onDelete(trip)}
                           type="button"
@@ -1222,13 +1260,13 @@ function BookingsPage({
   setQuery: (value: string) => void;
 }) {
   return (
-    <section className="rounded-lg border border-[#e4e7ec] bg-white shadow-sm">
-      <div className="flex flex-col gap-3 border-b border-[#eaecf0] p-5 sm:flex-row sm:items-center sm:justify-between">
+    <section className="admin-surface overflow-hidden rounded-2xl border border-[#d6e8ff] bg-white shadow-[0_12px_30px_rgba(15,102,215,0.07)]">
+      <div className="flex flex-col gap-3 border-b border-[#e4f0ff] bg-[#fbfdff] p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-lg font-black">Danh sách booking</h3>
           <p className="mt-1 text-sm text-[#667085]">Tìm theo mã vé, khách hàng, số điện thoại hoặc tuyến.</p>
         </div>
-        <label className="flex h-11 items-center gap-2 rounded-md border border-[#d0d5dd] px-3 text-[#667085] sm:w-80">
+        <label className="flex h-11 items-center gap-2 rounded-md border border-[#badcff] bg-white px-3 text-[#667085] shadow-sm sm:w-80">
           <Search className="h-4 w-4" />
           <input
             className="h-full flex-1 border-0 bg-transparent p-0 text-sm focus:ring-0"
@@ -1262,14 +1300,14 @@ function PaymentsPage({
   pendingAction: string;
 }) {
   return (
-    <section className="rounded-lg border border-[#e4e7ec] bg-white shadow-sm">
-      <div className="border-b border-[#eaecf0] p-5">
+    <section className="admin-surface overflow-hidden rounded-2xl border border-[#d6e8ff] bg-white shadow-[0_12px_30px_rgba(15,102,215,0.07)]">
+      <div className="border-b border-[#e4f0ff] bg-[#fbfdff] p-5">
         <h3 className="text-lg font-black">Đối soát thanh toán</h3>
         <p className="mt-1 text-sm text-[#667085]">Xác nhận các đơn đã nhận tiền để phát hành vé điện tử.</p>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
-          <thead className="bg-[#f8fafc] text-xs font-black text-[#667085]">
+          <thead className="bg-[#f7fbff] text-xs font-black text-[#667085]">
             <tr>
               <th className="px-4 py-3">Booking</th>
               <th className="px-4 py-3">Khách hàng</th>
@@ -1285,7 +1323,7 @@ function PaymentsPage({
               const confirming = pendingAction === `confirm-${booking.id}`;
               const rejecting = pendingAction === `reject-${booking.id}`;
               return (
-                <tr key={booking.id}>
+                <tr className="admin-table-row" key={booking.id}>
                   <td className="px-4 py-3">
                     <p className="font-black">{booking.code}</p>
                     <p className="text-xs font-semibold text-[#667085]">{booking.paymentReference || booking.paymentMethod}</p>
@@ -1302,7 +1340,7 @@ function PaymentsPage({
                       {status === "Chờ thanh toán" ? (
                         <>
                           <button
-                            className="inline-flex h-9 items-center gap-2 rounded-md bg-[#0b6ea8] px-3 text-xs font-black text-white disabled:bg-[#98a2b3]"
+                            className="admin-soft-button inline-flex h-9 items-center gap-2 rounded-md bg-[#1677e8] px-3 text-xs font-black text-white disabled:bg-[#98a2b3]"
                             disabled={Boolean(pendingAction)}
                             onClick={() => onConfirmPayment(booking)}
                             type="button"
@@ -1311,7 +1349,7 @@ function PaymentsPage({
                             {confirming ? "Đang xác nhận..." : "Xác nhận thanh toán"}
                           </button>
                           <button
-                            className="inline-flex h-9 items-center gap-2 rounded-md border border-[#fecdd3] px-3 text-xs font-black text-[#be123c] disabled:opacity-60"
+                            className="admin-soft-button inline-flex h-9 items-center gap-2 rounded-md border border-[#fecdd3] bg-white px-3 text-xs font-black text-[#be123c] disabled:opacity-60"
                             disabled={Boolean(pendingAction)}
                             onClick={() => onRejectBooking(booking)}
                             type="button"
@@ -1355,14 +1393,14 @@ function CancellationsPage({
   const rows = cancellations.filter((item) => statusFilter === "all" || item.status === statusFilter);
 
   return (
-    <section className="rounded-lg border border-[#e4e7ec] bg-white shadow-sm">
-      <div className="flex flex-col gap-3 border-b border-[#eaecf0] p-5 sm:flex-row sm:items-center sm:justify-between">
+    <section className="admin-surface overflow-hidden rounded-2xl border border-[#d6e8ff] bg-white shadow-[0_12px_30px_rgba(15,102,215,0.07)]">
+      <div className="flex flex-col gap-3 border-b border-[#e4f0ff] bg-[#fbfdff] p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-lg font-black">Yêu cầu hủy vé</h3>
           <p className="mt-1 text-sm text-[#667085]">Duyệt hoặc từ chối yêu cầu hủy do khách gửi.</p>
         </div>
         <select
-          className="h-10 rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
+          className="h-10 rounded-md border-[#badcff] text-sm font-bold focus:border-[#1677e8] focus:ring-[#1677e8]"
           onChange={(event) => setStatusFilter(event.target.value)}
           value={statusFilter}
         >
@@ -1374,7 +1412,7 @@ function CancellationsPage({
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
-          <thead className="bg-[#f8fafc] text-xs font-black text-[#667085]">
+          <thead className="bg-[#f7fbff] text-xs font-black text-[#667085]">
             <tr>
               <th className="px-4 py-3">Booking</th>
               <th className="px-4 py-3">Khách hàng</th>
@@ -1390,7 +1428,7 @@ function CancellationsPage({
               const rejecting = pendingAction === `cancel-REJECTED-${item.id}`;
 
               return (
-                <tr key={item.id}>
+                <tr className="admin-table-row" key={item.id}>
                   <td className="px-4 py-3">
                     <p className="font-black">{item.bookingCode}</p>
                     <p className="text-xs font-semibold text-[#667085]">
@@ -1412,7 +1450,7 @@ function CancellationsPage({
                       {item.status === "PENDING" ? (
                         <>
                           <button
-                            className="inline-flex h-9 items-center gap-2 rounded-md bg-[#0b6ea8] px-3 text-xs font-black text-white disabled:bg-[#98a2b3]"
+                            className="admin-soft-button inline-flex h-9 items-center gap-2 rounded-md bg-[#1677e8] px-3 text-xs font-black text-white disabled:bg-[#98a2b3]"
                             disabled={Boolean(pendingAction)}
                             onClick={() => onProcess(item, "APPROVED")}
                             type="button"
@@ -1421,7 +1459,7 @@ function CancellationsPage({
                             {approving ? "Đang duyệt..." : "Duyệt hủy"}
                           </button>
                           <button
-                            className="inline-flex h-9 items-center gap-2 rounded-md border border-[#fecdd3] px-3 text-xs font-black text-[#be123c] disabled:opacity-60"
+                            className="admin-soft-button inline-flex h-9 items-center gap-2 rounded-md border border-[#fecdd3] bg-white px-3 text-xs font-black text-[#be123c] disabled:opacity-60"
                             disabled={Boolean(pendingAction)}
                             onClick={() => onProcess(item, "REJECTED")}
                             type="button"
@@ -1454,13 +1492,13 @@ function CancellationsPage({
 
 function CustomersPage({ customers }: { customers: CustomerSummary[] }) {
   return (
-    <section className="rounded-lg border border-[#e4e7ec] bg-white shadow-sm">
-      <div className="border-b border-[#eaecf0] p-5">
+    <section className="admin-surface overflow-hidden rounded-2xl border border-[#d6e8ff] bg-white shadow-[0_12px_30px_rgba(15,102,215,0.07)]">
+      <div className="border-b border-[#e4f0ff] bg-[#fbfdff] p-5">
         <h3 className="text-lg font-black">Khách hàng</h3>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full text-left text-sm">
-          <thead className="bg-[#f8fafc] text-xs font-black text-[#667085]">
+          <thead className="bg-[#f7fbff] text-xs font-black text-[#667085]">
             <tr>
               <th className="px-4 py-3">Khách hàng</th>
               <th className="px-4 py-3">Liên hệ</th>
@@ -1471,7 +1509,7 @@ function CustomersPage({ customers }: { customers: CustomerSummary[] }) {
           </thead>
           <tbody className="divide-y divide-[#eaecf0]">
             {customers.map((customer) => (
-              <tr key={customer.id}>
+              <tr className="admin-table-row" key={customer.id}>
                 <td className="px-4 py-3">
                   <p className="font-black">{customer.name}</p>
                   <p className="text-xs font-semibold text-[#667085]">{customer.email}</p>
@@ -1509,11 +1547,11 @@ function RevenuePage({ revenue }: { revenue: RevenueReport }) {
         <RevenueChart revenue={revenue} type="daily" />
         <RevenueChart revenue={revenue} type="monthly" />
       </div>
-      <section className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+      <section className="admin-surface overflow-hidden rounded-2xl border border-[#d6e8ff] bg-white p-5 shadow-[0_12px_30px_rgba(15,102,215,0.07)]">
         <h3 className="text-lg font-black">Số vé bán theo ngày</h3>
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="bg-[#f8fafc] text-xs font-black text-[#667085]">
+            <thead className="bg-[#f7fbff] text-xs font-black text-[#667085]">
               <tr>
                 <th className="px-4 py-3">Ngày</th>
                 <th className="px-4 py-3">Số vé</th>
@@ -1522,7 +1560,7 @@ function RevenuePage({ revenue }: { revenue: RevenueReport }) {
             </thead>
             <tbody className="divide-y divide-[#eaecf0]">
               {revenue.daily.map((item) => (
-                <tr key={item.date}>
+                <tr className="admin-table-row" key={item.date}>
                   <td className="px-4 py-3 font-bold">{item.date}</td>
                   <td className="px-4 py-3">{item.tickets}</td>
                   <td className="px-4 py-3 font-bold">{formatCurrency(item.revenue)}</td>
@@ -1549,14 +1587,14 @@ function FeedbacksPage({
   const rows = feedbacks.filter((feedback) => statusFilter === "all" || feedback.status === statusFilter);
 
   return (
-    <section className="rounded-lg border border-[#e4e7ec] bg-white shadow-sm">
-      <div className="flex flex-col gap-3 border-b border-[#eaecf0] p-5 sm:flex-row sm:items-center sm:justify-between">
+    <section className="admin-surface overflow-hidden rounded-2xl border border-[#d6e8ff] bg-white shadow-[0_12px_30px_rgba(15,102,215,0.07)]">
+      <div className="flex flex-col gap-3 border-b border-[#e4f0ff] bg-[#fbfdff] p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-lg font-black">Phản hồi khách hàng</h3>
           <p className="mt-1 text-sm text-[#667085]">Bao gồm đánh giá chuyến và yêu cầu hỗ trợ khách gửi từ cổng user.</p>
         </div>
         <select
-          className="h-10 rounded-md border-[#d0d5dd] text-sm font-bold focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
+          className="h-10 rounded-md border-[#badcff] text-sm font-bold focus:border-[#1677e8] focus:ring-[#1677e8]"
           onChange={(event) => setStatusFilter(event.target.value)}
           value={statusFilter}
         >
@@ -1572,7 +1610,7 @@ function FeedbacksPage({
           const updating = pendingAction.startsWith("feedback-") && pendingAction.endsWith(feedback.id);
 
           return (
-            <article className="rounded-lg border border-[#eaecf0] p-4" key={feedback.id}>
+            <article className="admin-surface rounded-2xl border border-[#e4f0ff] bg-[#fbfdff] p-4" key={feedback.id}>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h4 className="font-black">{feedback.customerName}</h4>
@@ -1633,7 +1671,7 @@ function SettingsPage() {
 
   return (
     <section className="grid gap-5">
-      <div className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+      <div className="admin-surface rounded-2xl border border-[#d6e8ff] bg-white p-5 shadow-[0_12px_30px_rgba(15,102,215,0.07)]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h3 className="text-lg font-black">Cài đặt hệ thống</h3>
@@ -1642,7 +1680,7 @@ function SettingsPage() {
             </p>
           </div>
           <button
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#0b6ea8] px-4 text-sm font-black text-white"
+            className="admin-soft-button inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#1677e8] px-4 text-sm font-black text-white"
             onClick={() => setSavedAt(new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }))}
             type="button"
           >
@@ -1689,7 +1727,7 @@ function SettingsPage() {
         </SettingsPanel>
       </div>
 
-      <section className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+      <section className="admin-surface rounded-2xl border border-[#d6e8ff] bg-white p-5 shadow-[0_12px_30px_rgba(15,102,215,0.07)]">
         <h3 className="text-lg font-black">Checklist vận hành nhanh</h3>
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {[
@@ -1698,8 +1736,8 @@ function SettingsPage() {
             "Duyệt yêu cầu hủy vé",
             "Xem báo cáo doanh thu"
           ].map((item) => (
-            <label className="flex items-center gap-3 rounded-lg border border-[#eaecf0] bg-[#f8fafc] p-3 text-sm font-bold text-[#344054]" key={item}>
-              <input className="rounded border-[#d0d5dd] text-[#0b6ea8] focus:ring-[#0b6ea8]" type="checkbox" />
+            <label className="admin-surface flex items-center gap-3 rounded-2xl border border-[#e4f0ff] bg-[#fbfdff] p-3 text-sm font-bold text-[#344054]" key={item}>
+              <input className="rounded border-[#badcff] text-[#1677e8] focus:ring-[#1677e8]" type="checkbox" />
               {item}
             </label>
           ))}
@@ -1719,9 +1757,9 @@ function ShieldSettingsIcon() {
 
 function SettingsPanel({ children, icon, title }: { children: ReactNode; icon: ReactNode; title: string }) {
   return (
-    <section className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+    <section className="admin-surface rounded-2xl border border-[#d6e8ff] bg-white p-5 shadow-[0_12px_30px_rgba(15,102,215,0.07)]">
       <div className="mb-4 flex items-center gap-3">
-        <div className="grid h-10 w-10 place-items-center rounded-lg bg-[#e8f7fb] text-[#0b6ea8]">{icon}</div>
+        <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#eef7ff] text-[#1677e8] ring-1 ring-[#cfe7ff]">{icon}</div>
         <h3 className="text-lg font-black">{title}</h3>
       </div>
       <div className="grid gap-3">{children}</div>
@@ -1745,7 +1783,7 @@ function SettingsInput({
   return (
     <label className="block">
       <span className="mb-1 block text-sm font-bold text-[#344054]">{label}</span>
-      <div className="flex items-center rounded-md border border-[#d0d5dd] bg-white focus-within:border-[#0b6ea8] focus-within:ring-1 focus-within:ring-[#0b6ea8]">
+      <div className="flex items-center rounded-md border border-[#badcff] bg-white focus-within:border-[#1677e8] focus-within:ring-1 focus-within:ring-[#1677e8]">
         <input
           className="h-11 min-w-0 flex-1 border-0 bg-transparent text-sm focus:ring-0"
           onChange={(event) => onChange(event.target.value)}
@@ -1768,11 +1806,11 @@ function SettingsToggle({
   onChange: (value: boolean) => void;
 }) {
   return (
-    <label className="flex items-center justify-between gap-3 rounded-lg border border-[#eaecf0] bg-[#f8fafc] px-3 py-2 text-sm font-bold text-[#344054]">
+    <label className="admin-surface flex items-center justify-between gap-3 rounded-2xl border border-[#e4f0ff] bg-[#fbfdff] px-3 py-2 text-sm font-bold text-[#344054]">
       <span>{label}</span>
       <input
         checked={checked}
-        className="h-5 w-5 rounded border-[#d0d5dd] text-[#0b6ea8] focus:ring-[#0b6ea8]"
+        className="h-5 w-5 rounded border-[#badcff] text-[#1677e8] focus:ring-[#1677e8]"
         onChange={(event) => onChange(event.target.checked)}
         type="checkbox"
       />
@@ -1782,7 +1820,7 @@ function SettingsToggle({
 
 function SystemStatusRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border border-[#eaecf0] bg-[#f8fafc] px-3 py-2 text-sm">
+    <div className="flex items-center justify-between gap-4 rounded-2xl border border-[#e4f0ff] bg-[#fbfdff] px-3 py-2 text-sm">
       <span className="font-bold text-[#667085]">{label}</span>
       <span className="text-right font-black text-[#101828]">{value}</span>
     </div>
@@ -1808,7 +1846,7 @@ function BookingTable({
 
   return (
     <table className="min-w-full text-left text-sm">
-      <thead className="bg-[#f8fafc] text-xs font-black text-[#667085]">
+      <thead className="bg-[#f7fbff] text-xs font-black text-[#667085]">
         <tr>
           <th className="px-4 py-3">Mã vé</th>
           <th className="px-4 py-3">Khách hàng</th>
@@ -1825,7 +1863,7 @@ function BookingTable({
           const confirming = pendingAction === `confirm-${booking.id}`;
           const rejecting = pendingAction === `reject-${booking.id}`;
           return (
-            <tr key={booking.id}>
+            <tr className="admin-table-row" key={booking.id}>
               <td className="px-4 py-3">
                 <p className="font-black">{booking.code}</p>
                 <p className="text-xs font-semibold text-[#667085]">{formatDate(booking.createdAt)}</p>
@@ -1845,7 +1883,7 @@ function BookingTable({
                       <div className="flex flex-wrap justify-end gap-2">
                         {onConfirmPayment ? (
                           <button
-                            className="inline-flex h-9 items-center gap-2 rounded-md bg-[#0b6ea8] px-3 text-xs font-black text-white disabled:bg-[#98a2b3]"
+                            className="admin-soft-button inline-flex h-9 items-center gap-2 rounded-md bg-[#1677e8] px-3 text-xs font-black text-white disabled:bg-[#98a2b3]"
                             disabled={Boolean(pendingAction)}
                             onClick={() => onConfirmPayment(booking)}
                             type="button"
@@ -1856,7 +1894,7 @@ function BookingTable({
                         ) : null}
                         {onRejectBooking ? (
                           <button
-                            className="inline-flex h-9 items-center gap-2 rounded-md border border-[#fecdd3] px-3 text-xs font-black text-[#be123c] disabled:opacity-60"
+                            className="admin-soft-button inline-flex h-9 items-center gap-2 rounded-md border border-[#fecdd3] bg-white px-3 text-xs font-black text-[#be123c] disabled:opacity-60"
                             disabled={Boolean(pendingAction)}
                             onClick={() => onRejectBooking(booking)}
                             type="button"
@@ -1894,13 +1932,18 @@ function RevenueChart({ revenue, type }: { revenue: RevenueReport; type: "daily"
   const ticketValues = source.map((item) => item.tickets);
   const options: ApexOptions = {
     chart: {
+      animations: {
+        dynamicAnimation: { enabled: true, speed: 420 },
+        enabled: true,
+        speed: 520
+      },
       fontFamily: "inherit",
       toolbar: { show: false }
     },
-    colors: ["#0b6ea8", "#f59e0b"],
+    colors: ["#1677e8", "#f59e0b"],
     dataLabels: { enabled: false },
     grid: {
-      borderColor: "#eaecf0"
+      borderColor: "#e4f0ff"
     },
     legend: {
       fontWeight: 700
@@ -1934,7 +1977,7 @@ function RevenueChart({ revenue, type }: { revenue: RevenueReport; type: "daily"
   };
 
   return (
-    <section className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
+    <section className="admin-surface rounded-2xl border border-[#d6e8ff] bg-white p-5 shadow-[0_12px_30px_rgba(15,102,215,0.07)]">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h3 className="text-lg font-black">
@@ -1942,7 +1985,9 @@ function RevenueChart({ revenue, type }: { revenue: RevenueReport; type: "daily"
           </h3>
           <p className="mt-1 text-sm text-[#667085]">Tính theo booking đã xác nhận hoặc payment đã thanh toán.</p>
         </div>
-        <BarChart3 className="h-5 w-5 text-[#0b6ea8]" />
+        <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#eef7ff] text-[#1677e8] ring-1 ring-[#cfe7ff]">
+          <BarChart3 className="h-5 w-5" />
+        </span>
       </div>
       {source.length ? (
         <Chart
@@ -1964,9 +2009,17 @@ function RevenueChart({ revenue, type }: { revenue: RevenueReport; type: "daily"
 }
 
 function StatCard({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+  const tone =
+    label.includes("Doanh thu") || label === "Hôm nay" || label === "Tháng này"
+      ? "from-[#1677e8] to-[#22c7ff]"
+      : label.includes("hủy")
+        ? "from-[#ff8a00] to-[#ffd43b]"
+        : "from-[#0f9f6e] to-[#42e695]";
+
   return (
-    <div className="rounded-lg border border-[#e4e7ec] bg-white p-5 shadow-sm">
-      <div className="mb-4 grid h-10 w-10 place-items-center rounded-lg bg-[#e8f7fb] text-[#0b6ea8]">{icon}</div>
+    <div className="admin-surface relative overflow-hidden rounded-2xl border border-[#d6e8ff] bg-white p-5 shadow-[0_12px_30px_rgba(15,102,215,0.07)]">
+      <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${tone}`} />
+      <div className={`mb-4 grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br ${tone} text-white shadow-sm`}>{icon}</div>
       <p className="text-sm font-bold text-[#667085]">{label}</p>
       <p className="mt-1 text-2xl font-black text-[#101828]">{value}</p>
     </div>
@@ -1975,7 +2028,7 @@ function StatCard({ icon, label, value }: { icon: ReactNode; label: string; valu
 
 function MiniPanel({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-[#eaecf0] bg-[#f8fafc] p-4">
+    <div className="admin-surface rounded-2xl border border-[#e4f0ff] bg-[#fbfdff] p-4">
       <p className="text-sm font-bold text-[#667085]">{label}</p>
       <p className="mt-2 truncate text-lg font-black text-[#101828]">{value}</p>
     </div>
@@ -2001,7 +2054,7 @@ function FormInput({
     <label className="block">
       <span className="mb-1 block text-sm font-bold text-[#344054]">{label}</span>
       <input
-        className="h-11 w-full rounded-md border-[#d0d5dd] text-sm focus:border-[#0b6ea8] focus:ring-[#0b6ea8]"
+        className="h-11 w-full rounded-md border-[#badcff] text-sm focus:border-[#1677e8] focus:ring-[#1677e8]"
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         required={required}
