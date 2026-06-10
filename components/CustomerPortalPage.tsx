@@ -180,6 +180,26 @@ function displayBookingStatus(booking: ApiBooking) {
   return "Chờ thanh toán";
 }
 
+async function readApiJson<T>(response: Response, fallbackMessage: string): Promise<T> {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    return (await response.json()) as T;
+  }
+
+  await response.text();
+
+  if (response.status === 401) {
+    throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+  }
+
+  if (response.status === 403) {
+    throw new Error("Yêu cầu đang bị lớp bảo mật chặn. Vui lòng tải lại trang rồi thử lại.");
+  }
+
+  throw new Error(fallbackMessage);
+}
+
 export default function CustomerPortalPage({ section }: { section: string }) {
   const router = useRouter();
   const pageKey = (section in sectionMeta ? section : pageAliases[section] || "my-tickets") as SectionKey;
@@ -242,25 +262,46 @@ export default function CustomerPortalPage({ section }: { section: string }) {
   async function refreshPortal() {
     setLoading(true);
     try {
-      const currentUserResponse = await fetch("/api/auth/me", { cache: "no-store" });
+      const currentUserResponse = await fetch("/api/auth/me", {
+        cache: "no-store",
+        credentials: "include",
+        headers: { Accept: "application/json" }
+      });
       if (currentUserResponse.ok) {
-        const data = (await currentUserResponse.json()) as { user?: CustomerSession | null };
+        const data = await readApiJson<{ user?: CustomerSession | null }>(
+          currentUserResponse,
+          "Không thể kiểm tra phiên đăng nhập."
+        );
         setCustomer(data.user?.role === "USER" ? data.user : null);
       } else {
         setCustomer(null);
       }
 
-      const bookingsResponse = await fetch("/api/user/bookings", { cache: "no-store" });
+      const bookingsResponse = await fetch("/api/user/bookings", {
+        cache: "no-store",
+        credentials: "include",
+        headers: { Accept: "application/json" }
+      });
       if (bookingsResponse.ok) {
-        const data = (await bookingsResponse.json()) as { bookings?: ApiBooking[] };
+        const data = await readApiJson<{ bookings?: ApiBooking[] }>(
+          bookingsResponse,
+          "Không thể tải danh sách vé."
+        );
         setBookings(data.bookings || []);
       } else {
         setBookings([]);
       }
 
-      const feedbackResponse = await fetch("/api/feedbacks", { cache: "no-store" });
+      const feedbackResponse = await fetch("/api/feedbacks", {
+        cache: "no-store",
+        credentials: "include",
+        headers: { Accept: "application/json" }
+      });
       if (feedbackResponse.ok) {
-        const data = (await feedbackResponse.json()) as { feedbacks?: FeedbackItem[] };
+        const data = await readApiJson<{ feedbacks?: FeedbackItem[] }>(
+          feedbackResponse,
+          "Không thể tải phản hồi."
+        );
         setFeedbacks(data.feedbacks || []);
       }
     } catch {
@@ -290,10 +331,11 @@ export default function CustomerPortalPage({ section }: { section: string }) {
     try {
       const response = await fetch(`/api/user/bookings/${cancelTarget.id}/cancel-request`, {
         body: JSON.stringify(input),
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
         method: "POST"
       });
-      const data = (await response.json()) as { error?: string };
+      const data = await readApiJson<{ error?: string }>(response, "Không thể gửi yêu cầu hủy vé.");
 
       if (!response.ok) {
         throw new Error(data.error || "Không thể gửi yêu cầu hủy vé.");
@@ -310,8 +352,15 @@ export default function CustomerPortalPage({ section }: { section: string }) {
   async function loadPayment(booking: ApiBooking) {
     setPaymentLoadingId(booking.id);
     try {
-      const response = await fetch(`/api/payments/${booking.code}`, { cache: "no-store" });
-      const data = (await response.json()) as { error?: string; payment?: ManualPaymentInfo };
+      const response = await fetch(`/api/payments/${booking.code}`, {
+        cache: "no-store",
+        credentials: "include",
+        headers: { Accept: "application/json" }
+      });
+      const data = await readApiJson<{ error?: string; payment?: ManualPaymentInfo }>(
+        response,
+        "Không thể tải thông tin thanh toán."
+      );
       if (!response.ok || !data.payment) {
         throw new Error(data.error || "Không thể tải thông tin thanh toán.");
       }
@@ -964,10 +1013,11 @@ function SupportSection({
           rating: 5,
           route: selectedBooking?.route || ""
         }),
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
         method: "POST"
       });
-      const data = (await response.json()) as { error?: string };
+      const data = await readApiJson<{ error?: string }>(response, "Không thể gửi yêu cầu hỗ trợ.");
       if (!response.ok) {
         throw new Error(data.error || "Không thể gửi yêu cầu hỗ trợ.");
       }
@@ -1088,10 +1138,11 @@ function FeedbackSection({
           rating,
           route: selectedBooking?.route || ""
         }),
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
         method: "POST"
       });
-      const data = (await response.json()) as { error?: string };
+      const data = await readApiJson<{ error?: string }>(response, "Không thể gửi phản hồi.");
       if (!response.ok) {
         throw new Error(data.error || "Không thể gửi phản hồi.");
       }

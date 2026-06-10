@@ -165,6 +165,26 @@ function mapBookingStatus(booking: ApiBooking) {
   return "Chờ thanh toán";
 }
 
+async function readApiJson<T>(response: Response, fallbackMessage: string): Promise<T> {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    return (await response.json()) as T;
+  }
+
+  await response.text();
+
+  if (response.status === 401) {
+    throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại rồi đặt vé.");
+  }
+
+  if (response.status === 403) {
+    throw new Error("Yêu cầu đang bị lớp bảo mật chặn. Vui lòng tải lại trang rồi thử lại.");
+  }
+
+  throw new Error(fallbackMessage);
+}
+
 export default function LandingPage() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -255,24 +275,38 @@ export default function LandingPage() {
 
   async function refreshCurrentUser() {
     try {
-      const response = await fetch("/api/auth/me", { cache: "no-store" });
+      const response = await fetch("/api/auth/me", {
+        cache: "no-store",
+        credentials: "include",
+        headers: { Accept: "application/json" }
+      });
       if (!response.ok) {
         setCustomer(null);
         return;
       }
 
-      const data = (await response.json()) as { user?: CustomerSession | null };
+      const data = await readApiJson<{ user?: CustomerSession | null }>(
+        response,
+        "Không thể kiểm tra phiên đăng nhập."
+      );
       setCustomer(data.user?.role === "USER" ? data.user : null);
     } catch {
-      setCustomer(null);
+      // Keep the current UI stable when a transient edge/network response is not JSON.
     }
   }
 
   async function refreshTrips() {
     setTripsLoading(true);
     try {
-      const response = await fetch("/api/trips", { cache: "no-store" });
-      const data = (await response.json()) as { error?: string; trips?: ApiTrip[] };
+      const response = await fetch("/api/trips", {
+        cache: "no-store",
+        credentials: "include",
+        headers: { Accept: "application/json" }
+      });
+      const data = await readApiJson<{ error?: string; trips?: ApiTrip[] }>(
+        response,
+        "Không thể tải danh sách chuyến xe."
+      );
       if (!response.ok) {
         throw new Error(data.error || "Không thể tải danh sách chuyến xe.");
       }
@@ -398,20 +432,34 @@ export default function LandingPage() {
           seatNos: seatsToBook,
           tripId: activeTrip.id
         }),
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
         method: "POST"
       });
-      const data = (await response.json()) as { booking?: ApiBooking; error?: string };
+      const data = await readApiJson<{ booking?: ApiBooking; error?: string }>(
+        response,
+        "Máy chủ chưa trả về dữ liệu đặt vé hợp lệ. Vui lòng tải lại trang và thử lại."
+      );
 
       if (!response.ok || !data.booking) {
         throw new Error(data.error || "Không thể tạo đơn đặt vé.");
       }
 
-      const paymentResponse = await fetch(`/api/payments/${data.booking.code}`, { cache: "no-store" });
-      const paymentData = (await paymentResponse.json()) as { error?: string; payment?: ManualPaymentInfo };
-
       setRecentBooking(data.booking);
-      setPaymentInfo(paymentResponse.ok ? paymentData.payment || null : null);
+      try {
+        const paymentResponse = await fetch(`/api/payments/${data.booking.code}`, {
+          cache: "no-store",
+          credentials: "include",
+          headers: { Accept: "application/json" }
+        });
+        const paymentData = await readApiJson<{ error?: string; payment?: ManualPaymentInfo }>(
+          paymentResponse,
+          "Đã tạo đơn nhưng chưa tải được thông tin thanh toán."
+        );
+        setPaymentInfo(paymentResponse.ok ? paymentData.payment || null : null);
+      } catch {
+        setPaymentInfo(null);
+      }
       setSelectedSeats([]);
       await refreshTrips();
       setToast("Đã tạo đơn đặt vé. Vui lòng hoàn tất thanh toán QR.");

@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         throw new Error("TRIP_NOT_FOUND");
       }
 
-      if (seatNos.length > 6) {
+      if (seatNos.length > 10) {
         throw new Error("TOO_MANY_SEATS");
       }
 
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
     }
 
     if (error instanceof Error && error.message === "TOO_MANY_SEATS") {
-      return NextResponse.json({ error: "Mỗi đơn đặt tối đa 6 ghế." }, { status: 400 });
+      return NextResponse.json({ error: "Mỗi đơn đặt tối đa 10 ghế." }, { status: 400 });
     }
 
     return NextResponse.json({ error: "Không thể tạo đơn đặt vé." }, { status: 500 });
